@@ -4,7 +4,8 @@
       "moduleResolution": "NodeNext",
       "target": "ES3",
       "sourceMap": true,
-      "outDir": "lib"
+      "outDir": "lib",
+      "experimentalDecorators": true,
     },
     "include": ["src/**/*"]
   }

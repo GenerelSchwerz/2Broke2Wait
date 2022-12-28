@@ -8,9 +8,18 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "npx tsc"
+    "build": "npx tsc",
+    "test": "ts-node --esm -T ./src/index.ts"
   },
   "devDependencies": {
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@discordx/importer": "^1.1.10",
+    "config": "^3.3.8",
+    "discord.js": "^14.7.1",
+    "discordx": "^11.5.2",
+    "start": "^5.1.0"
   }
 }
