@@ -1,11 +1,11 @@
 {
-    "compilerOptions": {
-      "module": "NodeNext",
-      "moduleResolution": "NodeNext",
-      "target": "ES3",
-      "sourceMap": true,
-      "outDir": "lib",
-      "experimentalDecorators": true,
-    },
-    "include": ["src/**/*"]
-  }
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "ES2022",
+    "sourceMap": true,
+    "outDir": "lib",
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*"]
+}
