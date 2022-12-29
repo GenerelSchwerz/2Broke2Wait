@@ -11,6 +11,7 @@ import { buildClient } from "./misc/discord/index.js";
 
 dotenv.config();
 
+
 // rough option selection right now for testing.
 const options = {
   discord: {
