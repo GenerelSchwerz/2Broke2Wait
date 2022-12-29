@@ -9,9 +9,7 @@ import type { Bot, BotOptions } from "mineflayer";
 
 import {
   BaseCommand,
-  BaseCommands,
   isBaseCommand,
-  isQueueCommand,
   QueueCommand,
 } from "./constants.js";
 import { ProxyLogic } from "./proxyUtil/proxyLogic.js";
@@ -19,7 +17,7 @@ import { IProxyServerOpts } from "./proxyUtil/proxyServer.js";
 import { QueuePlugin } from "./mineflayerPlugins/queueFollower.js";
 
 export class QueueHandler extends ProxyLogic {
-  
+
   public get queuePos() {
     return this.proxyServer.remoteBot.queuePlugin.currentPosition;
   }

@@ -105,20 +105,18 @@ export class ProxyServer extends EventEmitter {
       this._connectedPlayer.end("Connection reset by 2b2t server.");
     }
     this._connectedPlayer = null;
-    
 
     if (info instanceof Error) {
-      this.emit('disconnect:error')
+      this.emit("disconnect:error");
     } else {
-      this.emit('disconnect:clean')
+      this.emit("disconnect:clean");
     }
-    
   };
 
   /**
    * TODO: Add functionality to server (if reused) and remote is not currently connected.
-   * @param actualUser 
-   * @returns 
+   * @param actualUser
+   * @returns
    */
   private serverLoginHandler = async (actualUser) => {
     if (this.opts.whitelist && this.remoteClient.uuid !== actualUser.uuid) {
@@ -170,7 +168,7 @@ export class ProxyServer extends EventEmitter {
     if (!this.reuseServer) {
       this.server["socketServer"].close();
     }
-   
-    this.emit('close')
+
+    this.emit("close");
   }
 }

@@ -5,7 +5,12 @@ import { buildClient } from "./discord/index.js";
 import { Client } from "discordx";
 import EventEmitter from "events";
 import { ProxyLogic } from "./proxyUtil/proxyLogic.js";
-import { BaseCommand, BaseCommands, isAnyCommand, LoopModes } from "./constants.js";
+import {
+  BaseCommand,
+  BaseCommands,
+  isAnyCommand,
+  LoopModes,
+} from "./constants.js";
 
 export interface IHandlerOpts {
   cli: boolean;

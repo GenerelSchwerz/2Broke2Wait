@@ -134,8 +134,8 @@ export class QueuePlugin extends EventEmitter implements IQueuePluginOpts {
    */
   public static makeInjection(opts: Partial<IQueuePluginOpts> = {}) {
     return (bot: Bot, options: BotOptions) => {
-        bot.queuePlugin = new QueuePlugin(bot, opts);
-    }
+      bot.queuePlugin = new QueuePlugin(bot, opts);
+    };
   }
 
   private onceInitialLogin = () => {

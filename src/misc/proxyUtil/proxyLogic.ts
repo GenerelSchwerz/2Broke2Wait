@@ -1,7 +1,7 @@
 import { IProxyServerOpts, ProxyServer } from "./proxyServer.js";
 import mc, { ServerOptions } from "minecraft-protocol";
 import {
-    AnyCommand,
+  AnyCommand,
   BaseCommand,
   ConnectMode,
   isBaseCommand,
@@ -35,12 +35,9 @@ export class ProxyLogic {
     return this._proxyServer;
   }
 
-
   public get proxy() {
     return this._proxyServer.proxy ?? null;
   }
-
-
 
   public constructor(
     public bOptions: BotOptions,
@@ -60,9 +57,9 @@ export class ProxyLogic {
     ...args: any[]
   ): Promise<unknown> {
     if (!isBaseCommand(command)) {
-        return undefined;
+      return undefined;
     }
-    
+
     switch (command) {
       case "shutdown":
         return this.shutdown();
@@ -89,7 +86,11 @@ export class ProxyLogic {
   }
 
   public start() {
-    this._proxyServer = ProxyServer.createProxyServer(this.bOptions, this.sOptions, this.psOptions);
+    this._proxyServer = ProxyServer.createProxyServer(
+      this.bOptions,
+      this.sOptions,
+      this.psOptions
+    );
     // this._proxyServer = ProxyServer.ProxyServerReuseServer(
     //   this._rawServer,
     //   this.bOptions,
