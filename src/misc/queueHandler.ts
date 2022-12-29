@@ -14,7 +14,8 @@ import {
 } from "./constants.js";
 import { ProxyLogic } from "./proxyUtil/proxyLogic.js";
 import { IProxyServerOpts } from "./proxyUtil/proxyServer.js";
-import { QueuePlugin } from "./mineflayerPlugins/queueFollower.js";
+import { QueuePlugin, QueueResult } from "./mineflayerPlugins/queueFollower.js";
+import merge from "ts-deepmerge";
 
 export class QueueHandler extends ProxyLogic {
 
@@ -26,6 +27,10 @@ export class QueueHandler extends ProxyLogic {
     return this.proxyServer.remoteBot.queuePlugin.positionHistory;
   }
 
+
+  private get queuePlugin() {
+    return this.proxyServer.remoteBot.queuePlugin;
+  }
 
   public constructor(
     bOptions: BotOptions,
@@ -47,6 +52,8 @@ export class QueueHandler extends ProxyLogic {
         return this.queuePos;
       case "qhistory":
         return this.queueHistory;
+      case "qinfo":
+        return this.getQueueInfo();
     }
   }
 
@@ -55,6 +62,13 @@ export class QueueHandler extends ProxyLogic {
     const inject = QueuePlugin.makeInjection();
     this.proxyServer.remoteBot.loadPlugin(inject);
     return true;
+  }
+
+
+  public getQueueInfo(): QueueResult & {currentPosition: number} | {currentPosition: number} {
+    const summarize: any = this.queuePlugin.summarize() || {};
+    summarize.currentPosition = this.queuePos;
+    return summarize;
   }
 
 }

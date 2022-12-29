@@ -6,6 +6,7 @@ import { ProxyLogic } from "./misc/proxyUtil/proxyLogic.js";
 
 import dotenv from "dotenv";
 import { QueueHandler } from "./misc/queueHandler.js";
+import { buildClient } from "./misc/discord/index.js";
 
 
 dotenv.config();
@@ -48,14 +49,18 @@ function buildBotOpts(opts: typeof options): BotOptions {
   return fuck;
 }
 
-// test discord client for simple and slash commands.
-// const discClient = await buildClient(options.discord.token, options.discord.prefix)
 
 // maintains info about the queue
 const queueHandler = new QueueHandler(
   buildBotOpts(options),
   options.minecraft.localServer
 );
+
+
+// test discord client for simple and slash commands.
+const discClient = await buildClient(options.discord.token, options.discord.prefix, queueHandler)
+
+
 
 // normalizes command inputs and returns outputs.
 const commandHandler = new CommandHandler(queueHandler, { cli: true });

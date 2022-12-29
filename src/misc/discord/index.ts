@@ -6,10 +6,14 @@ import {
 } from "discordx";
 import { dirname, importx } from "@discordx/importer";
 import { IntentsBitField, InteractionType } from "discord.js";
+import { ProxyLogic } from "../proxyUtil/proxyLogic.js";
 
-export async function buildClient(
+
+
+export async function buildClient<T extends ProxyLogic>(
   token: string,
-  prefix: string
+  prefix: string,
+  pLogic: T
 ): Promise<Client> {
   // await importx(`${dirname(import.meta.url)}/simple.ts`);
   await importx(`${dirname(import.meta.url)}/commands/**/*.{js,ts}`);
@@ -27,7 +31,7 @@ export async function buildClient(
       // IntentsBitField.Flags.MessageContent
     ],
     silent: false,
-  });
+  }); 
 
   /**
    * Code for loading slashes. Fuck that, it's not working right now.
@@ -47,6 +51,9 @@ export async function buildClient(
   //     client.executeCommand(message)
   // })
 
+
+
+  client["pLogic"] = pLogic
   await client.login(token);
   return client;
 }

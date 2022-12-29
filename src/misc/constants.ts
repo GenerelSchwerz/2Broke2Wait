@@ -11,7 +11,12 @@ export const BaseCommands = [
   "stats",
   "pingtime",
 ] as const;
-export const QueueCommands = ["qpos", "qhistory"] as const;
+export const QueueCommands = [
+  "qpos", 
+  "qinfo",
+  "qhistory",
+  "qlog"
+] as const;
 
 export const RecognizedCustomServers = ["2b2t.org"] as const;
 

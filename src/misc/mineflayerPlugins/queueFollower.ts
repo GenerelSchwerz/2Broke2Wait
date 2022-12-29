@@ -12,7 +12,7 @@ declare module "mineflayer" {
   }
 }
 
-interface QueueResult {
+export interface QueueResult {
   queueStartTime: number;
   startingPosition: number;
   minutesInQueue: number;
@@ -262,13 +262,17 @@ export class QueuePlugin extends EventEmitter implements IQueuePluginOpts {
     const queueStartTime = startingPosition.time;
     const now = new Date();
     const timeDelta = now.getTime() - startingPosition.time.getTime();
-    const minDelta = timeDelta / 1000 / 60;
-    const averagePositionsPerMinute = startingPosition.position / minDelta;
-    const averageMinutesPerPosition = minDelta / startingPosition.position;
+    const minDelta = timeDelta / (1000 * 60);
+
+    const curPos = this.currentPosition;
+    const posDiff = (startingPosition.position - curPos);
+
+    const averagePositionsPerMinute = posDiff / minDelta;
+    const averageMinutesPerPosition = minDelta / posDiff;
     return {
       queueStartTime: startingPosition.time.getTime(),
       startingPosition: startingPosition.position,
-      minutesInQueue: Math.floor(timeDelta / (1000 * 60)),
+      minutesInQueue: Math.floor(minDelta),
       averagePositionsPerMinute,
       averageMinutesPerPosition,
     };

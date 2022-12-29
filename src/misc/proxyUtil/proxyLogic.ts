@@ -52,13 +52,15 @@ export class ProxyLogic {
     // this._rawServer = mc.createServer(sOptions);
   }
 
+  public isConnected(): boolean {
+    return !!this._proxyServer
+  }
+
   public async handleCommand(
-    command: AnyCommand,
+    command: BaseCommand,
     ...args: any[]
   ): Promise<unknown> {
-    if (!isBaseCommand(command)) {
-      return undefined;
-    }
+
 
     switch (command) {
       case "shutdown":
@@ -101,7 +103,7 @@ export class ProxyLogic {
 
   public shutdown(): number {
     const localPlayerCount = Object.values(
-      this.proxyServer.server.clients
+      this._proxyServer.server.clients
     ).length;
     this.proxyServer.close();
     this._proxyServer = null;

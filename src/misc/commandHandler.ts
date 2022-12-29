@@ -11,6 +11,7 @@ import {
   isAnyCommand,
   LoopModes,
 } from "./constants.js";
+import { QueueHandler } from "./queueHandler.js";
 
 export interface IHandlerOpts {
   cli: boolean;
@@ -22,13 +23,13 @@ export interface IHandlerOpts {
  * Then add them to discord bot easily via discordx's decorators.
  * Could work.
  */
-export class CommandHandler<T extends ProxyLogic> extends EventEmitter {
+export class CommandHandler extends EventEmitter {
   private _useDiscord: boolean;
   private cliInterface: rl.Interface | null;
   private discordClient: Client | null;
 
   constructor(
-    public readonly logicHandler: T,
+    public readonly logicHandler: QueueHandler,
     opts?: Partial<IHandlerOpts>,
     dClient?: Client
   ) {
