@@ -8,9 +8,9 @@ import { ProxyLogic } from "./misc/proxyUtil/proxyLogic.js";
 import dotenv from "dotenv"
 
 dotenv.config();
-// const token = config.get("discord.token")
 
 
+// rough option selection right now for testing.
 const options = {
     "discord": {
         "token": process.env.BOT_TOKEN,
@@ -44,7 +44,6 @@ function buildBotOpts(opts: typeof options): BotOptions {
     }
     return fuck;
 }
-
 
 // const discClient = await buildClient(options.discord.token, options.discord.prefix)
 

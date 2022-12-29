@@ -40,7 +40,7 @@ export class ProxyLogic {
 
     public constructor(bOptions: BotOptions, sOptions: ServerOptions, psOptions?: Partial<IProxyServerOpts>) {
     // const discClient = await buildClient(options.discord.token, options.discord.prefix)
-
+        console.log(bOptions)
         this._proxy = new Conn(bOptions)
         if (sOptions["online-mode"] !== false) {
             sOptions["online-mode"] = bOptions.auth !== "offline"
@@ -134,5 +134,3 @@ export class ProxyLogic {
 
 
 }
-
-const fuck: ProxyLogic[Test] = (new ProxyLogic({} as any, {} as any))["start"]
