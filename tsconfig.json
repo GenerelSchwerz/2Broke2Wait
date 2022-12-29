@@ -7,5 +7,6 @@
     "outDir": "lib",
     "experimentalDecorators": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/misc/IceTankQHandler.ts"]
 }

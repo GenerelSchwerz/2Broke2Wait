@@ -11,7 +11,10 @@ export const BaseCommands = [
   "stats",
   "pingtime",
 ] as const;
-export const QueueCommands = ["queue"] as const;
+export const QueueCommands = [
+    "qpos",
+    "qhistory"
+] as const;
 
 export const RecognizedCustomServers = ["2b2t.org"] as const;
 
@@ -19,6 +22,24 @@ export type ConnectMode = typeof ConnectModes[number];
 export type LoopMode = typeof LoopModes[number];
 export type BaseCommand = typeof BaseCommands[number];
 export type QueueCommand = typeof QueueCommands[number];
+
+export type AnyCommand = BaseCommand | QueueCommand;
+
+
+export function isBaseCommand(command: string): command is BaseCommand {
+    return BaseCommands.includes(command as any);
+}
+
+export function isQueueCommand(command: string): command is QueueCommand {
+    return QueueCommands.includes(command as any);
+}
+
+
+
+export function isAnyCommand(command: string): command is AnyCommand {
+    return BaseCommands.includes(command as any) || QueueCommands.includes(command as any);
+}
+
 
 export type RecognizedCustomServer = typeof RecognizedCustomServers[number];
 

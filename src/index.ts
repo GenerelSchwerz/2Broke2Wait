@@ -7,6 +7,7 @@ import { ProxyLogic } from "./misc/proxyUtil/proxyLogic.js";
 import dotenv from "dotenv";
 import { QueueHandler } from "./misc/queueHandler.js";
 
+
 dotenv.config();
 
 // rough option selection right now for testing.
@@ -20,11 +21,11 @@ const options = {
       username: process.env.USERNAME,
       email: process.env.EMAIL, // here
       password: process.env.PASSWORD, // done
-      auth: "offline",
+      auth: process.env.AUTH,
     },
     remoteServer: {
-      host: "localhost",
-      port: 25566,
+      host: "2b2t.org",
+      port: 25565,
       version: "1.12.2",
     },
     localServer: {

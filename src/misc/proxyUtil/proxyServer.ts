@@ -101,11 +101,11 @@ export class ProxyServer extends EventEmitter {
   }
 
   private remoteClientDisconnect = async (info: string | Error) => {
-    this._connectedPlayer.end("Connection reset by 2b2t server.");
-    this._connectedPlayer = null;
-    if (this.opts.antiAFK) {
-      this.remoteBot["afk"].start();
+    if (this._connectedPlayer) {
+      this._connectedPlayer.end("Connection reset by 2b2t server.");
     }
+    this._connectedPlayer = null;
+    
 
     if (info instanceof Error) {
       this.emit('disconnect:error')

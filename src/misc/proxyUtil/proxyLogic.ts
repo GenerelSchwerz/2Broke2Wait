@@ -1,8 +1,10 @@
 import { IProxyServerOpts, ProxyServer } from "./proxyServer.js";
 import mc, { ServerOptions } from "minecraft-protocol";
 import {
+    AnyCommand,
   BaseCommand,
   ConnectMode,
+  isBaseCommand,
   LoopMode,
   LoopModes,
   promisedPing,
@@ -14,7 +16,6 @@ import merge from "ts-deepmerge";
 import type { BotOptions } from "mineflayer";
 
 export class ProxyLogic {
-  private _pServer: ProxyServer | null;
   private _rawServer: mc.Server;
 
   private _currentConnectMode: ConnectMode;
@@ -34,11 +35,9 @@ export class ProxyLogic {
     return this._proxyServer;
   }
 
-  public get pServer() {
-    return this._pServer;
-  }
+
   public get proxy() {
-    return this._pServer.proxy ?? null;
+    return this._proxyServer.proxy ?? null;
   }
 
 
@@ -57,9 +56,13 @@ export class ProxyLogic {
   }
 
   public async handleCommand(
-    command: BaseCommand,
+    command: AnyCommand,
     ...args: any[]
   ): Promise<unknown> {
+    if (!isBaseCommand(command)) {
+        return undefined;
+    }
+    
     switch (command) {
       case "shutdown":
         return this.shutdown();

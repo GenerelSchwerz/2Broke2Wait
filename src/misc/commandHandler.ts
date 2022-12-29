@@ -5,7 +5,7 @@ import { buildClient } from "./discord/index.js";
 import { Client } from "discordx";
 import EventEmitter from "events";
 import { ProxyLogic } from "./proxyUtil/proxyLogic.js";
-import { BaseCommand, BaseCommands, LoopModes } from "./constants.js";
+import { BaseCommand, BaseCommands, isAnyCommand, LoopModes } from "./constants.js";
 
 export interface IHandlerOpts {
   cli: boolean;
@@ -17,13 +17,13 @@ export interface IHandlerOpts {
  * Then add them to discord bot easily via discordx's decorators.
  * Could work.
  */
-export class CommandHandler extends EventEmitter {
+export class CommandHandler<T extends ProxyLogic> extends EventEmitter {
   private _useDiscord: boolean;
   private cliInterface: rl.Interface | null;
   private discordClient: Client | null;
 
   constructor(
-    public readonly proxyLogic: ProxyLogic,
+    public readonly logicHandler: T,
     opts?: Partial<IHandlerOpts>,
     dClient?: Client
   ) {
@@ -41,9 +41,9 @@ export class CommandHandler extends EventEmitter {
       });
       this.cliInterface.on("line", async (line) => {
         const [command, ...args] = line.split(" ");
-        if (BaseCommands.includes(command as any)) {
-          const result = await this.proxyLogic.handleCommand(
-            command as BaseCommand,
+        if (isAnyCommand(command)) {
+          const result = await this.logicHandler.handleCommand(
+            command,
             ...args
           );
           this.emit("command", "readline", command, result);
