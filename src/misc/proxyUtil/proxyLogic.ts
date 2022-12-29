@@ -6,6 +6,8 @@ import merge from "ts-deepmerge";
 
 import type {BotOptions} from "mineflayer"
 
+type Test = keyof ProxyLogic
+
 export class ProxyLogic {
 
     private _proxy: Conn | null;
@@ -132,3 +134,5 @@ export class ProxyLogic {
 
 
 }
+
+const fuck: ProxyLogic[Test] = (new ProxyLogic({} as any, {} as any))["start"]

@@ -1,12 +1,13 @@
-import config from "config"
-import { buildClient } from "./misc/discord/index.js"
-import {Conn as RobConn} from "@rob9315/mcproxy"
+
 import merge from "ts-deepmerge";
 
 import {BotOptions} from "mineflayer"
-import { ProxyServer } from "./misc/proxyUtil/proxyServer.js";
 import { CommandHandler } from "./misc/commandHandler.js";
 import { ProxyLogic } from "./misc/proxyUtil/proxyLogic.js";
+
+import dotenv from "dotenv"
+
+dotenv.config();
 // const token = config.get("discord.token")
 
 
@@ -17,9 +18,9 @@ const options = {
     },
     "minecraft": {
         "account": {
-            "username": "Generel_Schwerz",
-            "email": "mattwoods30006@gmail.com",// here
-            "password": "xCDf4gHjyQ7@-", // done
+            "username": process.env.USERNAME,
+            "email": process.env.EMAIL,// here
+            "password": process.env.PASSWORD, // done
             "auth": "offline"
         },
         "remoteServer": {
