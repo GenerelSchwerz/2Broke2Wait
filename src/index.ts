@@ -6,6 +6,7 @@ import { CommandHandler } from "./misc/commandHandler.js";
 import { ProxyLogic } from "./misc/proxyUtil/proxyLogic.js";
 
 import dotenv from "dotenv"
+import { QueueHandler } from "./misc/queueHandler.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ const options = {
             "host": "localhost",
             "port": 25565,
             "version": "1.12.2",
+            "maxPlayers": 1
         }
       
     } 
@@ -45,14 +47,16 @@ function buildBotOpts(opts: typeof options): BotOptions {
     return fuck;
 }
 
+// test discord client for simple and slash commands.
 // const discClient = await buildClient(options.discord.token, options.discord.prefix)
 
+// maintains info about the queue
+const queueHandler = new QueueHandler(buildBotOpts(options), options.minecraft.localServer);
 
-const proxyLogic = new ProxyLogic(buildBotOpts(options), options.minecraft.localServer);
+// normalizes command inputs and returns outputs.
+const commandHandler = new CommandHandler(queueHandler, {cli: true})
 
-const handler = new CommandHandler(proxyLogic, {cli: true})
-
-handler.on('command', (src, command) => console.log(`ran command ${command} from source ${src}`))
+commandHandler.on('command', (src, command, result) => console.log(`ran command ${command} from source ${src}.\nResult: ${result}`))
 
 
 // setTimeout(() => {

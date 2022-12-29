@@ -5,7 +5,7 @@ import { buildClient } from "./discord/index.js";
 import { Client } from "discordx";
 import EventEmitter from "events";
 import { ProxyLogic } from "./proxyUtil/proxyLogic.js";
-import { Command, Commands, LoopModes } from "./constants.js";
+import { BaseCommand, BaseCommands, LoopModes } from "./constants.js";
 
 
 export interface IHandlerOpts {
@@ -40,9 +40,9 @@ export class CommandHandler extends EventEmitter {
             });
             this.cliInterface.on('line', async (line) => {
                 const [command, ...args] = line.split(' ');
-                if (Commands.includes(command as any)) {
-                    console.log(await this.proxyLogic.handleCommand(command as Command, ...args));
-                    this.emit('command', 'readline', command)
+                if (BaseCommands.includes(command as any)) {
+                    const result = await this.proxyLogic.handleCommand(command as BaseCommand, ...args);
+                    this.emit('command', 'readline', command, result)
                 }
             })
         } else {

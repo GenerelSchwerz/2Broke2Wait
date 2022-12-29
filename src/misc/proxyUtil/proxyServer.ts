@@ -2,6 +2,7 @@ import { createServer, ServerOptions, Server, Client, ServerClient } from "minec
 import merge from "ts-deepmerge";
 import type { Bot } from "mineflayer"
 import rob, { Conn } from "@rob9315/mcproxy";
+import { sleep } from "../constants.js";
 
 
 /**
@@ -21,6 +22,8 @@ function filterPacketAndSend(data, meta, dest) {
 export interface IProxyServerOpts {
     whitelist: boolean,
     antiAFK: boolean,
+    stopServerOnError: boolean,
+    reconnectOnError: boolean,
 }
 
 export class ProxyServer {
@@ -40,17 +43,17 @@ export class ProxyServer {
         return this._connectedPlayer !== null;
     }
 
-    public constructor(server: Server, proxy: Conn, opts: Partial<IProxyServerOpts>) {
+    public constructor(server: Server, proxy: Conn, opts?: Partial<IProxyServerOpts>) {
         this.server = server;
         this.proxy = proxy;
         this.remoteBot = proxy.stateData.bot;
         this.remoteClient = proxy.stateData.bot._client;
-        this.opts = merge.default({ whitelist: true}, opts)
+        this.opts = merge.default({ whitelist: true, stopServerOnError: true, recconectOnError: true }, opts)
 
         // lol rough check for afk module.
         // ye not pretty but it will do
         // TODO: there's bot.hasPlugin but I wrote my own plugin so we'll test that out later
-        this.opts.antiAFK = this.opts.antiAFK && !!proxy.stateData.bot["afk"] 
+        this.opts.antiAFK = !!this.opts.antiAFK && !!proxy.stateData.bot["afk"] 
 
         server.on('login', async (actualUser) => {
             if (this.opts.whitelist && this.remoteClient.uuid !== actualUser.uuid) {
@@ -77,14 +80,30 @@ export class ProxyServer {
             this.proxy.sendPackets(actualUser as any); // works in original?
             this.proxy.link(actualUser as any) // again works
             this._connectedPlayer = actualUser;
-
         })
+
+        this.remoteClient.on('end', this.remoteClientDisconnect);
+        this.remoteClient.on('error', this.remoteClientDisconnect);
+
+    }
+
+    public static createProxyServer(proxy: Conn, serverOpts: ServerOptions, proxyServerOpts?: Partial<IProxyServerOpts>): ProxyServer {
+        return new ProxyServer(createServer(serverOpts), proxy, proxyServerOpts);
     }
 
 
+    public remoteClientDisconnect = async () => {
+        this._connectedPlayer.end("Connection reset by 2b2t server.");
+        this._connectedPlayer = null;
 
-    public static createProxyServer(proxy: Conn, serverOpts: ServerOptions, proxyServerOpts?: Partial<IProxyServerOpts>): ProxyServer {
-        return new ProxyServer(createServer(serverOpts), proxy, proxyServerOpts || {});
+        if (this.opts.stopServerOnError) {
+            this.close();
+        }
+
+        if (this.opts.reconnectOnError) {
+            await sleep(30000);
+        }
+        
     }
 
 
@@ -92,11 +111,21 @@ export class ProxyServer {
      * Custom version of minecraft-protocol's server close() to give a better message.
      */
     public close(): void {
-        this.remoteBot.quit();
+
+        // cleanup listeners.
+        this.remoteClient.removeListener('end', this.remoteClientDisconnect);
+        this.remoteClient.removeListener('error', this.remoteClientDisconnect);
+
+        // close remote bot cleanly.
+        this.proxy.disconnect();
+
+        // disconnect all local clients cleanly.
         Object.keys(this.server.clients).forEach(clientId => {
             const client = this.server.clients[clientId]
             client.end('Proxy stopped.')
         })
+
+        // shutdown actual socket server.
         this.server["socketServer"].close()
     }
 }

@@ -1,10 +1,10 @@
 import { IProxyServerOpts, ProxyServer } from "./proxyServer.js";
-import mc, {ServerOptions} from "minecraft-protocol"
-import { Command, ConnectMode, LoopMode, LoopModes, promisedPing, sleep } from "../constants.js";
+import mc, { ServerOptions } from "minecraft-protocol"
+import { BaseCommand, ConnectMode, LoopMode, LoopModes, promisedPing, sleep } from "../constants.js";
 import { Conn } from "@rob9315/mcproxy";
 import merge from "ts-deepmerge";
 
-import type {BotOptions} from "mineflayer"
+import type { BotOptions } from "mineflayer"
 
 type Test = keyof ProxyLogic
 
@@ -38,22 +38,24 @@ export class ProxyLogic {
         return this._pServer;
     }
 
-    public constructor(bOptions: BotOptions, sOptions: ServerOptions, psOptions?: Partial<IProxyServerOpts>) {
-    // const discClient = await buildClient(options.discord.token, options.discord.prefix)
-        console.log(bOptions)
-        this._proxy = new Conn(bOptions)
-        if (sOptions["online-mode"] !== false) {
-            sOptions["online-mode"] = bOptions.auth !== "offline"
+    public constructor(public bOptions: BotOptions, public sOptions: ServerOptions, public psOptions?: Partial<IProxyServerOpts>) {
+        // const discClient = await buildClient(options.discord.token, options.discord.prefix)
+        if (this.sOptions["online-mode"] !== false) {
+            this.sOptions["online-mode"] = this.bOptions.auth !== "offline"
         }
-        this._proxyServer = ProxyServer.createProxyServer(this._proxy, sOptions, psOptions)
-
     }
 
 
-    public async handleCommand(command: Command, ...args: any[]): Promise<any> {
+    public async handleCommand(command: BaseCommand, ...args: any[]): Promise<unknown> {
         switch (command) {
             case "shutdown":
                 return this.shutdown();
+
+            case "start":
+                return this.start();
+            
+            case "startat":
+                break;
 
             case "loop":
                 return this.loop(args[0]);
@@ -70,9 +72,17 @@ export class ProxyLogic {
 
 
             default:
-                return;
+                // should be only occurrence of returning undefined.
+                return undefined;
 
         }
+    }
+
+
+    public start() {
+        this._proxy = new Conn(this.bOptions)
+        this._proxyServer = ProxyServer.createProxyServer(this._proxy, this.sOptions, this.psOptions)
+        return true;
     }
 
     public shutdown(): number {
@@ -114,23 +124,25 @@ export class ProxyLogic {
 
 
 
-    public async reconnectWhenPingable() {
+    public async reconnectWhenPingable(host: string, port: number) {
         let res = false;
-        do {
-            mc.ping({
-                host: "",
-                port: 0
-            }, (err) => res = !!err)
 
+        while (true) {
+            try {
+                await promisedPing({ host, port })
+            } catch (e) {
+
+            }
+            
+        }
+        do {
+            mc.ping({ host, port }, (err) => res = !!err)
             await sleep(3000)
         } while (!res);
 
     }
 
-   
-    public start() {
 
-    }
 
 
 }
