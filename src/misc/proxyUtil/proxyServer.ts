@@ -4,6 +4,8 @@ import type { Bot } from "mineflayer"
 import rob, { Conn } from "@rob9315/mcproxy";
 import { sleep } from "../constants.js";
 
+import type { BotOptions } from "mineflayer";
+import EventEmitter from "events";
 
 /**
  * Function to filter out some packets that would make us disconnect otherwise.
@@ -23,10 +25,9 @@ export interface IProxyServerOpts {
     whitelist: boolean,
     antiAFK: boolean,
     stopServerOnError: boolean,
-    reconnectOnError: boolean,
 }
 
-export class ProxyServer {
+export class ProxyServer extends EventEmitter {
     public opts: IProxyServerOpts;
     public readonly server: Server;
     public readonly proxy: Conn;
@@ -43,12 +44,13 @@ export class ProxyServer {
         return this._connectedPlayer !== null;
     }
 
-    public constructor(server: Server, proxy: Conn, opts?: Partial<IProxyServerOpts>) {
+    public constructor(server: Server, proxy: Conn, opts: Partial<IProxyServerOpts> = {}) {
+        super();
         this.server = server;
         this.proxy = proxy;
         this.remoteBot = proxy.stateData.bot;
         this.remoteClient = proxy.stateData.bot._client;
-        this.opts = merge.default({ whitelist: true, stopServerOnError: true, recconectOnError: true }, opts)
+        this.opts = merge.default({ whitelist: true, stopServerOnError: true }, opts)
 
         // lol rough check for afk module.
         // ye not pretty but it will do
@@ -87,8 +89,8 @@ export class ProxyServer {
 
     }
 
-    public static createProxyServer(proxy: Conn, serverOpts: ServerOptions, proxyServerOpts?: Partial<IProxyServerOpts>): ProxyServer {
-        return new ProxyServer(createServer(serverOpts), proxy, proxyServerOpts);
+    public static createProxyServer(bOptions: BotOptions, sOptions: ServerOptions, psOptions: Partial<IProxyServerOpts> = {}): ProxyServer {
+        return new ProxyServer(createServer(sOptions), new Conn(bOptions), psOptions);
     }
 
 
@@ -99,11 +101,6 @@ export class ProxyServer {
         if (this.opts.stopServerOnError) {
             this.close();
         }
-
-        if (this.opts.reconnectOnError) {
-            await sleep(30000);
-        }
-        
     }
 
 
@@ -127,6 +124,8 @@ export class ProxyServer {
 
         // shutdown actual socket server.
         this.server["socketServer"].close()
+
+        this.emit('close');
     }
 }
 

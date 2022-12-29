@@ -38,7 +38,11 @@ export class ProxyLogic {
         return this._pServer;
     }
 
-    public constructor(public bOptions: BotOptions, public sOptions: ServerOptions, public psOptions?: Partial<IProxyServerOpts>) {
+    private get rawServer() {
+        return this._pServer.server ?? null;
+    }
+
+    public constructor(public bOptions: BotOptions, public sOptions: ServerOptions, public psOptions: Partial<IProxyServerOpts> = {}) {
         // const discClient = await buildClient(options.discord.token, options.discord.prefix)
         if (this.sOptions["online-mode"] !== false) {
             this.sOptions["online-mode"] = this.bOptions.auth !== "offline"
@@ -80,14 +84,16 @@ export class ProxyLogic {
 
 
     public start() {
-        this._proxy = new Conn(this.bOptions)
-        this._proxyServer = ProxyServer.createProxyServer(this._proxy, this.sOptions, this.psOptions)
+        this._proxyServer = ProxyServer.createProxyServer(this.bOptions, this.sOptions, this.psOptions)
+        this._proxy = this._proxyServer.proxy
         return true;
     }
 
     public shutdown(): number {
         const localPlayerCount = Object.values(this.proxyServer.server.clients).length
         this.proxyServer.close();
+        this._proxyServer = null;
+        this._proxy = null;
         return localPlayerCount;
     }
 
