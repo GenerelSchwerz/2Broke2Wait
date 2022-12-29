@@ -14,7 +14,6 @@ import merge from "ts-deepmerge";
 import type { BotOptions } from "mineflayer";
 
 export class ProxyLogic {
-  private _proxy: Conn | null;
   private _pServer: ProxyServer | null;
   private _rawServer: mc.Server;
 
@@ -35,13 +34,14 @@ export class ProxyLogic {
     return this._proxyServer;
   }
 
-  public get proxy() {
-    return this._proxy;
-  }
-
   public get pServer() {
     return this._pServer;
   }
+  public get proxy() {
+    return this._pServer.proxy ?? null;
+  }
+
+
 
   public constructor(
     public bOptions: BotOptions,
@@ -53,7 +53,7 @@ export class ProxyLogic {
       this.sOptions["online-mode"] = this.bOptions.auth !== "offline";
     }
 
-    this._rawServer = mc.createServer(sOptions);
+    // this._rawServer = mc.createServer(sOptions);
   }
 
   public async handleCommand(
@@ -86,12 +86,12 @@ export class ProxyLogic {
   }
 
   public start() {
-    this._proxyServer = ProxyServer.ProxyServerReuseServer(
-      this._rawServer,
-      this.bOptions,
-      this.psOptions
-    );
-    this._proxy = this._proxyServer.proxy;
+    this._proxyServer = ProxyServer.createProxyServer(this.bOptions, this.sOptions, this.psOptions);
+    // this._proxyServer = ProxyServer.ProxyServerReuseServer(
+    //   this._rawServer,
+    //   this.bOptions,
+    //   this.psOptions
+    // );
     return true;
   }
 
@@ -101,7 +101,6 @@ export class ProxyLogic {
     ).length;
     this.proxyServer.close();
     this._proxyServer = null;
-    this._proxy = null;
     return localPlayerCount;
   }
 

@@ -34,6 +34,7 @@ export interface IProxyServerOpts {
 }
 
 export class ProxyServer extends EventEmitter {
+  public readonly reuseServer: boolean;
   public opts: IProxyServerOpts;
   public readonly server: Server;
   public readonly proxy: Conn;
@@ -51,11 +52,13 @@ export class ProxyServer extends EventEmitter {
   }
 
   public constructor(
+    reuseServer: boolean,
     server: Server,
     proxy: Conn,
     opts: Partial<IProxyServerOpts> = {}
   ) {
     super();
+    this.reuseServer = reuseServer;
     this.server = server;
     this.proxy = proxy;
     this.remoteBot = proxy.stateData.bot;
@@ -82,6 +85,7 @@ export class ProxyServer extends EventEmitter {
     psOptions: Partial<IProxyServerOpts> = {}
   ): ProxyServer {
     return new ProxyServer(
+      false,
       createServer(sOptions),
       new Conn(bOptions),
       psOptions
@@ -93,17 +97,29 @@ export class ProxyServer extends EventEmitter {
     bOptions: BotOptions,
     psOptions: Partial<IProxyServerOpts> = {}
   ): ProxyServer {
-    return new ProxyServer(server, new Conn(bOptions), psOptions);
+    return new ProxyServer(true, server, new Conn(bOptions), psOptions);
   }
 
-  private remoteClientDisconnect = async () => {
+  private remoteClientDisconnect = async (info: string | Error) => {
     this._connectedPlayer.end("Connection reset by 2b2t server.");
     this._connectedPlayer = null;
     if (this.opts.antiAFK) {
       this.remoteBot["afk"].start();
     }
+
+    if (info instanceof Error) {
+      this.emit('disconnect:error')
+    } else {
+      this.emit('disconnect:clean')
+    }
+    
   };
 
+  /**
+   * TODO: Add functionality to server (if reused) and remote is not currently connected.
+   * @param actualUser 
+   * @returns 
+   */
   private serverLoginHandler = async (actualUser) => {
     if (this.opts.whitelist && this.remoteClient.uuid !== actualUser.uuid) {
       actualUser.end(
@@ -151,6 +167,10 @@ export class ProxyServer extends EventEmitter {
     });
 
     // shutdown actual socket server.
-    this.server["socketServer"].close();
+    if (!this.reuseServer) {
+      this.server["socketServer"].close();
+    }
+   
+    this.emit('close')
   }
 }
