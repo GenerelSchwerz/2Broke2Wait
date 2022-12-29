@@ -17,9 +17,11 @@
   },
   "dependencies": {
     "@discordx/importer": "^1.1.10",
+    "@rob9315/mcproxy": "^1.0.0",
     "config": "^3.3.8",
     "discord.js": "^14.7.1",
     "discordx": "^11.5.2",
-    "start": "^5.1.0"
+    "start": "^5.1.0",
+    "ts-deepmerge": "^5.0.0"
   }
 }
