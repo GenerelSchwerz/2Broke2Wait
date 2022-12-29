@@ -1,50 +1,52 @@
-import { Client, InitCommandOptions, DApplicationCommand, MetadataStorage} from "discordx";
+import {
+  Client,
+  InitCommandOptions,
+  DApplicationCommand,
+  MetadataStorage,
+} from "discordx";
 import { dirname, importx } from "@discordx/importer";
 import { IntentsBitField, InteractionType } from "discord.js";
 
+export async function buildClient(
+  token: string,
+  prefix: string
+): Promise<Client> {
+  // await importx(`${dirname(import.meta.url)}/simple.ts`);
+  await importx(`${dirname(import.meta.url)}/commands/**/*.{js,ts}`);
 
+  const client = new Client({
+    simpleCommand: {
+      prefix,
+    },
 
-export async function buildClient(token: string, prefix: string): Promise<Client> {
+    // botGuilds: [(client) => client.guilds.cache.map((guild) => guild.id)],
+    intents: [
+      IntentsBitField.Flags.Guilds,
+      IntentsBitField.Flags.GuildMessages,
+      IntentsBitField.Flags.GuildMembers,
+      // IntentsBitField.Flags.MessageContent
+    ],
+    silent: false,
+  });
 
-    // await importx(`${dirname(import.meta.url)}/simple.ts`);
-    await importx(`${dirname(import.meta.url)}/commands/**/*.{js,ts}`);
+  /**
+   * Code for loading slashes. Fuck that, it's not working right now.
+   * Metadata.instance._applicationCommandSlashesFlat is empty.
+   * Not fixing it right now.
+   */
+  client.once("ready", async () => {
+    await client.initApplicationCommands();
+    console.log(">> Bot started");
+  });
 
-    const client = new Client({
-        simpleCommand: {
-            prefix,
-        },
+  client.on("interactionCreate", (interaction) => {
+    client.executeInteraction(interaction);
+  });
 
-        // botGuilds: [(client) => client.guilds.cache.map((guild) => guild.id)],
-        intents: [
-            IntentsBitField.Flags.Guilds,
-            IntentsBitField.Flags.GuildMessages,
-            IntentsBitField.Flags.GuildMembers,
-            // IntentsBitField.Flags.MessageContent
-        ],
-        silent: false,
-    });
+  // client.on("messageCreate", (message) => {
+  //     client.executeCommand(message)
+  // })
 
-
-
-    /**
-     * Code for loading slashes. Fuck that, it's not working right now.
-     * Metadata.instance._applicationCommandSlashesFlat is empty.
-     * Not fixing it right now.
-     */
-    client.once("ready", async () => {
-        await client.initApplicationCommands();
-        console.log(">> Bot started");
-    });
-
-    client.on("interactionCreate", (interaction) => {
-        client.executeInteraction(interaction);
-    });
-
-    // client.on("messageCreate", (message) => {
-    //     client.executeCommand(message)
-    // })
-
-
-    await client.login(token);
-    return client;
+  await client.login(token);
+  return client;
 }

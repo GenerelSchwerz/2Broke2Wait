@@ -9,6 +9,7 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
+    "fix": "npx prettier . -w",
     "test": "ts-node --esm -T ./src/index.ts"
   },
   "devDependencies": {

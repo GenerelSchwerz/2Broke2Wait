@@ -1,11 +1,17 @@
-import { createServer, ServerOptions, Server, Client, ServerClient } from "minecraft-protocol";
+import {
+  createServer,
+  ServerOptions,
+  Server,
+  Client,
+  ServerClient,
+} from "minecraft-protocol";
 import merge from "ts-deepmerge";
-import type { Bot } from "mineflayer"
+import type { Bot } from "mineflayer";
 import rob, { Conn } from "@rob9315/mcproxy";
 import { sleep } from "../constants.js";
-
-import type { BotOptions } from "mineflayer";
 import EventEmitter from "events";
+
+import type {BotOptions} from "mineflayer";
 
 /**
  * Function to filter out some packets that would make us disconnect otherwise.
@@ -15,11 +21,11 @@ import EventEmitter from "events";
  * @param dest dunno actually.
  */
 function filterPacketAndSend(data, meta, dest) {
-    if (meta.name !== "keep_alive" && meta.name !== "update_time") { //keep alive packets are handled by the client we created, so if we were to forward them, the minecraft client would respond too and the server would kick us for responding twice.
-        dest.writeRaw(data);
-    }
+  if (meta.name !== "keep_alive" && meta.name !== "update_time") {
+    //keep alive packets are handled by the client we created, so if we were to forward them, the minecraft client would respond too and the server would kick us for responding twice.
+    dest.writeRaw(data);
+  }
 }
-
 
 export interface IProxyServerOpts {
     whitelist: boolean,
@@ -34,15 +40,15 @@ export class ProxyServer extends EventEmitter {
     public readonly remoteBot: Bot;
     public readonly remoteClient: Client;
 
-    private _connectedPlayer: ServerClient | null;
+  private _connectedPlayer: ServerClient | null;
 
-    public get connectedPlayer() {
-        return this._connectedPlayer;
-    }
+  public get connectedPlayer() {
+    return this._connectedPlayer;
+  }
 
-    public isPlayerConnected() {
-        return this._connectedPlayer !== null;
-    }
+  public isPlayerConnected() {
+    return this._connectedPlayer !== null;
+  }
 
     public constructor(server: Server, proxy: Conn, opts: Partial<IProxyServerOpts> = {}) {
         super();
@@ -50,12 +56,15 @@ export class ProxyServer extends EventEmitter {
         this.proxy = proxy;
         this.remoteBot = proxy.stateData.bot;
         this.remoteClient = proxy.stateData.bot._client;
-        this.opts = merge.default({ whitelist: true, stopServerOnError: true }, opts)
+        this.opts = merge.default(
+            { whitelist: true, stopServerOnError: true }, 
+            opts
+        )
 
-        // lol rough check for afk module.
-        // ye not pretty but it will do
-        // TODO: there's bot.hasPlugin but I wrote my own plugin so we'll test that out later
-        this.opts.antiAFK = !!this.opts.antiAFK && !!proxy.stateData.bot["afk"] 
+    // lol rough check for afk module.
+    // ye not pretty but it will do
+    // TODO: there's bot.hasPlugin but I wrote my own plugin so we'll test that out later
+    this.opts.antiAFK = !!this.opts.antiAFK && !!proxy.stateData.bot["afk"];
 
         server.on('login', this.serverLoginHandler);
 
@@ -76,9 +85,8 @@ export class ProxyServer extends EventEmitter {
     private remoteClientDisconnect = async () => {
         this._connectedPlayer.end("Connection reset by 2b2t server.");
         this._connectedPlayer = null;
-
-        if (this.opts.stopServerOnError) {
-            this.close();
+        if (this.opts.antiAFK) {
+          this.remoteBot["afk"].start();
         }
     }
 
@@ -109,32 +117,26 @@ export class ProxyServer extends EventEmitter {
         this._connectedPlayer = actualUser;
     }
 
-    /**
-     * Custom version of minecraft-protocol's server close() to give a better message.
-     */
-    public close(): void {
-
-        // cleanup listeners.
-        this.remoteClient.removeListener('end', this.remoteClientDisconnect);
-        this.remoteClient.removeListener('error', this.remoteClientDisconnect);
-
-        this.server.removeListener('login', this.serverLoginHandler);
-
-        // close remote bot cleanly.
-        this.proxy.disconnect();
-
-        // disconnect all local clients cleanly.
-        Object.keys(this.server.clients).forEach(clientId => {
-            const client = this.server.clients[clientId]
-            client.end('Proxy stopped.')
-        })
-
-        // shutdown actual socket server.
-        this.server["socketServer"].close()
 
 
+  /**
+   * Custom version of minecraft-protocol's server close() to give a better message.
+   */
+  public close(): void {
+    // cleanup listeners.
+    this.remoteClient.removeListener("end", this.remoteClientDisconnect);
+    this.remoteClient.removeListener("error", this.remoteClientDisconnect);
 
-        this.emit('close');
-    }
+    // close remote bot cleanly.
+    this.proxy.disconnect();
+
+    // disconnect all local clients cleanly.
+    Object.keys(this.server.clients).forEach((clientId) => {
+      const client = this.server.clients[clientId];
+      client.end("Proxy stopped.");
+    });
+
+    // shutdown actual socket server.
+    this.server["socketServer"].close();
+  }
 }
-
