@@ -57,32 +57,7 @@ export class ProxyServer extends EventEmitter {
         // TODO: there's bot.hasPlugin but I wrote my own plugin so we'll test that out later
         this.opts.antiAFK = !!this.opts.antiAFK && !!proxy.stateData.bot["afk"] 
 
-        server.on('login', async (actualUser) => {
-            if (this.opts.whitelist && this.remoteClient.uuid !== actualUser.uuid) {
-                actualUser.end(
-                    "Not whitelisted!\n" +
-                    "You need to use the same account as 2b2w or turn the whitelist off."
-                );
-                return;
-            }
-
-            actualUser.on('packet', (data, meta, rawData) => filterPacketAndSend(rawData, meta, this.remoteClient));
-            actualUser.on('end', (reason) => {
-                this._connectedPlayer = null;
-                if (this.opts.antiAFK) {
-                    this.remoteBot["afk"].start();
-                }
-                // startAntiAntiAFK();
-            });
-
-            if (this.opts.antiAFK) {
-                await this.remoteBot["afk"].stop();
-            }
-
-            this.proxy.sendPackets(actualUser as any); // works in original?
-            this.proxy.link(actualUser as any) // again works
-            this._connectedPlayer = actualUser;
-        })
+        server.on('login', this.serverLoginHandler);
 
         this.remoteClient.on('end', this.remoteClientDisconnect);
         this.remoteClient.on('error', this.remoteClientDisconnect);
@@ -93,8 +68,12 @@ export class ProxyServer extends EventEmitter {
         return new ProxyServer(createServer(sOptions), new Conn(bOptions), psOptions);
     }
 
+    public static ProxyServerReuseServer(server: Server, bOptions: BotOptions, psOptions: Partial<IProxyServerOpts> = {}): ProxyServer {
+        return new ProxyServer(server, new Conn(bOptions), psOptions);
+    }
 
-    public remoteClientDisconnect = async () => {
+
+    private remoteClientDisconnect = async () => {
         this._connectedPlayer.end("Connection reset by 2b2t server.");
         this._connectedPlayer = null;
 
@@ -103,6 +82,32 @@ export class ProxyServer extends EventEmitter {
         }
     }
 
+    private serverLoginHandler = async (actualUser) => {
+        if (this.opts.whitelist && this.remoteClient.uuid !== actualUser.uuid) {
+            actualUser.end(
+                "Not whitelisted!\n" +
+                "You need to use the same account as 2b2w or turn the whitelist off."
+            );
+            return;
+        }
+
+        actualUser.on('packet', (data, meta, rawData) => filterPacketAndSend(rawData, meta, this.remoteClient));
+        actualUser.on('end', (reason) => {
+            this._connectedPlayer = null;
+            if (this.opts.antiAFK) {
+                this.remoteBot["afk"].start();
+            }
+            // startAntiAntiAFK();
+        });
+
+        if (this.opts.antiAFK) {
+            await this.remoteBot["afk"].stop();
+        }
+
+        this.proxy.sendPackets(actualUser as any); // works in original?
+        this.proxy.link(actualUser as any) // again works
+        this._connectedPlayer = actualUser;
+    }
 
     /**
      * Custom version of minecraft-protocol's server close() to give a better message.
@@ -112,6 +117,8 @@ export class ProxyServer extends EventEmitter {
         // cleanup listeners.
         this.remoteClient.removeListener('end', this.remoteClientDisconnect);
         this.remoteClient.removeListener('error', this.remoteClientDisconnect);
+
+        this.server.removeListener('login', this.serverLoginHandler);
 
         // close remote bot cleanly.
         this.proxy.disconnect();
@@ -124,6 +131,8 @@ export class ProxyServer extends EventEmitter {
 
         // shutdown actual socket server.
         this.server["socketServer"].close()
+
+
 
         this.emit('close');
     }

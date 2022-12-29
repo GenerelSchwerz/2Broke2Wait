@@ -12,6 +12,7 @@ export class ProxyLogic {
 
     private _proxy: Conn | null;
     private _pServer: ProxyServer | null;
+    private _rawServer: mc.Server;
 
     private _currentConnectMode: ConnectMode;
     private _currentLoopMode: LoopMode;
@@ -38,15 +39,14 @@ export class ProxyLogic {
         return this._pServer;
     }
 
-    private get rawServer() {
-        return this._pServer.server ?? null;
-    }
 
     public constructor(public bOptions: BotOptions, public sOptions: ServerOptions, public psOptions: Partial<IProxyServerOpts> = {}) {
         // const discClient = await buildClient(options.discord.token, options.discord.prefix)
         if (this.sOptions["online-mode"] !== false) {
             this.sOptions["online-mode"] = this.bOptions.auth !== "offline"
         }
+
+        this._rawServer = mc.createServer(sOptions)
     }
 
 
@@ -84,7 +84,7 @@ export class ProxyLogic {
 
 
     public start() {
-        this._proxyServer = ProxyServer.createProxyServer(this.bOptions, this.sOptions, this.psOptions)
+        this._proxyServer = ProxyServer.ProxyServerReuseServer(this._rawServer, this.bOptions, this.psOptions);
         this._proxy = this._proxyServer.proxy
         return true;
     }
