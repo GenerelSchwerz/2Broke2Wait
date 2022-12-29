@@ -15,10 +15,10 @@ function isBaseCommand(command: string): command is BaseCommand {
 
 export class QueueHandler extends ProxyLogic {
   public get queuePos() {
-    return this.proxy?.stateData?.bot?.queueSpeed?.currentPosition ?? 0
+    return this.proxy?.stateData?.bot?.queueSpeed?.currentPosition ?? 0;
   }
 
-  public async handleCommand(
+  public override async handleCommand(
     command: QueueCommand | BaseCommand,
     ...args: any[]
   ) {
