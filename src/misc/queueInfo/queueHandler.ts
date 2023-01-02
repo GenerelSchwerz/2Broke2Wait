@@ -11,11 +11,12 @@ import {
   BaseCommand,
   isBaseCommand,
   QueueCommand,
-} from "./constants.js";
-import { ProxyLogic } from "./proxyUtil/proxyLogic.js";
-import { IProxyServerOpts } from "./proxyUtil/proxyServer.js";
-import { QueuePlugin, QueueResult } from "./mineflayerPlugins/queueFollower.js";
-import merge from "ts-deepmerge";
+} from "../constants.js";
+import { ProxyLogic } from "../proxyUtil/proxyLogic.js";
+import { IProxyServerOpts } from "../proxyUtil/proxyServer.js";
+import { QueuePlugin } from "./queueFollower.js";
+import { QueueResult } from "./index.js";
+
 
 export class QueueHandler extends ProxyLogic {
 
@@ -65,9 +66,9 @@ export class QueueHandler extends ProxyLogic {
   }
 
 
-  public getQueueInfo(): QueueResult & {currentPosition: number} | {currentPosition: number} {
-    const summarize: any = this.queuePlugin.summarize() || {};
-    summarize.currentPosition = this.queuePos;
+  public getQueueInfo(): QueueResult | {currentPosition: number} {
+    const summarize: any = this.queuePlugin.summarize();
+    if (!summarize) return {currentPosition: this.queuePos };
     return summarize;
   }
 

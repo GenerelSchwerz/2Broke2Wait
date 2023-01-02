@@ -5,25 +5,13 @@ import path from "path";
 import fs from "fs";
 
 import type { Bot, BotOptions } from "mineflayer";
-
-declare module "mineflayer" {
-  interface Bot {
-    queuePlugin: QueuePlugin;
-  }
-}
-
-export interface QueueResult {
-  queueStartTime: number;
-  startingPosition: number;
-  minutesInQueue: number;
-  averagePositionsPerMinute: number;
-  averageMinutesPerPosition: number;
-}
-
-type QueueLength = {
-  main: { normal: number; priority: number };
-  test: { normal: number; priority: number };
-};
+import {
+  IQueuePluginOpts,
+  PositionHistory,
+  QueueLength,
+  QueueResult,
+} from "./index.js";
+import { getWaitTime } from "./queuePredictor.js";
 
 class QueueLookup {
   private lastQueueLookup: Date;
@@ -89,22 +77,6 @@ class QueueLookup {
     }
     return returnValue as QueueLength;
   }
-}
-
-export type PositionHistory = {
-  time: Date;
-  position: number;
-  currentQueueLength: number;
-};
-
-export interface IQueuePluginOpts {
-  startTime: Date | null;
-  endTime: Date | null;
-  inQueue: boolean;
-  currentPosition: number;
-  lastPosition: number;
-  positionHistory: PositionHistory[];
-  sawQueuePosition: boolean;
 }
 
 export class QueuePlugin extends EventEmitter implements IQueuePluginOpts {
@@ -265,16 +237,23 @@ export class QueuePlugin extends EventEmitter implements IQueuePluginOpts {
     const minDelta = timeDelta / (1000 * 60);
 
     const curPos = this.currentPosition;
-    const posDiff = (startingPosition.position - curPos);
+    const posDiff = startingPosition.position - curPos;
 
     const averagePositionsPerMinute = posDiff / minDelta;
     const averageMinutesPerPosition = minDelta / posDiff;
+
+    const totalWaitTime = getWaitTime(startingPosition.position, 0);
+    const timepassed = getWaitTime(startingPosition.position, this.currentPosition);
+    const predictedETA = (totalWaitTime - timepassed) / 60;
+
     return {
-      queueStartTime: startingPosition.time.getTime(),
       startingPosition: startingPosition.position,
+      currentPosition: this.currentPosition,
+      queueStartTime: startingPosition.time.getTime(),
       minutesInQueue: Math.floor(minDelta),
       averagePositionsPerMinute,
       averageMinutesPerPosition,
+      predictedETA: Math.floor(predictedETA)
     };
 
     // console.info(`[Qeueue speed Summary]

@@ -11,7 +11,7 @@ import {
   isAnyCommand,
   LoopModes,
 } from "./constants.js";
-import { QueueHandler } from "./queueHandler.js";
+import { QueueHandler } from "./queueInfo/queueHandler.js";
 
 export interface IHandlerOpts {
   cli: boolean;

@@ -35,3 +35,8 @@ Currently supports CLI and Discord. You'll have to figure it out as I have to go
 
     Discord:
         you'll see when you invite the bot.
+
+
+### Roadmap:
+    1. Predict Queue time.
+    2. Log data appropiately.

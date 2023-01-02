@@ -5,8 +5,11 @@ export const LoopModes = ["enabled", "disabled", "once"] as const;
 export const ConnectModes = ["connecting", "auth"] as const;
 export const BaseCommands = [
   "shutdown",
+  "stop",
+  "exit",
+  "quit",
   "start",
-  "startat",
+  "play",
   "loop",
   "stats",
   "pingtime",
@@ -26,6 +29,10 @@ export type BaseCommand = typeof BaseCommands[number];
 export type QueueCommand = typeof QueueCommands[number];
 
 export type AnyCommand = BaseCommand | QueueCommand;
+
+export function isLoopMode(mode: string): mode is LoopMode {
+  return LoopModes.includes(mode as any);
+}
 
 export function isBaseCommand(command: string): command is BaseCommand {
   return BaseCommands.includes(command as any);

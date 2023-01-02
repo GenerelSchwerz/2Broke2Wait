@@ -107,9 +107,9 @@ export class ProxyServer extends EventEmitter {
     this._connectedPlayer = null;
 
     if (info instanceof Error) {
-      this.emit("disconnect:error");
+      this.emit("disconnect", info);
     } else {
-      this.emit("disconnect:clean");
+      this.emit("disconnect", info);
     }
   };
 

@@ -30,7 +30,7 @@ export async function buildClient<T extends ProxyLogic>(
       IntentsBitField.Flags.GuildMembers,
       // IntentsBitField.Flags.MessageContent
     ],
-    silent: false,
+    silent: true,
   }); 
 
   /**
@@ -40,7 +40,7 @@ export async function buildClient<T extends ProxyLogic>(
    */
   client.once("ready", async () => {
     await client.initApplicationCommands();
-    console.log(">> Bot started");
+    // console.log(">> Bot started");
   });
 
   client.on("interactionCreate", (interaction) => {

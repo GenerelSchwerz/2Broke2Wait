@@ -1,0 +1,25 @@
+{
+    "discord": {
+        "token": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GsLhvx.YmxcQuqgblEdmOnkTw7YcztHLh8FAOGFi09-yc",
+        "prefix": "!"
+    },
+    "minecraft": {
+        "account": {
+            "username": "Generel_Schwerz",
+            "email": "@outlook.com",
+            "password": "xCDf4gHjyQ7@-",
+            "auth": "microsoft"
+        },
+        "remoteServer": {
+            "host": "2b2t.org",
+            "port": 25565,
+            "version": "1.12.2"
+        },
+        "localServer": {
+            "host": "localhost",
+            "port": 25565,
+            "version": "1.12.2",
+            "maxPlayers": 1
+        }
+    }
+}
