@@ -1,24 +1,19 @@
 import { IProxyServerOpts, ProxyServer } from "./proxyServer.js";
-import mc, { ServerOptions } from "minecraft-protocol";
+import { ServerOptions, Server } from "minecraft-protocol";
 import {
-  AnyCommand,
   BaseCommand,
   ConnectMode,
-  isBaseCommand,
   isLoopMode,
   LoopMode,
-  LoopModes,
   promisedPing,
   sleep,
 } from "../constants.js";
-import { Conn } from "@rob9315/mcproxy";
-import merge from "ts-deepmerge";
 
 import type { BotOptions } from "mineflayer";
 import { waitUntilTimeToStart } from "../queueInfo/queuePredictor.js";
 
 export class ProxyLogic {
-  private _rawServer: mc.Server;
+  private _rawServer: Server;
 
   private _currentConnectMode: ConnectMode = "auth";
   private _currentLoopMode: LoopMode = "enabled";
@@ -61,18 +56,17 @@ export class ProxyLogic {
     command: BaseCommand,
     ...args: any[]
   ): Promise<unknown> {
+
+
     switch (command) {
       case "shutdown":
-      case "exit":
-      case "stop":
-      case "quit":
         return this.shutdown();
 
       case "start":
         return this.start();
 
       case "play":
-        return await this.playat(Number(args[0]), Number(args[1]));
+        break;
 
       case "loop":
         return this.loop(args[0]);

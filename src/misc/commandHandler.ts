@@ -3,7 +3,7 @@ import { ProxyServer } from "./proxyUtil/proxyServer.js";
 import * as rl from "readline";
 import { buildClient } from "./discord/index.js";
 import { Client } from "discordx";
-import EventEmitter from "events";
+import {EventEmitter} from "events";
 import { ProxyLogic } from "./proxyUtil/proxyLogic.js";
 import {
   BaseCommand,
@@ -24,6 +24,8 @@ export interface IHandlerOpts {
  * Could work.
  */
 export class CommandHandler extends EventEmitter {
+
+
   private _useDiscord: boolean;
   private cliInterface: rl.Interface | null;
   private discordClient: Client | null;
@@ -60,4 +62,6 @@ export class CommandHandler extends EventEmitter {
       this.cliInterface = null;
     }
   }
+
+
 }

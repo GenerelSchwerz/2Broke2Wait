@@ -1,5 +1,7 @@
 node_modules/
 lib/
+dist/
+yarn-error.log
 *.lock
 .env
 config/**

@@ -1,8 +1,8 @@
-import mc from "minecraft-protocol";
+import * as mc from "minecraft-protocol";
 
-import EventEmitter from "events";
-import path from "path";
-import fs from "fs";
+import {EventEmitter} from "events";
+import * as path from "path";
+import * as fs from "fs";
 
 import type { Bot, BotOptions } from "mineflayer";
 import {

@@ -1,5 +1,5 @@
 import { promisify } from "util";
-import mc from "minecraft-protocol";
+import * as mc from "minecraft-protocol";
 
 export const LoopModes = ["enabled", "disabled", "once"] as const;
 export const ConnectModes = ["connecting", "auth"] as const;

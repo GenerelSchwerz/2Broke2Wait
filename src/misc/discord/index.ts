@@ -3,20 +3,19 @@ import {
   InitCommandOptions,
   DApplicationCommand,
   MetadataStorage,
+  DDiscord,
 } from "discordx";
-import { dirname, importx } from "@discordx/importer";
+import { dirname, importx, isESM, resolve } from "@discordx/importer";
 import { IntentsBitField, InteractionType } from "discord.js";
 import { ProxyLogic } from "../proxyUtil/proxyLogic.js";
 
-
+import "./commands/slashes.js"
 
 export async function buildClient<T extends ProxyLogic>(
   token: string,
   prefix: string,
   pLogic: T
 ): Promise<Client> {
-  // await importx(`${dirname(import.meta.url)}/simple.ts`);
-  await importx(`${dirname(import.meta.url)}/commands/**/*.{js,ts}`);
 
   const client = new Client({
     simpleCommand: {
@@ -30,7 +29,7 @@ export async function buildClient<T extends ProxyLogic>(
       IntentsBitField.Flags.GuildMembers,
       // IntentsBitField.Flags.MessageContent
     ],
-    silent: true,
+    silent: false,
   }); 
 
   /**
