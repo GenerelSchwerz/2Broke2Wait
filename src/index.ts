@@ -80,4 +80,3 @@ const cli = rl.createInterface({
 
 cli.on("line", async (line) => console.log(await cliCommandHandler(line, queueHandler)));
 
-

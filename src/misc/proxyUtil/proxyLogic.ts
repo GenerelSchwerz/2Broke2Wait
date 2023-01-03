@@ -59,7 +59,6 @@ export class ProxyLogic {
   ): Promise<unknown> {
 
 
-
     switch (command) {
       case "shutdown":
         return this.shutdown();
@@ -68,7 +67,7 @@ export class ProxyLogic {
         return this.start();
 
       case "play":
-        return await this.playat(Number(args[0]), Number(args[1]));
+        break;
 
       case "loop":
         return this.loop(args[0]);
