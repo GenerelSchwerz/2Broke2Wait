@@ -1,5 +1,5 @@
 import { promisify } from "util";
-import mc from "minecraft-protocol";
+import * as mc from "minecraft-protocol";
 
 export const LoopModes = ["enabled", "disabled", "once"] as const;
 export const ConnectModes = ["connecting", "auth"] as const;
@@ -26,7 +26,7 @@ export const RecognizedCustomServers = ["2b2t.org"] as const;
 export type ConnectMode = typeof ConnectModes[number];
 export type LoopMode = typeof LoopModes[number];
 export type BaseCommand = typeof BaseCommands[number];
-export type QueueCommand = typeof QueueCommands[number];
+export type QueueCommand = typeof QueueCommands[number] & BaseCommand;
 
 export type AnyCommand = BaseCommand | QueueCommand;
 

@@ -6,12 +6,10 @@ import {
   ServerClient,
 } from "minecraft-protocol";
 import merge from "ts-deepmerge";
-import type { Bot } from "mineflayer";
-import rob, { Conn } from "@rob9315/mcproxy";
-import { sleep } from "../constants.js";
-import EventEmitter from "events";
+import { Conn } from "@rob9315/mcproxy";
+import { EventEmitter } from "events";
 
-import type { BotOptions } from "mineflayer";
+import type {Bot, BotOptions } from "mineflayer";
 
 /**
  * Function to filter out some packets that would make us disconnect otherwise.
@@ -63,10 +61,7 @@ export class ProxyServer extends EventEmitter {
     this.proxy = proxy;
     this.remoteBot = proxy.stateData.bot;
     this.remoteClient = proxy.stateData.bot._client;
-    this.opts = merge.default(
-      { whitelist: true, stopServerOnError: true },
-      opts
-    );
+    this.opts = merge({ whitelist: true, stopServerOnError: true }, opts);
 
     // lol rough check for afk module.
     // ye not pretty but it will do

@@ -1,6 +1,7 @@
-import everpolate from "everpolate";
+import * as linear from "everpolate/lib/linear.js";
+
 import { sleep } from "../constants.js";
-import tslux from "ts-luxon";
+import * as tslux from "ts-luxon";
 const { DateTime } = tslux;
 import fetch from "node-fetch";
 // from somewhere else (queueFollower.ts)
@@ -18,7 +19,7 @@ const queueData = {
 };
 
 export function getWaitTime(queueLength: number, queuePos: number) {
-  let b = everpolate.linear(queueLength, queueData.place, queueData.factor)[0];
+  let b = linear(queueLength, queueData.place, queueData.factor)[0];
   return Math.log((queuePos + c) / (queueLength + c)) / Math.log(b); // see issue 141
 }
 

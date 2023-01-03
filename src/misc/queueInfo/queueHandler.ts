@@ -1,16 +1,13 @@
-import mc from "minecraft-protocol";
 import { ServerOptions } from "minecraft-protocol";
 
-import EventEmitter from "events";
-import path from "path";
-import fs from "fs";
-
-import type { Bot, BotOptions } from "mineflayer";
+import type { BotOptions } from "mineflayer";
 
 import {
+  AnyCommand,
   BaseCommand,
   isBaseCommand,
   QueueCommand,
+  QueueCommands,
 } from "../constants.js";
 import { ProxyLogic } from "../proxyUtil/proxyLogic.js";
 import { IProxyServerOpts } from "../proxyUtil/proxyServer.js";
@@ -41,8 +38,9 @@ export class QueueHandler extends ProxyLogic {
     super(bOptions, sOptions, psOptions);
   }
 
+
   public override async handleCommand(
-    command: QueueCommand | BaseCommand,
+    command: AnyCommand,
     ...args: any[]
   ) {
     if (isBaseCommand(command)) {
@@ -64,7 +62,6 @@ export class QueueHandler extends ProxyLogic {
     this.proxyServer.remoteBot.loadPlugin(inject);
     return true;
   }
-
 
   public getQueueInfo(): QueueResult | {currentPosition: number} {
     const summarize: any = this.queuePlugin.summarize();

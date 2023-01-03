@@ -11,7 +11,7 @@ import {
   waitUntilTimeToStart,
 } from "../../queueInfo/queuePredictor.js";
 
-import tslux from "ts-luxon";
+import * as tslux from "ts-luxon";
 const { DateTime } = tslux;
 
 
@@ -29,7 +29,7 @@ export class QueueCommands {
       return;
     }
 
-    const spot = Number(await pLogic.handleCommand("qpos"));
+    const spot = pLogic.queuePos;
 
     if (Number.isNaN(spot)) interaction.reply("fuck, couldn't get thingy.");
 
