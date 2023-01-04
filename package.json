@@ -12,7 +12,8 @@
     "fix": "npx prettier . -w",
     "test": "ts-node --esm -T ./src/index.ts",
     "start": "node ./lib/index.js",
-    "package": "yarn build; pkg package.json; mv ./dist/2b2w-ts-rewrite ../../rust/server_auth_backend/static/2b2w-ts-rewrite-linux-x64"
+    "package": "yarn build; pkg package.json; mv ./dist/2b2w-ts-rewrite ../../rust/server_auth_backend/static/2b2w-ts-rewrite-linux-x64",
+    "nccbuild": "ncc build src/index.ts -o ncc --target es2022 -e 'mineflayer' -e 'prismarine-auth' -e 'minecraft-data' -e 'minecraft-folder-path' -e '@discordx/importer' -e '@nxg-org/mineflayer-antiafk' -e '@rob9315/mcproxy' -e 'discord.js' -e 'discordx' -e 'joi' -e 'ts-deepmerge' -e 'eslint' -e 'protodef' -e 'prismarine-nbt' -e 'minecraft-protocol' -d"
   },
   "pkg": {
     "targets": [
@@ -20,15 +21,13 @@
       "node16-macos-x64",
       "node16-windows-x64"
     ],
-    "outputPath": "dist",
+    "outputPath": "pkg",
     "options": [
-      "experimental-modules",
-      "debug"
+      "--experimental-modules",
+      "--debug"
     ]
   },
   "devDependencies": {
-    "pkg": "^5.8.0",
-    "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   },
   "dependencies": {
@@ -37,11 +36,8 @@
     "@rob9315/mcproxy": "^1.0.0",
     "discord.js": "^14.7.1",
     "discordx": "^11.5.2",
-    "dotenv": "^16.0.3",
-    "everpolate": "^0.0.3",
+    "events": "^3.3.0",
     "joi": "^17.7.0",
-    "readline": "^1.3.0",
-    "ts-deepmerge": "^5.0.0",
-    "ts-luxon": "^4.0.1"
+    "ts-deepmerge": "^5.0.0"
   }
 }

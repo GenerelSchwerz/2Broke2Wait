@@ -43,7 +43,7 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
     conn.stateData.bot.loadPlugins(plugins);
     return new AntiAFKServer(
       false,
-      sOptions["online-mode"],
+      !!sOptions["online-mode"],
       createServer(sOptions),
       conn,
       psOptions

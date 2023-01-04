@@ -1,6 +1,8 @@
 node_modules/
 lib/
 dist/
+pkg/
+ncc/
 yarn-error.log
 *.lock
 .env

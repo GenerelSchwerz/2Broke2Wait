@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
-    // "moduleResolution": "node16",
-    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
     "sourceMap": true,
     "outDir": "lib",
     "experimentalDecorators": true
   },
-  "include": ["src/**/*", "src/index.ts", "src/misc/constants.ts", "src/commandHandlers.ts", "old/misc/queueInfo", "old/misc/proxyUtil", "src/misc/webserver"],
-  "exclude": ["src/misc/IceTankQHandler.ts"]
+  "include": ["src/**/*"],
 }
