@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@discordx/importer": "^1.1.10",
-    "@nxg-org/mineflayer-antiafk": "^1.1.1",
+    "@nxg-org/mineflayer-antiafk": "file:/home/generel/Documents/vscode/javascript/mineflayer-plugins/antiafk",
     "@rob9315/mcproxy": "^1.0.0",
     "discord.js": "^14.7.1",
     "discordx": "^11.5.2",
