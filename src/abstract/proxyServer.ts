@@ -4,7 +4,7 @@ import {
   Server,
   Client,
   ServerClient,
-  PacketMeta
+  PacketMeta,
 } from "minecraft-protocol";
 import merge from "ts-deepmerge";
 import { Conn } from "@rob9315/mcproxy";
@@ -15,7 +15,7 @@ import antiAFK from "@nxg-org/mineflayer-antiafk";
 
 /**
  * Function to filter out some packets that would make us disconnect otherwise.
- * 
+ *
  * Note: This is where you could filter out packets with sign data to prevent chunk bans.
  * @param {any} data data from the server
  * @param {PacketMeta} meta metadata name of the packet
@@ -23,9 +23,8 @@ import antiAFK from "@nxg-org/mineflayer-antiafk";
  */
 function filterPacketAndSend(data, meta: PacketMeta, dest: Client) {
   if (meta.name !== "keep_alive" && meta.name !== "update_time") {
-
-    //keep alive packets are handled by the client we created, 
-    // so if we were to forward them, the minecraft client would respond too 
+    //keep alive packets are handled by the client we created,
+    // so if we were to forward them, the minecraft client would respond too
     // and the server would kick us for responding twice.
     dest.writeRaw(data);
   }
@@ -35,23 +34,20 @@ function filterPacketAndSend(data, meta: PacketMeta, dest: Client) {
  * Interface for the ProxyServer options.
  */
 export interface IProxyServerOpts {
-  whitelist: boolean;
-  antiAFK: boolean;
-  stopServerOnError: boolean;
+  whitelist?: string[];
 }
 
 /**
  * This proxy server provides a wrapper around the connection to the remote server and
  * the local server that players can connect to.
  */
-export class ProxyServer extends EventEmitter {
-
+export abstract class ProxyServer<T extends IProxyServerOpts> extends EventEmitter {
   /**
-   * flag to reuse the internal server instance across proxy servers. 
-   * 
-   * This is handled by 
-   *  {@link ProxyServer.createProxyServer} and 
-   *  {@link ProxyServer.ProxyServerReuseServer}.
+   * flag to reuse the internal server instance across proxy servers.
+   *
+   * This is handled by
+   *  {@link createProxyServer} and
+   *  {@link ProxyServerReuseServer}.
    */
   public readonly reuseServer: boolean;
 
@@ -59,7 +55,7 @@ export class ProxyServer extends EventEmitter {
    * Options for the proxy server.
    * This is meant to be extended later.
    */
-  public opts: IProxyServerOpts;
+  public opts: T;
 
   /**
    * Internal server. Actual server clients connect to.
@@ -95,6 +91,11 @@ export class ProxyServer extends EventEmitter {
   }
 
   /**
+   * Flag to check whether or not internal server is online.
+   */
+  public readonly onlineMode: boolean;
+
+  /**
    * Checks if there is a player connected to the local server controlling the remote bot.
    * @returns {boolean} Whether there is a player controlling the remote client or not.
    */
@@ -109,73 +110,68 @@ export class ProxyServer extends EventEmitter {
    * @param {Conn} proxy Proxy connection to remote server.
    * @param {IProxyServerOpts} opts Options for ProxyServer.
    */
-  private constructor(
+  protected constructor(
     reuseServer: boolean,
+    onlineMode: boolean,
     server: Server,
     proxy: Conn,
-    opts: Partial<IProxyServerOpts> = {}
+    opts: Partial<T> = {}
   ) {
     super();
     this.reuseServer = reuseServer;
+    this.onlineMode = onlineMode;
     this.server = server;
     this.proxy = proxy;
     this.remoteBot = proxy.stateData.bot;
     this.remoteClient = proxy.stateData.bot._client;
 
-    this.opts = merge({ whitelist: true, stopServerOnError: true }, opts);
-    this.opts.antiAFK = this.opts.antiAFK && !!proxy.stateData.bot.hasPlugin(antiAFK);
-
+    // TODO: somehow make this type-safe.
+    this.opts = merge.withOptions({mergeArrays: false}, <IProxyServerOpts>{ whitelist: [] }, opts) as any;
+    this.initialBotSetup(this.remoteBot);
+    this.optionValidation();
+  
     server.on("login", this.serverLoginHandler);
-
+    this.remoteBot.once("spawn", this.beginBotLogic.bind(this));
     this.remoteClient.on("end", this.remoteClientDisconnect);
     this.remoteClient.on("error", this.remoteClientDisconnect);
   }
 
   /**
-   * Creates Proxy server based on given arguments.
-   * 
-   * Does NOT re-use the server.
-   * @param {BotOptions} bOptions Mineflayer bot options.
-   * @param {Plugin[]} plugins Mineflayer bot plugins to load into the remote bot.
-   * @param {ServerOptions} sOptions Minecraft-protocol server options.
-   * @param {Partial<IProxyServerOpts>} psOptions Partial list of ProxyServer options.
-   * @returns {ProxyServer} Built proxy server.
+   * Function to handle any additional options for the config.
+   * I.E. checking if plugins necessary for options are available.
    */
-  public static createProxyServer(
-    bOptions: BotOptions,
-    plugins: Plugin[],
-    sOptions: ServerOptions,
-    psOptions: Partial<IProxyServerOpts> = {}
-  ): ProxyServer {
-    const conn = new Conn(bOptions);
-    conn.stateData.bot.loadPlugins(plugins);
-    return new ProxyServer(false, createServer(sOptions), conn, psOptions);
-  }
+  protected abstract optionValidation(): T;
 
   /**
-   * Creates Proxy server based on given arguments.
+   * Function to call on initialization of the bot.
    * 
-   * DOES re-use the server.
-   * @param {Server} server running Minecraft-protocol server.
-   * @param {BotOptions} bOptions Mineflayer bot options.
-   * @param {Plugin[]} plugins Mineflayer bot plugins to load into the remote bot.
-   * @param {Partial<IProxyServerOpts>} psOptions Partial list of ProxyServer options.
-   * @returns {ProxyServer} Built proxy server.
+   * Note that this is called BEFORE {@link ProxyServer.optionValidation | option validation}.
    */
-  public static ProxyServerReuseServer(
-    server: Server,
-    bOptions: BotOptions,
-    plugins: Plugin[],
-    psOptions: Partial<IProxyServerOpts> = {}
-  ): ProxyServer {
-    const conn = new Conn(bOptions);
-    conn.stateData.bot.loadPlugins(plugins);
-    return new ProxyServer(true, server, conn, psOptions);
-  }
+  protected initialBotSetup(bot: Bot): void {}
+
+
+  /**
+   * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} disconnects.
+   *
+   * Begin certain bot logic here.
+   * 
+   * Note: Workaround, we make this a function instead of anonymous. We just bind.
+   */
+  protected abstract beginBotLogic(): void;
+
+  /**
+   * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} connects/reconnects.
+   *
+   * End certain bot logic here.
+   * 
+   * Note: Workaround, we make this a function instead of anonymous. We just bind.
+   */
+  protected abstract endBotLogic(): void;
+
 
   /**
    * Handler for when the remote client disconnects from remote server.
-   * 
+   *
    * Usually, we do not know the reason. So for now, we emit an event.
    * @param {string | Error} info reason of disconnect.
    */
@@ -187,40 +183,44 @@ export class ProxyServer extends EventEmitter {
     this.emit("remoteDisconnect", info);
   };
 
+
   /**
-   * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} disconnects.
+   * Helper method to determine whether or not the user should be allowed
+   * to control the proxy bot.
    * 
-   * Begin certain bot logic here.
+   * @param {ServerClient} user Local connection to control the bot.
    */
-  protected beginBotLogic() {
-    if (this.opts.antiAFK) {
-      this.remoteBot.antiafk.start();
+  private isUserGood(user: ServerClient): boolean {
+    if (this.onlineMode) {
+      return this.remoteClient.uuid === user.uuid
+    } else {
+      return this.remoteClient.username === user.username;
     }
   }
 
-  /**
-   * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} connects/reconnects.
-   * 
-   * End certain bot logic here.
-   */
-  protected endBotLogic() {
-    if (this.opts.antiAFK) {
-      this.remoteBot.antiafk.stop();
-    }
+  private isUserWhiteListed(user: ServerClient): boolean {
+    return !this.opts.whitelist || this.opts.whitelist.includes(user.username)
   }
 
   /**
    * TODO: Add functionality to server (if reused) and remote is not currently connected.
-   * 
+   *
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
   private serverLoginHandler = async (actualUser: ServerClient) => {
-    if (this.opts.whitelist && this.remoteClient.uuid !== actualUser.uuid) {
 
-      // Send disconnect message for why they were kicked.
+    if (!this.isUserWhiteListed(actualUser)) {
       actualUser.end(
         "Not whitelisted!\n" +
-          "You need to use the same account as 2b2w or turn the whitelist off."
+          "You need to turn the whitelist off."
+      );
+      return; // early end.
+    }
+
+    if (!this.isUserGood(actualUser)) {
+      actualUser.end(
+        "Not the same account!\n" +
+          "You need to use the same account as the 2b2w."
       );
       return; // early end.
     }
@@ -233,12 +233,11 @@ export class ProxyServer extends EventEmitter {
     // set event for when they end.
     actualUser.on("end", (reason) => {
       this._controllingPlayer = null;
-      this.beginBotLogic();
-      
+      this.beginBotLogic.bind(this)();
     });
 
     // as player has just connected, end all bot activity and give control back to player.
-    this.endBotLogic();
+    this.endBotLogic.bind(this)();
 
     this.proxy.sendPackets(actualUser as any); // works in original?
     this.proxy.link(actualUser as any); // again works
@@ -247,11 +246,10 @@ export class ProxyServer extends EventEmitter {
 
   /**
    * Custom version of minecraft-protocol's server close() to give a better message.
-   * 
+   *
    * Note: this also provides cleanup for the remote client and our proxy.
    */
   public close(): void {
-
     // cleanup listeners.
     this.remoteClient.removeListener("end", this.remoteClientDisconnect);
     this.remoteClient.removeListener("error", this.remoteClientDisconnect);

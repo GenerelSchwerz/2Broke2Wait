@@ -8,19 +8,22 @@
             "username": "Generel_Schwerz",
             "email": "generel@outlook.com",
             "password": "xCDf4gHjyQ7@-",
-            "auth": "microsoft"
+            "auth": "offline"
         },
         "remoteServer": {
-            "host": "2b2t.org",
-            "port": 25565,
+            "host": "localhost",
+            "port": 25566,
             "version": "1.12.2"
         },
         "localServer": {
-            "onlineMode": true,
             "host": "localhost",
             "port": 25565,
             "version": "1.12.2",
+            "online-mode": false,
             "maxPlayers": 1
+        },
+        "localServerOptions": {
+            "whitelist": ["Generel_Schwerz"]
         }
     }
 }
