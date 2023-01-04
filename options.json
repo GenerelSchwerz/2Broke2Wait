@@ -6,7 +6,7 @@
     "minecraft": {
         "account": {
             "username": "Generel_Schwerz",
-            "email": "@outlook.com",
+            "email": "generel@outlook.com",
             "password": "xCDf4gHjyQ7@-",
             "auth": "microsoft"
         },
@@ -16,6 +16,7 @@
             "version": "1.12.2"
         },
         "localServer": {
+            "onlineMode": true,
             "host": "localhost",
             "port": 25565,
             "version": "1.12.2",

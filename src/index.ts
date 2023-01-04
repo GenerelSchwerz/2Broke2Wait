@@ -1,82 +1,49 @@
-// console.log(process.argv)
 // process.kill(Number(process.argv[2]), 31);
 
-process.kill(Number(process.argv[2]), 31);
+// useful for us.
+// const optionDir: string = process.argv[3] + "/options.json";
+const optionDir: string = "/home/generel/Documents/vscode/javascript/2b2w-ts-rewrite" + "/options.json";
 
-console.log(process.pid, process.ppid, process.argv);
 
 
-import merge from "ts-deepmerge";
+/////////////////////////////////////////////
+//                Imports                  //
+/////////////////////////////////////////////
 
-import { BotOptions } from "mineflayer";
 
+import { ProxyServer } from "./proxyServer";
 import * as fs from "fs";
-import { QueueHandler } from "./misc/queueInfo/queueHandler.js";
-import { buildClient } from "./misc/discord/index.js";
 
-import * as rl from "readline";
-import { cliCommandHandler } from "./commandHandlers.js";
+import { Options } from "discord.js";
+import { validateConfig } from "./util/config";
 
 
-// Minecraft and discord options such as discord bot prefix and minecraft login info
-interface Options {
-  discord: {
-    token: string,
-    prefix: string
-  }
-  minecraft: {
-    account: {
-      username: string,
-      email: string,
-      password: string,
-      auth: string
-    },
-    remoteServer: {
-      host: string,
-      port: number,
-      version: string
-    },
-    localServer: {
-      host: string,
-      port: number,
-      version: string,
-      maxPlayers: number
-    }
-  }
-}
 
 
-const options: Options = JSON.parse(fs.readFileSync(process.argv[3] + "/options.json").toString());
-
-function buildBotOpts(opts: Options): BotOptions {
-  const fuck = merge(
-    opts.minecraft.account,
-    opts.minecraft.remoteServer
-  ) as BotOptions;  
-  if (fuck.auth === "microsoft") {
-    delete fuck["password"]; // Allows for first-time microsoft sign-in.
-  }
-  return fuck;
-}
+/////////////////////////////////////////////
+//              Initialization             //
+/////////////////////////////////////////////
 
 
-// Maintains info about the queue
-const queueHandler = new QueueHandler(
-  buildBotOpts(options),
-  options.minecraft.localServer,
-  {}
-);
+// ... If no errors were found, return the validated config
+
+const config = JSON.parse(fs.readFileSync(optionDir).toString())
+
+const checkedConfig: Options = validateConfig(config);
 
 
-// Test discord client for simple and slash commands.
 
-buildClient(options.discord.token, options.discord.prefix, queueHandler)
+// const pServer = ProxyServer.createProxyServer()
 
 
-const cli = rl.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-})
 
-cli.on("line", async (line) => console.log(await cliCommandHandler(line, queueHandler)));
+/////////////////////////////////////////////
+//                                         //
+/////////////////////////////////////////////
 
+
+
+
+/////////////////////////////////////////////
+//                                         //
+/////////////////////////////////////////////
