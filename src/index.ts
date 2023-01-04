@@ -1,9 +1,12 @@
 // console.log(process.argv)
 // process.kill(Number(process.argv[2]), 31);
 
-process.kill(Number(process.argv[2]), 31);
 
-console.log(process.pid, process.ppid, process.argv);
+const ppid = Number(process.argv[2])
+
+if (ppid !== 0) {
+  process.kill(Number(process.argv[2]), 31);
+}
 
 
 import merge from "ts-deepmerge";
