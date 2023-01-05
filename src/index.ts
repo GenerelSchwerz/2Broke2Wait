@@ -2,8 +2,8 @@
 
 // useful for us.
 // const optionDir: string = process.argv[3] + "/options.json";
-const optionDir: string =
-  "/home/generel/Documents/vscode/javascript/2b2w-ts-rewrite" + "/options.json";
+import * as path from "path";
+const optionDir: string = path.join(process.argv[2], "./options.json");
 
 /////////////////////////////////////////////
 //                Imports                  //
@@ -14,6 +14,10 @@ import * as fs from "fs";
 import { validateConfig } from "./util/config";
 import { AntiAFKServer } from "./impls/antiAfkServer";
 import { botOptsFromConfig, Options } from "./util/options";
+import { OldPredictor } from "./impls/2b2wPredictor";
+import { BasedPredictor } from "./impls/basedPredictor";
+import { DateTime, Duration } from "ts-luxon";
+import { CombinedPredictor } from "./impls/combinedPredictor";
 
 /////////////////////////////////////////////
 //              Initialization             //
@@ -27,21 +31,30 @@ const checkedConfig: Options = validateConfig(config);
 
 const botOptions = botOptsFromConfig(checkedConfig);
 
-const server = AntiAFKServer.createServer(
+const pServer = AntiAFKServer.createServer(
   botOptions,
   [],
   checkedConfig.minecraft.localServer,
   { antiAFK: true, ...checkedConfig.minecraft.localServerOptions }
 );
 
+const combined = new CombinedPredictor(pServer.proxy);
 
+combined.begin();
 
-
-// const pServer = ProxyServer.createProxyServer()
+combined.on("queueUpdate", updateServerMotd);
 
 /////////////////////////////////////////////
-//                                         //
+//              functions                  //
 /////////////////////////////////////////////
+
+function updateServerMotd(oldPos: number, newPos: number, eta: number) {
+  if (Number.isNaN(eta)) return;
+
+  pServer.server.motd = `Pos: ${newPos}, ETA: ${Duration.fromMillis(
+    eta * 1000 - Date.now()
+  ).toFormat("dd:hh:mm:ss")}`;
+}
 
 /////////////////////////////////////////////
 //                                         //

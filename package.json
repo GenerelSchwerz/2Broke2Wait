@@ -32,12 +32,16 @@
   },
   "dependencies": {
     "@discordx/importer": "^1.1.10",
-    "@nxg-org/mineflayer-antiafk": "file:/home/generel/Documents/vscode/javascript/mineflayer-plugins/antiafk",
+    "@nxg-org/mineflayer-antiafk": "^1.2.2",
+    "@nxg-org/mineflayer-auto-eat": "^2.0.1",
     "@rob9315/mcproxy": "^1.0.0",
     "discord.js": "^14.7.1",
     "discordx": "^11.5.2",
     "events": "^3.3.0",
+    "everpolate": "^0.0.3",
     "joi": "^17.7.0",
-    "ts-deepmerge": "^5.0.0"
+    "strict-event-emitter-types": "^2.0.0",
+    "ts-deepmerge": "^5.0.0",
+    "ts-luxon": "^4.0.1"
   }
 }

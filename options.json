@@ -7,7 +7,7 @@
         "account": {
             "username": "Generel_Schwerz",
             "email": "generel@outlook.com",
-            "password": "xCDf4gHjyQ7@-",
+            "password": "",
             "auth": "offline"
         },
         "remoteServer": {
@@ -23,6 +23,8 @@
             "maxPlayers": 1
         },
         "localServerOptions": {
+            "antiAFK": true,
+            "autoEat": true,
             "whitelist": ["Generel_Schwerz"]
         }
     }

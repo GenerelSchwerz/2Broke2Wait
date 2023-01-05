@@ -27,6 +27,7 @@ export interface Options {
       maxPlayers: number;
     };
     localServerOptions: {
+      antiAFK: boolean;
       whitelist: string[];
     }
   };

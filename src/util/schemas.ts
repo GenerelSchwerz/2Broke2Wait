@@ -31,6 +31,8 @@ export const configSchema = joi.object({
   discord: joi
     .object({
       token: tokenSchema
+        .allow("")
+        .default("")
         .required()
         .description("The discord bot token to send updates to."),
       prefix: joi
@@ -129,10 +131,18 @@ export const configSchema = joi.object({
         .description("Settings for how you connect to the proxy"),
       localServerOptions: joi
         .object({
+          antiAFK: joi
+            .boolean()
+            .default(true)
+            .description("Whether or not the bot should antiAFK."),
+          autoEat: joi
+            .boolean()
+            .default(true)
+            .description("Whether or not the bot should eat automatically."),
           whitelist: joi
             .array()
             .items(usernameSchema)
-			.default([])
+            .default([])
             .description(
               "Playernames of accounts that are allowed to connect to the proxy"
             ),

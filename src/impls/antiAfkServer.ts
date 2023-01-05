@@ -7,9 +7,11 @@ import antiAFK, {
   DEFAULT_MODULES,
   DEFAULT_PASSIVES,
 } from "@nxg-org/mineflayer-antiafk";
+import autoEat from "@nxg-org/mineflayer-auto-eat";
 
 export interface AntiAFKOpts extends IProxyServerOpts {
   antiAFK: boolean;
+  autoEat: boolean;
 }
 
 export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
@@ -18,7 +20,7 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
     onlineMode: boolean,
     server: Server,
     proxy: Conn,
-    opts: Partial<AntiAFKOpts> = { antiAFK: false }
+    opts: Partial<AntiAFKOpts>
   ) {
     super(reuseServer, onlineMode, server, proxy, opts);
   }
@@ -37,12 +39,12 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
     bOptions: BotOptions,
     plugins: Plugin[],
     sOptions: ServerOptions,
-    psOptions: Partial<AntiAFKOpts> = { antiAFK: false }
+    psOptions: Partial<AntiAFKOpts>
   ): AntiAFKServer {
     const conn = new Conn(bOptions);
     conn.stateData.bot.loadPlugins(plugins);
     return new AntiAFKServer(
-      false,
+      true,
       !!sOptions["online-mode"],
       createServer(sOptions),
       conn,
@@ -51,11 +53,13 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
   }
 
   protected override optionValidation(): AntiAFKOpts {
-    this.opts.antiAFK = this.opts.antiAFK && !!this.remoteBot.hasPlugin(antiAFK);
+    this.opts.antiAFK = this.opts.antiAFK && this.remoteBot.hasPlugin(antiAFK);
+    this.opts.autoEat = this.opts.autoEat && this.remoteBot.hasPlugin(autoEat);
     return this.opts;
   }
 
   protected override initialBotSetup(bot: Bot): void {
+
     if (this.opts.antiAFK) {
       bot.loadPlugin(antiAFK);
       bot.antiafk.on("moduleStarted", (mod) =>
@@ -81,17 +85,41 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
         playerWhitelist: new Set(["Generel_Schwerz"]),
       });
     }
+
+    if (this.opts.autoEat) {
+      bot.loadPlugin(autoEat);
+      bot.autoEat.enable();
+
+
+      bot.autoEat.setOptions({
+        eatUntilFull: true,
+        eatingTimeout: 3000,
+        minHealth: 12,
+        minHunger: 15,
+        returnToLastItem: true,
+        useOffHand: true,
+        bannedFood: [ "rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye" ]
+      })
+    }
   }
 
   protected override beginBotLogic() {
     if (this.opts.antiAFK) {
       this.remoteBot.antiafk.start();
     }
+
+    if (this.opts.autoEat) {
+      this.remoteBot.autoEat.enable();
+    }
   }
 
   protected override endBotLogic() {
     if (this.opts.antiAFK) {
       this.remoteBot.antiafk.forceStop();
+    }
+
+    if (this.opts.autoEat) {
+      this.remoteBot.autoEat.disable();
     }
   }
 }
