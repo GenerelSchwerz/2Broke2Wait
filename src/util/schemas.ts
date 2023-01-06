@@ -131,6 +131,10 @@ export const configSchema = joi.object({
         .description("Settings for how you connect to the proxy"),
       localServerOptions: joi
         .object({
+          restartOnDisconnect: joi
+          .boolean()
+          .default(true)
+          .description("Whether or not the bot should reconnect when disconnected."),
           antiAFK: joi
             .boolean()
             .default(true)

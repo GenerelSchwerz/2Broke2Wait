@@ -1,6 +1,11 @@
 import { ProxyServer } from "../abstract/proxyServer";
-import { Bot, BotOptions, Plugin } from "mineflayer";
-import { ServerOptions, createServer, Server } from "minecraft-protocol";
+import { Bot } from "mineflayer";
+import {
+  ServerOptions,
+  createServer,
+  Server,
+  ServerClient,
+} from "minecraft-protocol";
 import { IProxyServerOpts } from "../abstract/proxyServer";
 import { Conn } from "@rob9315/mcproxy";
 import antiAFK, {
@@ -8,6 +13,7 @@ import antiAFK, {
   DEFAULT_PASSIVES,
 } from "@nxg-org/mineflayer-antiafk";
 import autoEat from "@nxg-org/mineflayer-auto-eat";
+import { PacketQueuePredictor } from "../abstract/packetQueuePredictor";
 
 export interface AntiAFKOpts extends IProxyServerOpts {
   antiAFK: boolean;
@@ -15,14 +21,19 @@ export interface AntiAFKOpts extends IProxyServerOpts {
 }
 
 export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
+
+  private queue: PacketQueuePredictor<any, any>;
+
   public constructor(
     reuseServer: boolean,
     onlineMode: boolean,
     server: Server,
     proxy: Conn,
+    queue: PacketQueuePredictor<any, any>,
     opts: Partial<AntiAFKOpts>
   ) {
     super(reuseServer, onlineMode, server, proxy, opts);
+    this.queue = queue;
   }
 
   /**
@@ -36,21 +47,49 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
    * @returns {ProxyServer} Built proxy server.
    */
   public static createServer(
-    bOptions: BotOptions,
-    plugins: Plugin[],
+    proxy: Conn,
+    queue: PacketQueuePredictor<any, any>,
     sOptions: ServerOptions,
-    psOptions: Partial<AntiAFKOpts>
+    psOptions: Partial<AntiAFKOpts> = {}
   ): AntiAFKServer {
-    const conn = new Conn(bOptions);
-    conn.stateData.bot.loadPlugins(plugins);
     return new AntiAFKServer(
-      true,
+      false,
       !!sOptions["online-mode"],
       createServer(sOptions),
-      conn,
+      proxy,
+      queue,
       psOptions
     );
   }
+
+    /**
+   * Creates Proxy server based on given arguments.
+   *
+   * DOES re-use the server.
+   * @param {BotOptions} bOptions Mineflayer bot options.
+   * @param {Plugin[]} plugins Mineflayer bot plugins to load into the remote bot.
+   * @param {ServerOptions} sOptions Minecraft-protocol server options.
+   * @param {Partial<IProxyServerOpts>} psOptions Partial list of ProxyServer options.
+   * @returns {ProxyServer} Built proxy server.
+   */
+    public static wrapServer(
+      online: boolean,
+      proxy: Conn,
+      server: Server,
+      queue: PacketQueuePredictor<any, any>,
+      psOptions: Partial<AntiAFKOpts> = {}
+    ): AntiAFKServer {
+      return new AntiAFKServer(
+        true,
+        online,
+        server,
+        proxy,
+        queue,
+        psOptions
+      );
+    }
+
+  protected serverBadLoginHandler = (actualUser: ServerClient) => {};
 
   protected override optionValidation(): AntiAFKOpts {
     this.opts.antiAFK = this.opts.antiAFK && this.remoteBot.hasPlugin(antiAFK);
@@ -59,12 +98,8 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
   }
 
   protected override initialBotSetup(bot: Bot): void {
-
     if (this.opts.antiAFK) {
       bot.loadPlugin(antiAFK);
-      bot.antiafk.on("moduleStarted", (mod) =>
-        console.log(mod.constructor.name)
-      );
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES["LookAroundModule"], {
         enabled: true,
@@ -88,27 +123,31 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
 
     if (this.opts.autoEat) {
       bot.loadPlugin(autoEat);
-      bot.autoEat.enable();
-
-
+      
       bot.autoEat.setOptions({
         eatUntilFull: true,
         eatingTimeout: 3000,
-        minHealth: 12,
+        minHealth: 14,
         minHunger: 15,
         returnToLastItem: true,
         useOffHand: true,
-        bannedFood: [ "rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye" ]
-      })
+        bannedFood: [
+          "rotten_flesh",
+          "pufferfish",
+          "chorus_fruit",
+          "poisonous_potato",
+          "spider_eye",
+        ],
+      });
     }
   }
 
   protected override beginBotLogic() {
-    if (this.opts.antiAFK) {
+    if (this.opts.antiAFK && !this.queue.inQueue) {
       this.remoteBot.antiafk.start();
     }
 
-    if (this.opts.autoEat) {
+    if (this.opts.autoEat && !this.queue.inQueue) {
       this.remoteBot.autoEat.enable();
     }
   }

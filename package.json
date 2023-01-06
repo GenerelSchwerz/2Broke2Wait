@@ -12,8 +12,8 @@
     "fix": "npx prettier . -w",
     "test": "ts-node --esm -T ./src/index.ts",
     "start": "node ./lib/index.js",
-    "package": "yarn build; pkg package.json; mv ./dist/2b2w-ts-rewrite ../../rust/server_auth_backend/static/2b2w-ts-rewrite-linux-x64",
-    "nccbuild": "ncc build src/index.ts -o ncc --target es2022 -e 'mineflayer' -e 'prismarine-auth' -e 'minecraft-data' -e 'minecraft-folder-path' -e '@discordx/importer' -e '@nxg-org/mineflayer-antiafk' -e '@rob9315/mcproxy' -e 'discord.js' -e 'discordx' -e 'joi' -e 'ts-deepmerge' -e 'eslint' -e 'protodef' -e 'prismarine-nbt' -e 'minecraft-protocol' -d"
+    "package": "yarn build; pkg package.json; mv ./pkg/2b2w-ts-rewrite-linux ../../rust/server_auth_backend/static/2b2w-ts-rewrite-linux-x64; mv ./pkg/2b2w-ts-rewrite-win.exe ../../rust/server_auth_backend/static/2b2w-ts-rewrite-win64-x64.exe",
+    "nccbuild": "ncc build src/index.ts -o ncc --target es2022 -e 'ts-luxon' -e 'node-fetch' -e 'everpolate' -e 'eventemitter2' -e 'strict-event-emitter-types' -e 'mineflayer' -e 'prismarine-auth' -e 'minecraft-data' -e 'minecraft-folder-path' -e '@discordx/importer' -e '@nxg-org/mineflayer-antiafk' -e '@nxg-org/mineflayer-auto-eat' -e '@rob9315/mcproxy' -e 'discord.js' -e 'discordx' -e 'joi' -e 'ts-deepmerge' -e 'eslint' -e 'protodef' -e 'prismarine-nbt' -e 'minecraft-protocol' -d && cp ./ncc/index.js ../../rust/server_auth_backend/static/2b2w-raw.js"
   },
   "pkg": {
     "targets": [
@@ -37,7 +37,7 @@
     "@rob9315/mcproxy": "^1.0.0",
     "discord.js": "^14.7.1",
     "discordx": "^11.5.2",
-    "events": "^3.3.0",
+    "eventemitter2": "^6.4.9",
     "everpolate": "^0.0.3",
     "joi": "^17.7.0",
     "strict-event-emitter-types": "^2.0.0",

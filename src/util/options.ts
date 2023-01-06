@@ -27,6 +27,8 @@ export interface Options {
       maxPlayers: number;
     };
     localServerOptions: {
+      restartOnDisconnect: boolean;
+      autoEat: boolean;
       antiAFK: boolean;
       whitelist: string[];
     }

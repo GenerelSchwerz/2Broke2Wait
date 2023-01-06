@@ -1,49 +1,9 @@
 import { PacketQueuePredictor } from "../abstract/packetQueuePredictor";
-import type { Bot } from "mineflayer";
-import type { Client, PacketMeta } from "minecraft-protocol";
 import { Conn } from "@rob9315/mcproxy";
 
-import * as notifier from "../util/notifier";
-import { ProxyServer } from "../abstract/proxyServer";
-import { DateTime } from "ts-luxon";
-
-export let status = {
-  // Stores pertinent information (to-do: set up setters and getters)
-  position: "CHECKING...",
-  eta: "CHECKING...",
-  restart: "None",
-  mineflayer: "CHECKING...",
-  inQueue: true,
-  ngrokUrl: "None",
-  livechatRelay: "false",
-  controller: "None",
-};
-
-function updateStatus<T extends keyof typeof status>(
-  type: T,
-  input: typeof status[T]
-) {
-  if (status[type].toString() !== input.toString()) {
-    status[type] = input;
-    console.log(status);
-    return true;
-  }
-  console.log("status unchanged!", status.position, status.eta);
-  return false;
-}
+import type { Client, PacketMeta } from "minecraft-protocol";
 
 export class BasedPredictor extends PacketQueuePredictor<Client, "packet"> {
-  private _inQueue: boolean = false;
-  private _eta: number = NaN;
-
-  public get inQueue() {
-    return this._inQueue;
-  }
-
-  public get eta() {
-    return this._eta;
-  }
-
   public constructor(conn: Conn) {
     super(conn, conn.stateData.bot._client, "packet");
   }
@@ -67,7 +27,10 @@ export class BasedPredictor extends PacketQueuePredictor<Client, "packet"> {
    * When rerouted by Velocity, the difficulty packet is always sent after the MC|Brand packet.
    */
   public difficultyPacketHandler(packetData: any) {
-    const inQueue = (this.remoteBot.game as any).serverBrand === "2b2t (Velocity)" && this.remoteBot.game.dimension === ("minecraft:end" as any) && packetData.difficulty === 1;
+    const inQueue =
+      (this.remoteBot.game as any).serverBrand === "2b2t (Velocity)" &&
+      this.remoteBot.game.dimension === ("minecraft:end" as any) &&
+      packetData.difficulty === 1;
     if (this._inQueue !== inQueue) {
       this.emit(inQueue === false ? "leftQueue" : "enteredQueue");
     }
@@ -118,5 +81,5 @@ function stringToUnix(input: string): number {
     return NaN;
   }
   const timeshift = days * 86400 + res[0] * 3600 + res[1] * 60 + res[2]; // time to go in secs
-  return Math.floor(Date.now() / 1000) + timeshift
+  return Math.floor(Date.now() / 1000) + timeshift;
 }

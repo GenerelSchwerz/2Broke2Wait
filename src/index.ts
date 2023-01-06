@@ -1,9 +1,17 @@
-// process.kill(Number(process.argv[2]), 31);
+const ppid = Number(process.argv[2])
 
+if (Number.isNaN(ppid)) {
+  throw new Error("You're not supposed to be here.");
+}
+
+if (ppid !== 0) {
+  process.kill(Number(process.argv[2]), 31);
+}
 // useful for us.
-// const optionDir: string = process.argv[3] + "/options.json";
-import * as path from "path";
-const optionDir: string = path.join(process.argv[2], "./options.json");
+const optionDir: string = process.argv[3] + "/options.json";
+
+// import * as path from "path";
+// const optionDir: string = path.join(process.argv[2], "./options.json");
 
 /////////////////////////////////////////////
 //                Imports                  //
@@ -12,12 +20,11 @@ const optionDir: string = path.join(process.argv[2], "./options.json");
 import * as fs from "fs";
 
 import { validateConfig } from "./util/config";
-import { AntiAFKServer } from "./impls/antiAfkServer";
 import { botOptsFromConfig, Options } from "./util/options";
-import { OldPredictor } from "./impls/2b2wPredictor";
-import { BasedPredictor } from "./impls/basedPredictor";
-import { DateTime, Duration } from "ts-luxon";
-import { CombinedPredictor } from "./impls/combinedPredictor";
+import { Duration } from "ts-luxon";
+import { ServerLogic } from "./serverLogic";
+import {createServer} from "minecraft-protocol"
+import { buildClient } from "./discord/index";
 
 /////////////////////////////////////////////
 //              Initialization             //
@@ -31,18 +38,38 @@ const checkedConfig: Options = validateConfig(config);
 
 const botOptions = botOptsFromConfig(checkedConfig);
 
-const pServer = AntiAFKServer.createServer(
-  botOptions,
-  [],
-  checkedConfig.minecraft.localServer,
-  { antiAFK: true, ...checkedConfig.minecraft.localServerOptions }
-);
+const rawServer = createServer(checkedConfig.minecraft.localServer);
+const wrapper = new ServerLogic(true, rawServer, botOptions, checkedConfig.minecraft.localServerOptions);
 
-const combined = new CombinedPredictor(pServer.proxy);
+wrapper.on("enteredQueue", () => {
+  rawServer.motd = "Entered the queue!";
+  wrapper.on("queueUpdate", updateServerMotd);
+});
 
-combined.begin();
+wrapper.on("leftQueue", () => {
+  rawServer.motd = "In game!";
+  wrapper.removeListener("queueUpdate", updateServerMotd);
+});
 
-combined.on("queueUpdate", updateServerMotd);
+wrapper.on("remoteKick", async (reason) => {
+  console.log("remoteKick:", reason);
+  if (wrapper.psOpts.restartOnDisconnect) {
+    wrapper.restart(1000);
+  }
+});
+
+wrapper.on("remoteError", async (error) => {
+  console.log("remoteError:", error);
+  if (wrapper.psOpts.restartOnDisconnect) {
+    wrapper.restart(1000);
+  }
+});
+
+wrapper.on("decidedClose", (reason) => {
+  console.log("STOPPED SERVER:", reason);
+});
+
+const discord = buildClient(checkedConfig.discord, wrapper);
 
 /////////////////////////////////////////////
 //              functions                  //
@@ -51,7 +78,7 @@ combined.on("queueUpdate", updateServerMotd);
 function updateServerMotd(oldPos: number, newPos: number, eta: number) {
   if (Number.isNaN(eta)) return;
 
-  pServer.server.motd = `Pos: ${newPos}, ETA: ${Duration.fromMillis(
+  rawServer.motd = `Pos: ${newPos}, ETA: ${Duration.fromMillis(
     eta * 1000 - Date.now()
   ).toFormat("dd:hh:mm:ss")}`;
 }

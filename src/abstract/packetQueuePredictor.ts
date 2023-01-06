@@ -1,10 +1,9 @@
-import { EventEmitter } from "events";
+import { ConstructorOptions, EventEmitter2 } from "eventemitter2";
 import { StrictEventEmitter } from "strict-event-emitter-types";
+import { Client } from "minecraft-protocol";
+import { Conn } from "@rob9315/mcproxy";
 
 import type { Bot, BotEvents } from "mineflayer";
-import { Client } from "minecraft-protocol";
-import { ProxyServer } from "./proxyServer";
-import { Conn } from "@rob9315/mcproxy";
 
 type Overloads<T extends (...args: any[]) => any> = T extends {
   (...args: infer A1): infer R1;
@@ -126,7 +125,7 @@ type ValidEmitters = Bot | Client;
 type ValidClientFuncs = Extract<
   OverloadedParameters<Client["on"]>,
   [
-    event: "packet" | "raw" | "session" | "state" | "end" | "connect",
+    event: any, //"packet" | "raw" | "session" | "state" | "end" | "connect"
     handler: any
   ]
 >;
@@ -144,39 +143,50 @@ type EmitterEvent<T extends ValidEmitters> = T extends Bot
   : never;
 
 type PromiseLike = void | Promise<void>;
+
 export interface PacketQueuePredictorEvents {
   invalidData: (...any: any[]) => PromiseLike;
   enteredQueue: () => PromiseLike;
   leftQueue: () => PromiseLike;
   queueUpdate: (oldPos: number, newPos: number, eta: number) => PromiseLike;
-
 }
 
 type PacketQueuePredictorEmitter<
   T extends PacketQueuePredictorEvents = PacketQueuePredictorEvents
-> = StrictEventEmitter<EventEmitter, T>;
+> = StrictEventEmitter<EventEmitter2, T>;
 
 export abstract class PacketQueuePredictor<
   Src extends ValidEmitters,
   T extends EmitterEvent<Src>
-> extends (EventEmitter as { new (): PacketQueuePredictorEmitter }) {
+> extends (EventEmitter2 as {
+  new (options?: ConstructorOptions): PacketQueuePredictorEmitter;
+}) {
+  protected _inQueue: boolean = false;
   protected _lastPos: number = NaN;
+  protected _eta: number = NaN;
 
   public get lastPos() {
     return this._lastPos;
+  }
+
+  public get eta() {
+    return this._eta;
+  }
+
+  public get inQueue() {
+    return this._inQueue;
   }
 
   public readonly remoteBot;
 
   public readonly remoteClient;
 
-
   constructor(
     protected readonly conn: Conn,
     protected readonly emitter: Src,
     protected readonly wantedEvent: T
   ) {
-    super();
+    super({ wildcard: true });
     this.remoteBot = conn.stateData.bot;
     this.remoteClient = conn.stateData.bot._client;
   }
@@ -194,4 +204,6 @@ export abstract class PacketQueuePredictor<
   public end() {
     this.emitter.removeListener(this.wantedEvent as any, this.listener);
   }
+
+  public getInfo() {}
 }

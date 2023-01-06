@@ -8,12 +8,10 @@ import {
 } from "minecraft-protocol";
 import merge from "ts-deepmerge";
 import { Conn } from "@rob9315/mcproxy";
-import { EventEmitter } from "events";
+import { ConstructorOptions, EventEmitter2 } from "eventemitter2";
 
-import type { Bot, BotOptions, Plugin } from "mineflayer";
-import antiAFK from "@nxg-org/mineflayer-antiafk";
-
-
+import type { Bot, BotOptions } from "mineflayer";
+import StrictEventEmitter from "strict-event-emitter-types";
 
 /**
  * Interface for the ProxyServer options.
@@ -23,17 +21,27 @@ export interface IProxyServerOpts {
   restartOnDisconnect: boolean;
 }
 
+export interface IProxyServerEvents {
+  remoteKick: (reason: string) => void;
+  remoteError: (error: Error) => void;
+  decidedClose: (reason: string) => void;
+}
+
+type ProxyServerEmitter<T extends IProxyServerEvents = IProxyServerEvents> = StrictEventEmitter<EventEmitter2, T>;
+
 /**
  * This proxy server provides a wrapper around the connection to the remote server and
  * the local server that players can connect to.
  */
-export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts> extends EventEmitter {
+export abstract class ProxyServer<
+  T extends IProxyServerOpts = IProxyServerOpts,
+> extends (EventEmitter2 as { new(options?: ConstructorOptions): ProxyServerEmitter }) {
   /**
    * flag to reuse the internal server instance across proxy servers.
    *
    * This is handled by
-   *  {@link createProxyServer} and
-   *  {@link ProxyServerReuseServer}.
+   *  {@link } and
+   *  {@link }.
    */
   public readonly reuseServer: boolean;
 
@@ -60,7 +68,6 @@ export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts>
   public get proxy() {
     return this._proxy;
   }
-  
 
   /**
    * Internal bot connected to remote server. Created by {@link ProxyServer.proxy | ProxyServer's proxy.}
@@ -106,6 +113,10 @@ export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts>
     return this._controllingPlayer !== null;
   }
 
+  public isProxyConnected(): boolean {
+    return this._remoteIsConnected;
+  }
+
   /**
    * Hidden constructor. Use static methods.
    * @param {boolean} reuseServer Whether or not to destroy internal server on close.
@@ -120,38 +131,44 @@ export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts>
     proxy: Conn,
     opts: Partial<T> = {}
   ) {
-    super();
+    super({wildcard: true});
     this.reuseServer = reuseServer;
     this.onlineMode = onlineMode;
     this.server = server;
 
     // TODO: somehow make this type-safe.
-    this.opts = merge.withOptions({mergeArrays: false}, <IProxyServerOpts>{ whitelist: [] }, opts) as any;
+    this.opts = merge.withOptions(
+      { mergeArrays: false },
+      <IProxyServerOpts>{ whitelist: [] },
+      opts
+    ) as any;
 
-    server.on("login", this.serverGoodLoginHandler);
+
     this._proxy = proxy;
+    this.setupProxy();
+    server.on("login", this.serverUnknownLoginHandler);
+
   }
 
   /**
    * Function to handle any additional options for the config.
-   * 
+   *
    * I.E. checking if plugins necessary for options are available.
    */
   protected abstract optionValidation(): T;
 
   /**
    * Function to call on initialization of the bot.
-   * 
+   *
    * Note: this is called before {@link ProxyServer.optionValidation | option validation}.
    */
   protected initialBotSetup(bot: Bot): void {}
-
 
   /**
    * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} disconnects.
    *
    * Begin certain bot logic here.
-   * 
+   *
    * Note: Workaround, we make this a function instead of anonymous. We just bind.
    */
   protected abstract beginBotLogic(): void;
@@ -160,25 +177,35 @@ export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts>
    * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} connects/reconnects.
    *
    * End certain bot logic here.
-   * 
+   *
    * Note: Workaround, we make this a function instead of anonymous. We just bind.
    */
   protected abstract endBotLogic(): void;
 
-
-  protected setupProxy(conn: Conn): void {
-    if (this._proxy === conn) return;
-    replaceProxy(this._proxy, conn);
+  public replaceProxy(conn: Conn) {
+    if (this._proxy.pclient) {
+      conn.link(this._proxy.pclient);
+      this._proxy.unlink();
+    }
+    for (const client of this._proxy.pclients) {
+      this._proxy.detach(client);
+      conn.attach(client);
+    }
     this._proxy = conn;
-    
-    this.initialBotSetup(conn.stateData.bot);
-    this.optionValidation();
-    conn.stateData.bot.once("spawn", this.beginBotLogic.bind(this));
-    conn.stateData.bot._client.on("end", this.remoteClientDisconnect);
-    conn.stateData.bot._client.on("error", this.remoteClientDisconnect);
-    this._proxy = conn;
+    this.setupProxy();
   }
 
+  public setupProxy(): void {
+    this.initialBotSetup(this._proxy.stateData.bot);
+    this.optionValidation();
+
+    this._proxy.stateData.bot._client.on("end", this.remoteClientDisconnect);
+    this._proxy.stateData.bot._client.on("error", this.remoteClientDisconnect);
+    this._proxy.stateData.bot.on("login", () => {
+      this._remoteIsConnected = true
+    });
+    this._proxy.stateData.bot.once("spawn", this.beginBotLogic.bind(this));
+  }
 
   /**
    * Function to filter out some packets that would make us disconnect otherwise.
@@ -208,43 +235,51 @@ export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts>
       this._controllingPlayer.end("Connection reset by 2b2t server.");
     }
     this._controllingPlayer = null;
-    this.emit("remoteDisconnect", info);
+    this._remoteIsConnected = false;
+    this.endBotLogic.bind(this)();
+    if (info instanceof Error) {
+      this.emit("remoteError", info);
+    } else {
+      this.emit("remoteKick", info)
+    }
+    
   };
-
 
   /**
    * Helper method to determine whether or not the user should be allowed
    * to control the proxy bot.
-   * 
+   *
    * @param {ServerClient} user Local connection to control the bot.
    */
   private isUserGood(user: ServerClient): boolean {
     if (this.onlineMode) {
-      return this.remoteClient.uuid === user.uuid
+      return this.remoteClient.uuid === user.uuid;
     } else {
       return this.remoteClient.username === user.username;
     }
   }
 
   private isUserWhiteListed(user: ServerClient): boolean {
-    return !this.opts.whitelist || this.opts.whitelist.includes(user.username)
+    return !this.opts.whitelist || this.opts.whitelist.includes(user.username);
   }
 
-  private serverUnknownLoginHandler = async (actualUser: ServerClient) => {
-   
-  }
+  private serverUnknownLoginHandler = (actualUser: ServerClient) => {
+    if (this._remoteIsConnected) {
+      this.serverGoodLoginHandler(actualUser);
+    } else {
+      this.serverBadLoginHandler(actualUser);
+    }
+  };
 
   /**
    * TODO: Add functionality to server (if reused) and remote is not currently connected.
    *
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
-  private serverGoodLoginHandler = async (actualUser: ServerClient) => {
-
+  private serverGoodLoginHandler = (actualUser: ServerClient) => {
     if (!this.isUserWhiteListed(actualUser)) {
       actualUser.end(
-        "Not whitelisted!\n" +
-          "You need to turn the whitelist off."
+        "Not whitelisted!\n" + "You need to turn the whitelist off."
       );
       return; // early end.
     }
@@ -267,33 +302,31 @@ export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts>
       this._controllingPlayer = null;
       this.beginBotLogic.bind(this)();
     });
-
+   
     // as player has just connected, end all bot activity and give control back to player.
     this.endBotLogic.bind(this)();
 
-    this.proxy.sendPackets(actualUser as any); // works in original?
-    this.proxy.link(actualUser as any); // again works
+    this._proxy.sendPackets(actualUser as any); // works in original?
+    this._proxy.link(actualUser as any); // again works
     this._controllingPlayer = actualUser;
   };
-
+  
+  protected abstract serverBadLoginHandler: (actualUser: ServerClient) => void;
 
   /**
    * Custom version of minecraft-protocol's server close() to give a better message.
    *
    * Note: this also provides cleanup for the remote client and our proxy.
    */
-  public close(reason: string = "Proxy stopped."): void {
-    // cleanup listeners.
-    this.remoteClient.removeListener("end", this.remoteClientDisconnect);
-    this.remoteClient.removeListener("error", this.remoteClientDisconnect);
+  public stop = (reason: string = "Proxy stopped.") => {
 
     // close remote bot cleanly.
-    this.proxy.disconnect();
+    this._proxy.disconnect();
 
     // disconnect all local clients cleanly.
     Object.keys(this.server.clients).forEach((clientId) => {
       const client: Client = this.server.clients[clientId];
-      client.end("Proxy stopped.");
+      client.end(reason);
     });
 
     // shutdown actual socket server.
@@ -301,18 +334,7 @@ export abstract class ProxyServer<T extends IProxyServerOpts = IProxyServerOpts>
       this.server["socketServer"].close();
     }
 
-    this._remoteIsConnected = true;
-
-    this.emit("close");
+    this.emit("decidedClose", reason);
   }
 }
 
-
-
-function replaceProxy(old: Conn, nw: Conn) {
-  for (const client of old.pclients) {
-      old.detach(client);
-      nw.attach(client);
-  }
-  old.disconnect();
-}
