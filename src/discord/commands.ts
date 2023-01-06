@@ -1,8 +1,8 @@
-import type { CommandInteraction } from "discord.js";
+import { CommandInteraction, OAuth2Scopes } from "discord.js";
 import { ApplicationCommandOptionType } from "discord.js";
 
 import { Client, Discord, Slash, SlashGroup, SlashOption } from "discordx";
-import { DateTime } from "ts-luxon";
+import { DateTime, Duration } from "ts-luxon";
 import {
   hourAndMinToDateTime,
   pingTime,
@@ -40,29 +40,21 @@ export class QueueCommands {
       return;
     }
 
+    let eta;
+    let joiningAt;
+    if (!Number.isNaN(mcServer.queue.eta)) {
+      console.log(mcServer.queue.eta);
+      eta =  Duration.fromMillis((mcServer.queue.eta * 1000)- Date.now()).toFormat("h 'hours and' m 'minutes'");
+      joiningAt = DateTime.local().plus({seconds: mcServer.queue.eta}).toFormat("hh:mm a, MM/dd/yyyy")
+    } else {
+      eta = "Unknown (ETA is NaN)"
+    }
+
     interaction.reply(
-      `Queue pos: ${mcServer.queue.lastPos}` +
-        `Queue ETA: ${mcServer.queue.eta}`
+      `Queue pos: ${mcServer.queue.lastPos}\n` +
+      `Queue ETA: ${eta}\n` + 
+      `Joining at: `
     );
-
-    // const info = GQueueLookup.getQueueInfo();
-
-    // if (isFullRes(info)) {
-    //   interaction.reply(
-    //     `Queue info!\n` +
-    //       `Queue size: ${info.startingPosition}\n` +
-    //       `Current position: ${info.currentPosition}\n` +
-    //       `Average positions (per min): ${info.averagePositionsPerMinute}\n` +
-    //       `Average minutes (per pos): ${info.averageMinutesPerPosition}\n` +
-    //       `Time in queue (min): ${info.minutesInQueue}\n` +
-    //       `Predicted ETA (min): ${info.predictedETA}\n` +
-    //       `Linear estimate (min): ${
-    //         info.currentPosition * info.averageMinutesPerPosition
-    //       }`
-    //   );
-    // } else {
-    //   interaction.reply(`Queue pos: ${info.currentPosition}`);
-    // }
   }
 }
 
@@ -91,7 +83,7 @@ export class LocalServerCommands {
     const mcServer = client.mcServer;
 
     if (!mcServer.isProxyConnected()) {
-      interaction.reply("We are already disProxyConnected from the server!");
+      interaction.reply("We are already disconnected from the server!");
       return;
     }
 
@@ -249,9 +241,9 @@ export class GeneralCommands {
   }
 
   @Slash({ description: "invite" })
-  invite(interaction: CommandInteraction) {
+  invite(interaction: CommandInteraction, client: Client) {
     interaction.reply(
-      "https://discord.com/api/oauth2/authorize?client_id=1057786019799380059&permissions=0&scope=bot%20applications.commands"
+      client.generateInvite({permissions: "Administrator", scopes: [OAuth2Scopes.Bot, OAuth2Scopes.ApplicationsCommands]})
     );
   }
 }

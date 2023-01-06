@@ -1,6 +1,6 @@
 {
     "discord": {
-        "token": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GsLhvx.YmxcQuqgblEdmOnkTw7YcztHLh8FAOGFi09-yc",
+        "token": "MTA2MTA0NDgxNDU1NDA3MTExMA.GKY-MG.XvLXnb2P8oLgAa4vnqa1lmCu-zn20tUTO_DCQk",
         "prefix": "!"
     },
     "minecraft": {
@@ -11,19 +11,19 @@
             "auth": "microsoft"
         },
         "remoteServer": {
-            "host": "2b2t.org",
-            "port": 25565,
+            "host": "localhost",
+            "port": 25566,
             "version": "1.12.2"
         },
         "localServer": {
             "host": "localhost",
-            "port": 25565,
+            "port": 25567,
             "version": "1.12.2",
             "online-mode": true,
             "maxPlayers": 1
         },
         "localServerOptions": {
-            "restartOnDisconnect": false,
+            "restartOnDisconnect": true,
             "antiAFK": true,
             "autoEat": true,
             "whitelist": ["Generel_Schwerz"]

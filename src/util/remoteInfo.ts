@@ -107,7 +107,6 @@ export async function tentativeStartTime(
   try {
     const res = await fetch("https://2b2t.io/api/queue");
     if (!res.ok) {
-      console.log(await res.text())
       return NaN;
     }
     const playTime = hourAndMinToDateTime(hour, minute);
@@ -118,7 +117,6 @@ export async function tentativeStartTime(
       playTime.toSeconds() - waitTime - DateTime.local().toSeconds()
     );
   } catch (e) {
-    console.log(e)
     return NaN;
   }
 }
