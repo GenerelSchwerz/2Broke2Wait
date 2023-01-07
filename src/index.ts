@@ -69,7 +69,18 @@ wrapper.on("decidedClose", (reason) => {
   console.log("STOPPED SERVER:", reason);
 });
 
-const discord = buildClient(checkedConfig.discord, wrapper);
+
+if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
+  const discord = buildClient(checkedConfig.discord.bot, wrapper);
+} else {
+  console.log("No discord token included. Going without it (No command functionality currently).");
+  wrapper.start();
+}
+
+if (checkedConfig.discord.webhooks.enabled) {
+  
+}
+
 
 /////////////////////////////////////////////
 //              functions                  //

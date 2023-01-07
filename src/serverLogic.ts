@@ -1,14 +1,15 @@
 import { IProxyServerEvents, IProxyServerOpts, ProxyServer } from "./abstract/proxyServer";
 import { AntiAFKOpts, AntiAFKServer } from "./impls/antiAfkServer";
 import { CombinedPredictor } from "./impls/combinedPredictor";
-import { Server} from "minecraft-protocol";
-import type {BotOptions} from "mineflayer"
+import { Server, Client} from "minecraft-protocol";
+import type {Bot, BotOptions} from "mineflayer"
 import { Conn } from "@rob9315/mcproxy";
 import { waitUntilStartingTime } from "./util/remoteInfo";
-import { PacketQueuePredictorEvents } from "./abstract/packetQueuePredictor";
+import { PacketQueuePredictor, PacketQueuePredictorEvents } from "./abstract/packetQueuePredictor";
 import {EventEmitter2} from "eventemitter2";
 import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
 import { sleep } from "./util/index";
+import { EventRegister } from "./abstract/EventRegister";
 
 
 interface ServerLogicEvents extends PacketQueuePredictorEvents, IProxyServerEvents  {}
@@ -26,7 +27,6 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
     private _proxyServer: AntiAFKServer | null;
     private _queue: CombinedPredictor | null;
 
-
     public get queue() {
         return this._queue;
     }
@@ -39,8 +39,12 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
         return this._proxyServer;
     }
 
-    public get bot() {
+    public get remoteBot() {
         return this._proxyServer.remoteBot;
+    }
+
+    public get remoteClient() {
+        return this._proxyServer.remoteClient;
     }
 
     public get psOpts() {
@@ -107,5 +111,13 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
         await sleep(ms);
         this.start();
     }
+
+    // public registerListeners<L extends string, T extends (emitter: Bot | Client, listener: L) => EventRegister<Bot | Client, L>>(...listeners: T[]) {
+    //     for (const listener of listeners) {
+    //         if (this._registeredListeners.has(listener.name)) continue;
+    //         this._registeredListeners.add(listener.name);
+            
+    //     }
+    // }
 
 }

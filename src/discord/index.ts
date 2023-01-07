@@ -3,15 +3,16 @@ import { IntentsBitField } from "discord.js";
 import { ServerLogic } from "../serverLogic.js";
 
 import "./commands";
+import { Options } from "../util/options.js";
 
 declare module "discordx" {
   interface Client {
-    mcServer: ServerLogic
+    mcServer: ServerLogic;
   }
 }
 
-
-export async function buildClient({token, prefix}: {token: string, prefix: string},
+export async function buildClient(
+  { botToken, prefix }: Options["discord"]["bot"],
   server: ServerLogic
 ): Promise<Client> {
   const client = new Client({
@@ -26,6 +27,8 @@ export async function buildClient({token, prefix}: {token: string, prefix: strin
     silent: true,
   });
 
+  client.mcServer = server;
+
   client.once("ready", async () => {
     await client.initApplicationCommands();
   });
@@ -34,8 +37,6 @@ export async function buildClient({token, prefix}: {token: string, prefix: strin
     client.executeInteraction(interaction);
   });
 
-  client.mcServer = server;
-
-  await client.login(token);
+  await client.login(botToken);
   return client;
 }

@@ -1,16 +1,9 @@
-import * as mc from "minecraft-protocol";
-import * as everpolate from "everpolate";
-
-import { EventEmitter } from "events";
-import * as path from "path";
-import * as fs from "fs";
-
-import type { Bot, BotOptions } from "mineflayer";
 import { PacketQueuePredictor } from "../abstract/packetQueuePredictor";
 import { ChatMessage } from "prismarine-chat";
 import { Conn } from "@rob9315/mcproxy";
 import { getWaitTime, GQueueLookup, PositionHistory } from "../util/remoteInfo";
 
+import type { Bot } from "mineflayer";
 
 export class OldPredictor extends PacketQueuePredictor<Bot, "message"> {
   private _startedQueue: number = 0; // epoch

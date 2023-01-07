@@ -4,8 +4,16 @@ import merge from "ts-deepmerge";
 // Minecraft and discord options such as discord bot prefix and minecraft login info
 export interface Options {
   discord: {
-    token: string;
-    prefix: string;
+    bot: {
+      enabled: boolean;
+      botToken: string;
+      prefix: string;
+    },
+    webhooks: {
+      enabled: boolean;
+      spam: string;
+      gameChat: string;
+    }
   };
   minecraft: {
     account: {

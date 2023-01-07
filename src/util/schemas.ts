@@ -30,15 +30,47 @@ const tokenSchema = joi
 export const configSchema = joi.object({
   discord: joi
     .object({
-      token: tokenSchema
-        .allow("")
-        .default("")
-        .required()
-        .description("The discord bot token to send updates to."),
-      prefix: joi
-        .string()
-        .default("!")
-        .description("The prefix for the discord bot (using simple commands)."),
+      bot: joi
+        .object({
+          enabled: joi
+            .boolean()
+            .default(false)
+            .description("Whether to use the discord bot or not."),
+          botToken: tokenSchema
+            .allow("")
+            .default("")
+            .required()
+            .description("The discord bot token to send updates to."),
+          prefix: joi
+            .string()
+            .default("!")
+            .description(
+              "The prefix for the discord bot (using simple commands)."
+            ),
+        })
+        .default()
+        .description("Discord's configuration for an interactive bot."),
+      webhooks: joi
+        .object({
+          enabled: joi
+            .boolean()
+            .default(false)
+            .description("Whether to use the discord webhooks or not."),
+          spam: joi
+            .string()
+            .allow("")
+            .default("")
+            .required()
+            .description("Default webhook URL (backup)."),
+          gameChat: joi
+            .string()
+            .allow("")
+            .default("")
+            .required()
+            .description("Webhook URL for in-game chat."),
+        })
+        .default()
+        .description("Webhook URLs for logging, if wanted."),
     })
     .optional()
     .description("Configuration for a discord bot."),
@@ -132,9 +164,11 @@ export const configSchema = joi.object({
       localServerOptions: joi
         .object({
           restartOnDisconnect: joi
-          .boolean()
-          .default(true)
-          .description("Whether or not the bot should reconnect when disconnected."),
+            .boolean()
+            .default(true)
+            .description(
+              "Whether or not the bot should reconnect when disconnected."
+            ),
           antiAFK: joi
             .boolean()
             .default(true)

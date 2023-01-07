@@ -40,7 +40,7 @@ export function validateConfig<T extends object>(config: any): T {
       }
 
       // note: process.exit(<INVALID CONFIG CODE>)
-      throw new Error("Couldn't validate config.json");
+      throw new Error("Couldn't validate options.json");
     }
   
     return validationResult.value;
