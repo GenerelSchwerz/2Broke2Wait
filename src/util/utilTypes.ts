@@ -1,11 +1,7 @@
-import { ConstructorOptions, EventEmitter2 } from "eventemitter2";
-import { StrictEventEmitter } from "strict-event-emitter-types";
-import { Client, PacketMeta, PromiseLike } from "minecraft-protocol";
-import { Conn } from "@rob9315/mcproxy";
-
 import type { Bot, BotEvents } from "mineflayer";
+import type { Client } from "minecraft-protocol";
 
-type Overloads<T extends (...args: any[]) => any> = T extends {
+export type Overloads<T extends (...args: any[]) => any> = T extends {
   (...args: infer A1): infer R1;
   (...args: infer A2): infer R2;
   (...args: infer A3): infer R3;
@@ -113,54 +109,60 @@ type Overloads<T extends (...args: any[]) => any> = T extends {
   ? (...args: A1) => R1
   : never;
 
-type OverloadedParameters<T extends (...args: any[]) => any> = Parameters<
-  Overloads<T>
+/**
+ * Note: this removes the string and raw-string implementations of emit from minecraft-protocol's client.
+ */
+type CustomOverload<T extends (...args: any[]) => any> = T extends {
+  (...args: infer A1): infer R1;
+  (...args: infer A2): infer R2;
+  (...args: infer A3): infer R3;
+  (...args: infer A4): infer R4;
+  (...args: infer A5): infer R5;
+  (...args: infer A6): infer R6;
+  (...args: infer A7): infer R7;
+  (...args: infer A8): infer R8;
+  (...args: infer A9): infer R9;
+}
+  ?
+      | ((...args: A1) => R1)
+      | ((...args: A2) => R2)
+      | ((...args: A3) => R3)
+      | ((...args: A4) => R4)
+      | ((...args: A5) => R5)
+      | ((...args: A6) => R6)
+      | ((...args: A7) => R7)
+  :
+    never;
+
+type CustomOverloadedParameters<T extends (...args: any[]) => any> = Parameters<
+  CustomOverload<T>
 >;
 
-type ValidEmitters = Bot | Client;
+export type OverloadedParameters<T extends (...args: any[]) => any> =
+  Parameters<Overloads<T>>;
+export type OverloadedReturnType<T extends (...args: any[]) => any> =
+  ReturnType<Overloads<T>>;
 
-type ValidClientFuncs = Extract<
-  OverloadedParameters<Client["on"]>,
-  [
-    event: any, //"packet" | "raw" | "session" | "state" | "end" | "connect"
-    handler: any
-  ]
->;
+export type ClientEmitters = Bot | Client;
+
+// type ValidClientFuncs = Extract<
+//   OverloadedParameters<Client["on"]>,
+//   [event: any, handler: any]
+// >; // event: "packet" | "raw" | "session" | "state" | "end" | "connect"
+
+type ValidClientFuncs = CustomOverloadedParameters<Client["on"]>;
+
 type ValidClientEvents = ValidClientFuncs[0];
 
-type ClientListener<T extends ValidClientEvents> = Extract<
+export type ClientListener<T extends ValidClientEvents> = Extract<
   ValidClientFuncs,
   [event: T, handler: any]
 >;
 
-type EmitterEvent<T extends ValidEmitters> = T extends Bot
+export type ClientEvent<T extends ClientEmitters> = T extends Bot
   ? keyof BotEvents
   : T extends Client
   ? ValidClientEvents
   : never;
 
-
-export abstract class EventRegister<
-  Src extends ValidEmitters,
-  T extends EmitterEvent<Src>
-> {
-
-  constructor(
-    public readonly emitter: Src,
-    public readonly wantedEvent: T
-  ) {}
-
-  protected abstract listener: T extends EmitterEvent<Bot>
-    ? BotEvents[T]
-    : T extends EmitterEvent<Client>
-    ? ClientListener<T>[1]
-    : never;
-
-  public begin() {
-    this.emitter.on(this.wantedEvent as any, this.listener);
-  }
-
-  public end() {
-    this.emitter.removeListener(this.wantedEvent as any, this.listener);
-  }
-}
+export type PromiseLike = void | Promise<void>;

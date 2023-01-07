@@ -1,26 +1,30 @@
-import { IProxyServerEvents, IProxyServerOpts, ProxyServer } from "./abstract/proxyServer";
+import { IProxyServerEvents } from "./abstract/proxyServer";
 import { AntiAFKOpts, AntiAFKServer } from "./impls/antiAfkServer";
 import { CombinedPredictor } from "./impls/combinedPredictor";
-import { Server, Client} from "minecraft-protocol";
-import type {Bot, BotOptions} from "mineflayer"
+import { Server, Client, ServerClient, PacketMeta } from "minecraft-protocol";
+
 import { Conn } from "@rob9315/mcproxy";
 import { waitUntilStartingTime } from "./util/remoteInfo";
-import { PacketQueuePredictor, PacketQueuePredictorEvents } from "./abstract/packetQueuePredictor";
-import {EventEmitter2} from "eventemitter2";
-import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
+import { PacketQueuePredictorEvents } from "./abstract/packetQueuePredictor";
+import { EventEmitter2, ConstructorOptions } from "eventemitter2";
 import { sleep } from "./util/index";
-import { EventRegister } from "./abstract/EventRegister";
+import { ClientEventRegister, ServerEventRegister } from "./abstract/eventRegisters";
+import {StrictEventEmitter} from "strict-event-emitter-types";
+import type { Bot, BotOptions } from "mineflayer"
 
 
-interface ServerLogicEvents extends PacketQueuePredictorEvents, IProxyServerEvents  {
+export interface ServerLogicEvents extends PacketQueuePredictorEvents, IProxyServerEvents {
     started: () => void;
+    "*": ServerLogicEvents[Exclude<keyof ServerLogicEvents, "*">]
 }
+
+export type StrictServerLogicEvents = Omit<ServerLogicEvents, "*">
 
 type ServerLogicEmitter = StrictEventEmitter<EventEmitter2, ServerLogicEvents>;
 
+export class ServerLogic extends (EventEmitter2 as { new(options?: ConstructorOptions): ServerLogicEmitter }) {
 
-export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter }) {
-
+    public readonly event: any;
     private online: boolean;
     private _options: BotOptions;
     private _psOpts: AntiAFKOpts;
@@ -28,10 +32,13 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
     private _rawServer: Server;
     private _proxyServer: AntiAFKServer | null;
     private _queue: CombinedPredictor | null;
+    private _registeredClientListeners: Set<string> = new Set();
+    private _runningClientListeners: ClientEventRegister<Bot | Client, any>[] = [];
+
+    private _registeredServerListeners: Set<string> = new Set();
+    private _runningServerListeners: ServerEventRegister<any>[] = [];
 
 
-    private _registeredListeners: Set<string> = new Set();
-    private _runningListeners: EventRegister<Bot | Client, any>[] = [];
 
     public get queue() {
         return this._queue;
@@ -53,8 +60,16 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
         return this._proxyServer?.remoteClient;
     }
 
+    public get connectedPlayer() {
+        return this._proxyServer?.connectedPlayer;
+    }
+
     public get psOpts() {
         return this._psOpts;
+    }
+
+    public get bOpts() {
+        return this._options;
     }
 
     public set psOpts(opts: AntiAFKOpts) {
@@ -68,20 +83,23 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
         bOptions: BotOptions,
         psOptions: AntiAFKOpts
     ) {
-        super();
+        super({ wildcard: true });
         this.online = online;
         this._options = bOptions;
         this._psOpts = psOptions;
         this._rawServer = server;
         this._proxyServer = null;
         this._queue = null;
+
+        this._rawServer.on("login", this.notConnectedLoginHandler);
     }
-    
+
     public isProxyConnected() {
         return this._proxyServer && this._proxyServer.isProxyConnected();
     }
 
     public start() {
+        this._rawServer.removeListener("login", this.notConnectedLoginHandler);
         this._conn = new Conn(this._options);
         this._queue = new CombinedPredictor(this._conn);
         this._proxyServer = AntiAFKServer.wrapServer(this.online, this._conn, this._rawServer, this._queue, this._psOpts);
@@ -102,6 +120,7 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
     public stop() {
         this._queue.end();
         this._proxyServer.stop();
+        this._rawServer.on("login", this.notConnectedLoginHandler);
     }
 
     public shutdown() {
@@ -114,22 +133,102 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
         this.start();
     }
 
-    public registerListeners(...listeners: EventRegister<Bot | Client, any>[]) {
-        for (const listener of listeners) {
-            if (this._registeredListeners.has(listener.constructor.name)) continue;
-            this._registeredListeners.add(listener.constructor.name);
-            listener.begin();
-            this._runningListeners.push(listener);
+    public kickAll() {
+        for (const client in this._rawServer.clients) {
+            this._rawServer.clients[client].end("Host ran kick all.");
         }
     }
 
-    public removeListeners(...listeners: EventRegister<Bot | Client, any>[]) {
+    public registerClientListeners(...listeners: ClientEventRegister<Bot | Client, any>[]) {
         for (const listener of listeners) {
-            if (!this._registeredListeners.has(listener.constructor.name)) continue;
-            this._registeredListeners.delete(listener.constructor.name);
-            listener.end();
-            this._runningListeners = this._runningListeners.filter(l => l.constructor.name !== listener.constructor.name);
+            if (this._registeredClientListeners.has(listener.constructor.name)) continue;
+            this._registeredClientListeners.add(listener.constructor.name);
+            listener.begin();
+            this._runningClientListeners.push(listener);
         }
     }
+
+    public removeClientListeners(...listeners: ClientEventRegister<Bot | Client, any>[]) {
+        for (const listener of listeners) {
+            if (!this._registeredClientListeners.has(listener.constructor.name)) continue;
+            this._registeredClientListeners.delete(listener.constructor.name);
+            listener.end();
+            this._runningClientListeners = this._runningClientListeners.filter(l => l.constructor.name !== listener.constructor.name);
+        }
+    }
+
+    public removeAllClientListeners() {
+        this._registeredClientListeners.clear();
+        for (const listener of this._runningClientListeners) {
+            listener.end();
+        }
+        this._runningClientListeners = [];
+    }
+
+    public registerServerListeners(...listeners: ServerEventRegister<any>[]) {
+        for (const listener of listeners) {
+            if (this._registeredServerListeners.has(listener.constructor.name)) continue;
+            this._registeredServerListeners.add(listener.constructor.name);
+            listener.begin();
+            this._runningServerListeners.push(listener);
+        }
+    }
+
+    public removeServerListeners(...listeners: ServerEventRegister<any>[]) {
+        for (const listener of listeners) {
+            console.log(listener.constructor.name)
+            if (!this._registeredServerListeners.has(listener.constructor.name)) continue;
+            this._registeredServerListeners.delete(listener.constructor.name);
+            listener.end();
+            this._runningServerListeners = this._runningServerListeners.filter(l => l.constructor.name !== listener.constructor.name);
+        }
+    }
+
+    public removeAllServerListeners() {
+        this._registeredServerListeners.clear();
+        for (const listener of this._runningServerListeners) {
+            listener.end();
+        }
+        this._runningServerListeners = [];
+    }
+
+    protected notConnectedLoginHandler = (actualUser: ServerClient) => {
+        actualUser.write('login', {
+            entityId: actualUser.id,
+            levelType: 'default',
+            gameMode: 0,
+            dimension: 0,
+            difficulty: 2,
+            maxPlayers: 1,
+            reducedDebugInfo: false
+        });
+        actualUser.write('position', {
+            x: 0,
+            y: 1.62,
+            z: 0,
+            yaw: 0,
+            pitch: 0,
+            flags: 0x00
+        });
+        
+        actualUser.on("chat", ({message}: {message: string}, packetMeta: PacketMeta) => {
+            switch (message) {
+                case "/start":
+                    this.kickAll();
+                    this.start();
+                    break;
+                default:
+                    break;
+            }
+                
+        })
+        actualUser.on("tab_complete", (packetData: {text: string, assumeCommand: boolean, lookedAtBlock?: any}, packetMeta: PacketMeta) => {
+            if ("/start".startsWith(packetData.text)) {
+                actualUser.write('tab_complete', {
+                    matches: ["/start"]
+                })
+            }
+        });
+    };
 
 }

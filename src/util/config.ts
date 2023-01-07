@@ -6,8 +6,8 @@ export function loadConfig(wd: string): object {
     return JSON.parse(fs.readFileSync(wd + "/options.json").toString())
 }
 
-export function validateOptions<T extends object>(config: any): T {
-    const validationResult = configSchema.validate(config, {
+export function validateOptions<T extends object>(options: any): T {
+    const validationResult = configSchema.validate(options, {
       abortEarly: false, // (find all errors)
       allowUnknown: true, // (allow undefined values (we'll set defaults where we can))
     });

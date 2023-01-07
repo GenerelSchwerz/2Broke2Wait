@@ -5,144 +5,7 @@ import { Conn } from "@rob9315/mcproxy";
 
 import type { Bot, BotEvents } from "mineflayer";
 
-type Overloads<T extends (...args: any[]) => any> = T extends {
-  (...args: infer A1): infer R1;
-  (...args: infer A2): infer R2;
-  (...args: infer A3): infer R3;
-  (...args: infer A4): infer R4;
-  (...args: infer A5): infer R5;
-  (...args: infer A6): infer R6;
-  (...args: infer A7): infer R7;
-  (...args: infer A8): infer R8;
-  (...args: infer A9): infer R9;
-}
-  ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-      | ((...args: A7) => R7)
-      | ((...args: A8) => R8)
-      | ((...args: A9) => R9)
-  : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-      (...args: infer A6): infer R6;
-      (...args: infer A7): infer R7;
-      (...args: infer A8): infer R8;
-    }
-  ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-      | ((...args: A7) => R7)
-      | ((...args: A8) => R8)
-  : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-      (...args: infer A6): infer R6;
-      (...args: infer A7): infer R7;
-    }
-  ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-      | ((...args: A7) => R7)
-  : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-      (...args: infer A6): infer R6;
-    }
-  ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-  : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-    }
-  ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-  : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-    }
-  ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-  : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-    }
-  ? ((...args: A1) => R1) | ((...args: A2) => R2) | ((...args: A3) => R3)
-  : T extends { (...args: infer A1): infer R1; (...args: infer A2): infer R2 }
-  ? ((...args: A1) => R1) | ((...args: A2) => R2)
-  : T extends { (...args: infer A1): infer R1 }
-  ? (...args: A1) => R1
-  : never;
-
-type OverloadedParameters<T extends (...args: any[]) => any> = Parameters<
-  Overloads<T>
->;
-type OverloadedReturnType<T extends (...args: any[]) => any> = ReturnType<
-  Overloads<T>
->;
-
-type ValidEmitters = Bot | Client;
-
-type ValidClientFuncs = Extract<
-  OverloadedParameters<Client["on"]>,
-  [
-    event: any, //"packet" | "raw" | "session" | "state" | "end" | "connect"
-    handler: any
-  ]
->;
-type ValidClientEvents = ValidClientFuncs[0];
-
-type ClientListener<T extends ValidClientEvents> = Extract<
-  ValidClientFuncs,
-  [event: T, handler: any]
->;
-
-type EmitterEvent<T extends ValidEmitters> = T extends Bot
-  ? keyof BotEvents
-  : T extends Client
-  ? ValidClientEvents
-  : never;
-
-type PromiseLike = void | Promise<void>;
+import type { ClientListener, ClientEvent, PromiseLike, ClientEmitters } from "../util/utilTypes";
 
 export interface PacketQueuePredictorEvents {
   invalidData: (...any: any[]) => PromiseLike;
@@ -156,8 +19,8 @@ type PacketQueuePredictorEmitter<
 > = StrictEventEmitter<EventEmitter2, T>;
 
 export abstract class PacketQueuePredictor<
-  Src extends ValidEmitters,
-  T extends EmitterEvent<Src>
+  Src extends ClientEmitters,
+  T extends ClientEvent<Src>
 > extends (EventEmitter2 as {
   new (options?: ConstructorOptions): PacketQueuePredictorEmitter;
 }) {
@@ -191,9 +54,9 @@ export abstract class PacketQueuePredictor<
     this.remoteClient = conn.stateData.bot._client;
   }
 
-  protected abstract listener: T extends EmitterEvent<Bot>
+  protected abstract listener: T extends ClientEvent<Bot>
     ? BotEvents[T]
-    : T extends EmitterEvent<Client>
+    : T extends ClientEvent<Client>
     ? ClientListener<T>[1]
     : never;
 

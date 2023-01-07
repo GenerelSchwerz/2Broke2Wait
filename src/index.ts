@@ -71,7 +71,10 @@ wrapper.on("remoteError", async (error) => {
 
 wrapper.on("decidedClose", (reason) => {
   console.log("STOPPED SERVER:", reason);
+  wrapper.removeAllClientListeners();
+  wrapper.removeAllServerListeners();
 });
+
 
 wrapper.on("started", () => {
   if (checkedConfig.discord.webhooks.enabled) {
@@ -79,14 +82,21 @@ wrapper.on("started", () => {
   }
 })
 
-rawServer.on("connection", console.log)
 
 
 if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
   const discord = buildClient(checkedConfig.discord.bot, wrapper);
+  console.log("We are using a discord bot.");
 } else {
   console.log("No discord token included. Going without it (No command functionality currently).");
   wrapper.start();
+}
+
+
+if (checkedConfig.discord.webhooks.enabled) {
+  console.log("Using discord webhooks to relay information!");
+} else {
+  console.log("Discord webhooks are disabled. Will not be using them.")
 }
 
 
@@ -99,7 +109,7 @@ function updateServerMotd(oldPos: number, newPos: number, eta: number) {
 
   rawServer.motd = `Pos: ${newPos}, ETA: ${Duration.fromMillis(
     eta * 1000 - Date.now()
-  ).toFormat("dd:hh:mm:ss")}`;
+  ).toFormat("d 'days' h 'hours' m 'minutes'")}`;
 }
 
 /////////////////////////////////////////////

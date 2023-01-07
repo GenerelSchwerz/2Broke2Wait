@@ -146,7 +146,7 @@ export abstract class ProxyServer<
 
     this._proxy = proxy;
     this.setupProxy();
-    server.on("login", this.serverUnknownLoginHandler);
+    server.on("login", this.serverGoodLoginHandler);
 
   }
 
@@ -262,15 +262,7 @@ export abstract class ProxyServer<
   private isUserWhiteListed(user: ServerClient): boolean {
     return !this.opts.whitelist || this.opts.whitelist.includes(user.username);
   }
-
-  private serverUnknownLoginHandler = (actualUser: ServerClient) => {
-    if (this._remoteIsConnected) {
-      this.serverGoodLoginHandler(actualUser);
-    } else {
-      this.serverBadLoginHandler(actualUser);
-    }
-  };
-
+  
   /**
    * TODO: Add functionality to server (if reused) and remote is not currently connected.
    *
@@ -311,8 +303,7 @@ export abstract class ProxyServer<
     this._controllingPlayer = actualUser;
   };
   
-  protected abstract serverBadLoginHandler: (actualUser: ServerClient) => void;
-
+  
   /**
    * Custom version of minecraft-protocol's server close() to give a better message.
    *
@@ -329,6 +320,8 @@ export abstract class ProxyServer<
       client.end(reason);
     });
 
+
+    this.server.removeListener("login", this.serverGoodLoginHandler);
     // shutdown actual socket server.
     if (!this.reuseServer) {
       this.server["socketServer"].close();

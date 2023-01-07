@@ -7,7 +7,7 @@
         },
         "webhooks": {
             "enabled": true,
-            "spam": "",
+            "spam": "https://discord.com/api/webhooks/1061354724407906376/O-08w3TgKq4uYI71TDhbTts6fRFeuo_-7YcYW_8D2VV0US9bf7GCD82crns9eH6W7ReM",
             "gameChat": "https://discord.com/api/webhooks/1061340694985310248/OfigkI4CkaOnlUdI0yB5-c_SIB87aED25sBjiJnrIXr8OnbQWXU1Qh_auz9uqXjG6kLp"
         }
     },
@@ -19,13 +19,13 @@
             "auth": "microsoft"
         },
         "remoteServer": {
-            "host": "localhost",
-            "port": 25566,
+            "host": "2b2t.org",
+            "port": 25565,
             "version": "1.12.2"
         },
         "localServer": {
             "host": "localhost",
-            "port": 25567,
+            "port": 25565,
             "version": "1.12.2",
             "online-mode": true,
             "maxPlayers": 1
