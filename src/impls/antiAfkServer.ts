@@ -89,7 +89,9 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
       );
     }
 
-  protected serverBadLoginHandler = (actualUser: ServerClient) => {};
+  protected serverBadLoginHandler = (actualUser: ServerClient) => {
+    console.log(actualUser);
+  };
 
   protected override optionValidation(): AntiAFKOpts {
     this.opts.antiAFK = this.opts.antiAFK && this.remoteBot.hasPlugin(antiAFK);

@@ -1,7 +1,15 @@
 {
     "discord": {
-        "token": "MTA2MTA0NDgxNDU1NDA3MTExMA.GKY-MG.XvLXnb2P8oLgAa4vnqa1lmCu-zn20tUTO_DCQk",
-        "prefix": "!"
+        "bot": {
+            "enabled": true,
+            "botToken": "MTA2MTA0NDgxNDU1NDA3MTExMA.GKY-MG.XvLXnb2P8oLgAa4vnqa1lmCu-zn20tUTO_DCQk",
+            "prefix": "!"
+        },
+        "webhooks": {
+            "enabled": true,
+            "spam": "",
+            "gameChat": "https://discord.com/api/webhooks/1061340694985310248/OfigkI4CkaOnlUdI0yB5-c_SIB87aED25sBjiJnrIXr8OnbQWXU1Qh_auz9uqXjG6kLp"
+        }
     },
     "minecraft": {
         "account": {
@@ -23,7 +31,7 @@
             "maxPlayers": 1
         },
         "localServerOptions": {
-            "restartOnDisconnect": true,
+            "restartOnDisconnect": false,
             "antiAFK": true,
             "autoEat": true,
             "whitelist": ["Generel_Schwerz"]

@@ -19,12 +19,13 @@ const optionDir: string = process.argv[3] + "/options.json";
 
 import * as fs from "fs";
 
-import { validateConfig } from "./util/config";
+import { validateOptions } from "./util/config";
 import { botOptsFromConfig, Options } from "./util/options";
 import { Duration } from "ts-luxon";
 import { ServerLogic } from "./serverLogic";
 import {createServer} from "minecraft-protocol"
 import { buildClient } from "./discord/index";
+import { applyWebhookListeners } from "./util/chatting";
 
 /////////////////////////////////////////////
 //              Initialization             //
@@ -34,11 +35,14 @@ import { buildClient } from "./discord/index";
 
 const config = JSON.parse(fs.readFileSync(optionDir).toString());
 
-const checkedConfig: Options = validateConfig(config);
+const checkedConfig: Options = validateOptions(config);
 
 const botOptions = botOptsFromConfig(checkedConfig);
 
 const rawServer = createServer(checkedConfig.minecraft.localServer);
+
+console.log(checkedConfig.minecraft.localServer);
+
 const wrapper = new ServerLogic(true, rawServer, botOptions, checkedConfig.minecraft.localServerOptions);
 
 wrapper.on("enteredQueue", () => {
@@ -69,16 +73,20 @@ wrapper.on("decidedClose", (reason) => {
   console.log("STOPPED SERVER:", reason);
 });
 
+wrapper.on("started", () => {
+  if (checkedConfig.discord.webhooks.enabled) {
+    applyWebhookListeners(wrapper, checkedConfig.discord.webhooks)
+  }
+})
+
+rawServer.on("connection", console.log)
+
 
 if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
   const discord = buildClient(checkedConfig.discord.bot, wrapper);
 } else {
   console.log("No discord token included. Going without it (No command functionality currently).");
   wrapper.start();
-}
-
-if (checkedConfig.discord.webhooks.enabled) {
-  
 }
 
 

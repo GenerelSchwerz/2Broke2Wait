@@ -333,7 +333,7 @@ export abstract class ProxyServer<
     if (!this.reuseServer) {
       this.server["socketServer"].close();
     }
-
+    
     this.emit("decidedClose", reason);
   }
 }

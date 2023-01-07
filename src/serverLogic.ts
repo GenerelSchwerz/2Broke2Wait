@@ -12,10 +12,12 @@ import { sleep } from "./util/index";
 import { EventRegister } from "./abstract/EventRegister";
 
 
-interface ServerLogicEvents extends PacketQueuePredictorEvents, IProxyServerEvents  {}
-
+interface ServerLogicEvents extends PacketQueuePredictorEvents, IProxyServerEvents  {
+    started: () => void;
+}
 
 type ServerLogicEmitter = StrictEventEmitter<EventEmitter2, ServerLogicEvents>;
+
 
 export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter }) {
 
@@ -26,6 +28,10 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
     private _rawServer: Server;
     private _proxyServer: AntiAFKServer | null;
     private _queue: CombinedPredictor | null;
+
+
+    private _registeredListeners: Set<string> = new Set();
+    private _runningListeners: EventRegister<Bot | Client, any>[] = [];
 
     public get queue() {
         return this._queue;
@@ -40,11 +46,11 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
     }
 
     public get remoteBot() {
-        return this._proxyServer.remoteBot;
+        return this._proxyServer?.remoteBot;
     }
 
     public get remoteClient() {
-        return this._proxyServer.remoteClient;
+        return this._proxyServer?.remoteClient;
     }
 
     public get psOpts() {
@@ -80,11 +86,12 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
         this._queue = new CombinedPredictor(this._conn);
         this._proxyServer = AntiAFKServer.wrapServer(this.online, this._conn, this._rawServer, this._queue, this._psOpts);
         this._proxyServer.on("*" as any, (...args: any[]) => {
-            this.emit((this._proxyServer as any).event, ...args);
+            this.emit(this._proxyServer["event"], ...args);
         });
         this._queue.on("*" as any, (...args: any[]) => {
-            this.emit((this._queue as any).event, ...args);
+            this.emit(this._queue["event"], ...args);
         });
+        this.emit("started");
     }
 
     public async playat(hour: number, minute: number) {
@@ -93,13 +100,8 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
     }
 
     public stop() {
-        this._proxyServer.stop();
         this._queue.end();
-        this._proxyServer.once("decidedClose", () => {
-            this._proxyServer = null;
-            this._queue = null;
-        })
-     
+        this._proxyServer.stop();
     }
 
     public shutdown() {
@@ -112,12 +114,22 @@ export class ServerLogic extends ( EventEmitter2 as { new(): ServerLogicEmitter 
         this.start();
     }
 
-    // public registerListeners<L extends string, T extends (emitter: Bot | Client, listener: L) => EventRegister<Bot | Client, L>>(...listeners: T[]) {
-    //     for (const listener of listeners) {
-    //         if (this._registeredListeners.has(listener.name)) continue;
-    //         this._registeredListeners.add(listener.name);
-            
-    //     }
-    // }
+    public registerListeners(...listeners: EventRegister<Bot | Client, any>[]) {
+        for (const listener of listeners) {
+            if (this._registeredListeners.has(listener.constructor.name)) continue;
+            this._registeredListeners.add(listener.constructor.name);
+            listener.begin();
+            this._runningListeners.push(listener);
+        }
+    }
+
+    public removeListeners(...listeners: EventRegister<Bot | Client, any>[]) {
+        for (const listener of listeners) {
+            if (!this._registeredListeners.has(listener.constructor.name)) continue;
+            this._registeredListeners.delete(listener.constructor.name);
+            listener.end();
+            this._runningListeners = this._runningListeners.filter(l => l.constructor.name !== listener.constructor.name);
+        }
+    }
 
 }
