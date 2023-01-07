@@ -91,7 +91,7 @@ export class ServerLogic extends (EventEmitter2 as { new(options?: ConstructorOp
         this._proxyServer = null;
         this._queue = null;
 
-        this._rawServer.on("login", this.notConnectedLoginHandler);
+        this.convertToDisconnected();
     }
 
     public isProxyConnected() {
@@ -99,7 +99,8 @@ export class ServerLogic extends (EventEmitter2 as { new(options?: ConstructorOp
     }
 
     public start() {
-        this._rawServer.removeListener("login", this.notConnectedLoginHandler);
+        this.convertToConnected();
+
         this._conn = new Conn(this._options);
         this._queue = new CombinedPredictor(this._conn);
         this._proxyServer = AntiAFKServer.wrapServer(this.online, this._conn, this._rawServer, this._queue, this._psOpts);
@@ -120,7 +121,7 @@ export class ServerLogic extends (EventEmitter2 as { new(options?: ConstructorOp
     public stop() {
         this._queue.end();
         this._proxyServer.stop();
-        this._rawServer.on("login", this.notConnectedLoginHandler);
+        this.convertToDisconnected();
     }
 
     public shutdown() {
@@ -192,6 +193,28 @@ export class ServerLogic extends (EventEmitter2 as { new(options?: ConstructorOp
         this._runningServerListeners = [];
     }
 
+
+    protected convertToConnected() {
+        this._rawServer.on("login", this.whileConnectedCommandHandler);
+        this._rawServer.off("login", this.notConnectedCommandHandler);
+        this._rawServer.off("login", this.notConnectedLoginHandler);
+
+        for (const client in this._rawServer.clients) {
+            this.whileConnectedCommandHandler(this._rawServer.clients[client] as any);
+        }
+    }
+
+    protected convertToDisconnected() {
+        this._rawServer.on("login", this.notConnectedCommandHandler);
+        this._rawServer.on("login", this.notConnectedLoginHandler);
+        this._rawServer.off("login", this.whileConnectedCommandHandler);
+
+        for (const client in this._rawServer.clients) {
+            this.notConnectedCommandHandler(this._rawServer.clients[client] as any);
+        }
+    }
+
+
     protected notConnectedLoginHandler = (actualUser: ServerClient) => {
         actualUser.write('login', {
             entityId: actualUser.id,
@@ -210,7 +233,13 @@ export class ServerLogic extends (EventEmitter2 as { new(options?: ConstructorOp
             pitch: 0,
             flags: 0x00
         });
-        
+    }
+
+    /**
+     * This WILL be moved later.
+     * @param actualUser 
+     */
+    protected notConnectedCommandHandler = (actualUser: ServerClient) => {
         actualUser.on("chat", ({message}: {message: string}, packetMeta: PacketMeta) => {
             switch (message) {
                 case "/start":
@@ -226,6 +255,30 @@ export class ServerLogic extends (EventEmitter2 as { new(options?: ConstructorOp
             if ("/start".startsWith(packetData.text)) {
                 actualUser.write('tab_complete', {
                     matches: ["/start"]
+                })
+            }
+        });
+    };
+
+    /**
+     * This WILL be moved later.
+     * @param actualUser 
+     */
+    protected whileConnectedCommandHandler = (actualUser: ServerClient) => {        
+        actualUser.on("chat", ({message}: {message: string}, packetMeta: PacketMeta) => {
+            switch (message) {
+                case "/stop":
+                    this.stop();
+                    break;
+                default:
+                    break;
+            }
+                
+        })
+        actualUser.on("tab_complete", (packetData: {text: string, assumeCommand: boolean, lookedAtBlock?: any}, packetMeta: PacketMeta) => {
+            if ("/stop".startsWith(packetData.text)) {
+                actualUser.write('tab_complete', {
+                    matches: ["/stop"]
                 })
             }
         });
