@@ -9,7 +9,8 @@ import { AntiAFKEvents, AntiAFKServer, StrictAntiAFKEvents } from "../impls/anti
 
 import { ClientEmitters, ClientEvent } from "../util/utilTypes";
 import { PacketQueuePredictorEvents } from "./packetQueuePredictor";
-import { IProxyServerEvents, ProxyServer } from "./proxyServer";
+import { ProxyServer } from "./proxyBuilder";
+import { IProxyServerEvents } from "./proxyServer";
 
 
 // const NiceClientNames: {[key in ClientEvent<ClientEmitters>]: string} = {

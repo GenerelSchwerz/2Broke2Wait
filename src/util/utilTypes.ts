@@ -1,4 +1,4 @@
-import EventEmitter2, { ConstructorOptions } from "eventemitter2";
+import EventEmitter2, { ConstructorOptions, event, Listener, ListenerFn, OnOptions } from "eventemitter2";
 import type { Client } from "minecraft-protocol";
 import type { Bot, BotEvents } from "mineflayer";
 import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
@@ -196,53 +196,29 @@ interface ITypedEventEmitter<T, K = T> {
   on: OnAll<T>,
   emit: EmitAll<K>
 }
-
+type ListenerType<T> = [T] extends [(...args: infer U) => any] ? U : [T] extends [void] ? [] : [T];
 // Optional derived class if we need it (if we have nothing to add we can just us EventEmitter directly 
-class TypedEventEmitterImpl extends EventEmitter2 { }
+//(EventEmitter2 as { new(): StrictEventEmitter<EventEmitter2, any, any> }) {
+class TypedEventEmitterImpl extends (EventEmitter2 as { new(): StrictEventEmitter<EventEmitter2, any, any> }) {
+
+}
 // Define the actual constructor, we need to use a type assertion to make the `EventEmitter` fit  in here 
 
-export const TypedEventEmitter: { 
-  new <T, K = T>(options?: ConstructorOptions): StrictEventEmitter<EventEmitter2, T, K> 
+export const TypedEventEmitter: {
+  new <T, K = T>(options?: ConstructorOptions): StrictEventEmitter<EventEmitter2, T, K>
 } = TypedEventEmitterImpl as any;
 
 // Define the type for our emitter 
-export type TypedEventEmitter<T, K = T> = StrictEventEmitter<T, K> & ITypedEventEmitter<T, K> // Order matters here, we want our overloads to be considered first
+export type TypedEventEmitter<T, K = T> = StrictEventEmitter<EventEmitter2, T, K>  // Order matters here, we want our overloads to be considered first
+
+// ITypedEventEmitter<T, K> &
 
 
 interface Events {
-  fuck: () => void;
-  fuck1: (reason: string) => void;
+  fuck: (reason: string) => void;
+  fuck1: (num: number) => void;
 }
-
-const test1: TypedEventEmitter<IProxyServerEvents> = TypedEventEmitter.prototype;
-test1.emit("remoteKick", {} as Error)
-test1.on("decidedClose", (reason) => {
-
-})
-
-test1.on("started", (conn) => {
-  
-})
-
-
-type CustomParams<T> = [T] extends [(...args: infer U) => any] ? U : [T] extends [void] ? [] : [T];
-type ListenerType<T> = [T] extends [(...args: infer U) => any] ? U : [T] extends [void] ? [] : [T];
-
-// expands object types one level deep
-type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
-
-// expands object types recursively
-type ExpandRecursively<T> = T extends object
-  ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
-  : T;
-
-
-interface Events {
-  fuck: () => void;
-  fuck1: (reason: string) => void;
-}
-
 interface NewEvents extends Events {
-  fuck2: (num: number) => void 
-};
+  fuck2: (num: number, num1: number) => void;
+}
 

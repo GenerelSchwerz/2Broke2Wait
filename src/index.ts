@@ -45,14 +45,15 @@ console.log(checkedConfig.minecraft.localServer);
 
 const wrapper = AntiAFKServer.wrapServer(true,botOptions,  rawServer, checkedConfig.minecraft.localServerOptions);
 
-wrapper.queue.on("enteredQueue", () => {
+
+wrapper.on("enteredQueue", () => {
   rawServer.motd = "Entered the queue!";
-  wrapper.queue.on("queueUpdate", updateServerMotd);
+  wrapper.on("queueUpdate", updateServerMotd);
 });
 
-wrapper.queue.on("leftQueue", () => {
+wrapper.on("leftQueue", () => {
   rawServer.motd = "In game!";
-  wrapper.queue.removeListener("queueUpdate", updateServerMotd);
+  wrapper.removeListener("queueUpdate", updateServerMotd);
 });
 
 wrapper.on("remoteKick", async (reason) => {

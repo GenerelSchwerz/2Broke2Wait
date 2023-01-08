@@ -5,8 +5,9 @@ import { Conn } from "@rob9315/mcproxy";
 import { ClientListener, ClientEvent, ClientEmitters } from "../util/utilTypes";
 
 import type { Bot, BotEvents } from "mineflayer";
-import { IProxyServerEvents, ProxyServer } from "./proxyServer";
+import { IProxyServerEvents } from "./proxyServer";
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from "./packetQueuePredictor";
+import { ProxyServer } from "./proxyBuilder";
 
 export interface EventRegister {
   begin(): void;

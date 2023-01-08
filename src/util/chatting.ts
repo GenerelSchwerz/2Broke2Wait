@@ -1,12 +1,11 @@
-import { Options } from "./options";
 import type { Bot } from "mineflayer";
-import {
-  ClientWebhookReporter,
-  AntiAFKWebhookReporter,
-} from "../abstract/webhookReporters";
 import { DateTime, Duration } from "ts-luxon";
-import { ProxyServer } from "../abstract/proxyServer";
+import { ProxyServer } from "../abstract/proxyBuilder";
+import {
+  AntiAFKWebhookReporter, ClientWebhookReporter
+} from "../abstract/webhookReporters";
 import { AntiAFKServer } from "../impls/antiAfkServer";
+import { Options } from "./options";
 
 function escapeMarkdown(...texts: string[]): string[] {
   for (let text in texts) {
@@ -138,7 +137,7 @@ export function applyWebhookListeners(
 
     srv.registerServerListeners(start, stop);
   }
-  
+
   const queueUpdates = new ServerQueueUpdateMessenger(srv, config.spam);
   const enteredQueue = new ServerEnteredQueueMessenger(srv, config.spam);
   srv.registerQueueListeners(queueUpdates, enteredQueue);
