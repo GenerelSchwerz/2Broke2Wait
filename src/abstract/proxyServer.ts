@@ -60,7 +60,7 @@ export abstract class ProxyServer<
   /**
    * Proxy instance. see Rob's proxy. {@link Conn}
    */
-  private _proxy: Conn;
+  private _proxy: Conn | null;
 
   /**
    * Proxy instance. see Rob's proxy. {@link Conn}
@@ -73,14 +73,14 @@ export abstract class ProxyServer<
    * Internal bot connected to remote server. Created by {@link ProxyServer.proxy | ProxyServer's proxy.}
    */
   public get remoteBot() {
-    return this._proxy.stateData.bot;
+    return this._proxy?.stateData.bot;
   }
 
   /**
    * Internal mc protocol client connected to remote server. Created by {@link ProxyServer.proxy | ProxyServer's proxy.}
    */
   public get remoteClient() {
-    return this._proxy.stateData.bot._client;
+    return this._proxy?.stateData.bot._client;
   }
 
   /**
@@ -182,18 +182,18 @@ export abstract class ProxyServer<
    */
   protected abstract endBotLogic(): void;
 
-  public replaceProxy(conn: Conn) {
-    if (this._proxy.pclient) {
-      conn.link(this._proxy.pclient);
-      this._proxy.unlink();
-    }
-    for (const client of this._proxy.pclients) {
-      this._proxy.detach(client);
-      conn.attach(client);
-    }
-    this._proxy = conn;
-    this.setupProxy();
-  }
+  // public replaceProxy(conn: Conn) {
+  //   if (this._proxy.pclient) {
+  //     conn.link(this._proxy.pclient);
+  //     this._proxy.unlink();
+  //   }
+  //   for (const client of this._proxy.pclients) {
+  //     this._proxy.detach(client);
+  //     conn.attach(client);
+  //   }
+  //   this._proxy = conn;
+  //   this.setupProxy();
+  // }
 
   public setupProxy(): void {
     this.initialBotSetup(this._proxy.stateData.bot);
@@ -242,7 +242,6 @@ export abstract class ProxyServer<
     } else {
       this.emit("remoteKick", info)
     }
-    
   };
 
   /**
@@ -328,6 +327,10 @@ export abstract class ProxyServer<
     }
     
     this.emit("decidedClose", reason);
+  }
+
+  public start = () => {
+    
   }
 }
 
