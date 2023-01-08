@@ -5,12 +5,12 @@ import {
   QueueEventRegister,
   ServerEventRegister,
 } from "../abstract/eventRegisters";
-import { AntiAFKEvents, AntiAFKServer, StrictAntiAFKEvents } from "../impls/antiAfkServer";
+import { AntiAFKServer, StrictAntiAFKEvents } from "../impls/antiAfkServer";
 
 import { ClientEmitters, ClientEvent } from "../util/utilTypes";
 import { PacketQueuePredictorEvents } from "./packetQueuePredictor";
 import { ProxyServer } from "./proxyBuilder";
-import { IProxyServerEvents } from "./proxyServer";
+import { IProxyServerEvents, OldProxyServer } from "./proxyServer";
 
 
 // const NiceClientNames: {[key in ClientEvent<ClientEmitters>]: string} = {
@@ -58,12 +58,13 @@ const NiceServerNames: {[key in keyof StrictAntiAFKEvents]: string } = {
   started: "Server started!",
 } as const;
 
+
 export abstract class AntiAFKWebhookReporter<
-  K extends keyof StrictAntiAFKEvents
-> extends ServerEventRegister<K, AntiAFKEvents, AntiAFKServer> {
+  T extends keyof StrictAntiAFKEvents
+> extends ServerEventRegister<StrictAntiAFKEvents, T, AntiAFKServer> {
   protected readonly webhookClient: WebhookClient;
 
-  constructor(srv: AntiAFKServer, event: K, public url: string) {
+  constructor(srv: AntiAFKServer, event: T, public url: string) {
     super(srv, event);
     this.webhookClient = new WebhookClient({ url });
   }
@@ -72,6 +73,7 @@ export abstract class AntiAFKWebhookReporter<
 
     const eta = !Number.isNaN(this.srv.queue.eta) ? Duration.fromMillis(this.srv.queue.eta * 1000 - Date.now()) : null;
 
+    console.log(this.srv.isProxyConnected());
     const embed: APIEmbed = {
       title: NiceServerNames[this.wantedEvent],
       footer: {

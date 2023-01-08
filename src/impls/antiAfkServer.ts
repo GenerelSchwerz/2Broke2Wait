@@ -1,21 +1,26 @@
+import { IProxyServerEvents, OldProxyServer } from "../abstract/proxyServer";
+import { Bot, BotOptions } from "mineflayer";
+import {
+  ServerOptions,
+  createServer,
+  Server,
+  ServerClient,
+  PacketMeta,
+  Client
+} from "minecraft-protocol";
+import { IProxyServerOpts } from "../abstract/proxyServer";
+import { Conn } from "@rob9315/mcproxy";
 import antiAFK, {
   DEFAULT_MODULES,
   DEFAULT_PASSIVES
 } from "@nxg-org/mineflayer-antiafk";
 import autoEat from "@nxg-org/mineflayer-auto-eat";
-import { Conn } from "@rob9315/mcproxy";
-import EventEmitter2 from "eventemitter2";
-import {
-  Client, createServer, PacketMeta, Server,
-  ServerClient, ServerOptions
-} from "minecraft-protocol";
-import { Bot, BotOptions } from "mineflayer";
-import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
-import { ClientEventRegister, ServerEventRegister } from "../abstract/eventRegisters";
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../abstract/packetQueuePredictor";
-import { BuildProxyBase } from "../abstract/proxyBuilder";
-import { IProxyServerEvents, IProxyServerOpts } from "../abstract/proxyServer";
+import { ClientEventRegister, ServerEventRegister } from "../abstract/eventRegisters";
 import { CombinedPredictor } from "./combinedPredictor";
+import { BuildProxyBase, ProxyServer } from "../abstract/proxyBuilder";
+import EventEmitter2, { ConstructorOptions } from "eventemitter2";
+import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
 
 export interface AntiAFKOpts extends IProxyServerOpts {
   antiAFK: boolean;
@@ -24,17 +29,15 @@ export interface AntiAFKOpts extends IProxyServerOpts {
 
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
-  "*": AntiAFKEvents[Exclude<keyof AntiAFKEvents, "*">]
+  "*": AntiAFKEvents[Exclude<keyof AntiAFKEvents, "*">];
 }
-
-
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, "*">
 
-class AntiAFKEmitter extends (EventEmitter2 as { new(): StrictEventEmitter<EventEmitter2, StrictAntiAFKEvents> }) { }
+class Shit extends (EventEmitter2 as { new(options?: ConstructorOptions): StrictEventEmitter<EventEmitter2, StrictAntiAFKEvents>}) {};
 
-const AntiAFKProxyBase = BuildProxyBase<AntiAFKOpts, StrictAntiAFKEvents>(AntiAFKEmitter);
+const AntiAFKBase = BuildProxyBase<AntiAFKOpts, StrictAntiAFKEvents>(Shit);
 
-export class AntiAFKServer extends AntiAFKProxyBase {
+export class AntiAFKServer extends AntiAFKBase {
 
   private _queue: PacketQueuePredictor<any, any>;
 
@@ -42,17 +45,20 @@ export class AntiAFKServer extends AntiAFKProxyBase {
     return this._queue;
   }
 
-  private _registeredQueueListeners: Set<string>;
-  private _runningQueueListeners: any[];
+  private _registeredQueueListeners: Set<string> = new Set();
+  private _runningQueueListeners: any[] = [];
 
-  public constructor(
-    reuseServer: boolean,
-    onlineMode: boolean,
-    bOpts: BotOptions,
-    server: Server,
-    psOpts: Partial<AntiAFKOpts>
-  ) {
-    super(reuseServer, onlineMode, bOpts, server, psOpts);
+  // public constructor(
+  //   onlineMode: boolean,
+  //   bOpts: BotOptions,
+  //   server: Server,
+  //   psOpts: Partial<AntiAFKOpts>
+  // ) {
+  //   super(onlineMode, bOpts, server, psOpts);
+  // }
+
+  public constructor(...args: any[]) {
+    super(args[0], args[1], args[2], args[3]);
   }
 
   /**
@@ -63,7 +69,7 @@ export class AntiAFKServer extends AntiAFKProxyBase {
    * @param {Plugin[]} plugins Mineflayer bot plugins to load into the remote bot.
    * @param {ServerOptions} sOptions Minecraft-protocol server options.
    * @param {Partial<IProxyServerOpts>} psOptions Partial list of ProxyServer options.
-   * @returns {ProxyServer} Built proxy server.
+   * @returns {OldProxyServer} Built proxy server.
    */
   public static wrapServer(
     online: boolean,
@@ -72,7 +78,6 @@ export class AntiAFKServer extends AntiAFKProxyBase {
     psOptions: Partial<AntiAFKOpts> = {}
   ): AntiAFKServer {
     return new AntiAFKServer(
-      true,
       online,
       bOpts,
       server,
@@ -81,16 +86,15 @@ export class AntiAFKServer extends AntiAFKProxyBase {
   }
 
 
-  public override start: () => Conn = () => {
-    console.log(this);
+  public override start() {
     const conn = super.start();
     this._queue = new CombinedPredictor(conn);
     this._queue.begin();
-    this._queue.on("*" as any, (...args: any[]) => { this.emit(this._queue["event"], ...args); });
+    this._queue.on("*", (...args: any[]) => { this.emit(this._queue["event"], ...args); });
     return conn;
   }
   
-  public override stop = () => {
+  public override stop () {
     super.stop();
     this._queue.end();
   }
@@ -221,7 +225,7 @@ export class AntiAFKServer extends AntiAFKProxyBase {
 
 
 
-  public registerQueueListeners(...listeners: ServerEventRegister<any>[]) {
+  public registerQueueListeners(...listeners: ServerEventRegister<any, any>[]) {
     for (const listener of listeners) {
       if (this._registeredQueueListeners.has(listener.constructor.name)) continue;
       this._registeredQueueListeners.add(listener.constructor.name);
@@ -230,7 +234,7 @@ export class AntiAFKServer extends AntiAFKProxyBase {
     }
   }
 
-  public removeServerListeners(...listeners: ServerEventRegister<any>[]) {
+  public removeServerListeners(...listeners: ServerEventRegister<any, any>[]) {
     for (const listener of listeners) {
       console.log(listener.constructor.name)
       if (!this._registeredQueueListeners.has(listener.constructor.name)) continue;

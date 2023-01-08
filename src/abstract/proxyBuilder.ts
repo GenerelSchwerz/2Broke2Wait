@@ -18,12 +18,12 @@ type BasicEmitter<T> = GConstructor<StrictEventEmitter<EventEmitter2, T>>;
 
 export function BuildProxyBase<Opts extends IProxyServerOpts, Key extends IProxyServerEvents = IProxyServerEvents>(Base: BasicEmitter<Key>) {
 
-    return class ProxyBase extends Base {
+    return class extends Base {
         private _registeredClientListeners: Set<string> = new Set();
         private _runningClientListeners: ClientEventRegister<Bot | Client, any>[] = [];
 
         private _registeredServerListeners: Set<string> = new Set();
-        private _runningServerListeners: ServerEventRegister<any>[] = [];
+        private _runningServerListeners: ServerEventRegister<any, any>[] = [];
 
 
         /**
@@ -33,7 +33,7 @@ export function BuildProxyBase<Opts extends IProxyServerOpts, Key extends IProxy
          *  {@link } and
          *  {@link }.
          */
-        public readonly reuseServer: boolean;
+        public readonly reuseServer: boolean = true;
 
         /**
          * Options for the proxy server.
@@ -122,20 +122,19 @@ export function BuildProxyBase<Opts extends IProxyServerOpts, Key extends IProxy
          * @param {Conn} proxy Proxy connection to remote server.
          * @param {IProxyServerOpts} psOpts Options for ProxyServer.
          */
-        protected constructor(...args: any[]) {
+        public constructor(...args: any[]) {
             super({ wildcard: true });
-            this.reuseServer = args[0];
-            this.onlineMode = args[1];
-            this.server = args[3];
+            this.onlineMode = args[0];
+            this.server = args[2];
 
             // TODO: somehow make this type-safe.
             this.psOpts = merge.withOptions(
                 { mergeArrays: false },
                 <IProxyServerOpts>{ whitelist: [] },
-               args[4]
+               args[3]
             ) as any;
 
-            this._bOpts = args[2];
+            this._bOpts = args[1];
         }
         
         /**
@@ -190,6 +189,7 @@ export function BuildProxyBase<Opts extends IProxyServerOpts, Key extends IProxy
             this._proxy.stateData.bot._client.on("end", this.remoteClientDisconnect);
             this._proxy.stateData.bot._client.on("error", this.remoteClientDisconnect);
             this._proxy.stateData.bot.on("login", () => {
+                console.log("hm");
                 this._remoteIsConnected = true
             });
             this._proxy.stateData.bot.once("spawn", this.beginBotLogic.bind(this));
@@ -337,16 +337,16 @@ export function BuildProxyBase<Opts extends IProxyServerOpts, Key extends IProxy
 
 
 
-        public start = () => {
+        public start(){
             this._proxy = new Conn(this._bOpts);
-            this.server.on("login", this.whileConnectedLoginHandler);
+            this.setupProxy();
             this.convertToConnected();
             this.emit("started" as any, this._proxy)
             return this._proxy;
         }
 
 
-        public stop = () => {
+        public stop(){
             this.closeConnections();
             this.convertToDisconnected();
         }
@@ -445,4 +445,3 @@ class ProxyEmitter extends (EventEmitter2 as { new(): StrictEventEmitter<EventEm
 
 export const ProxyServer = BuildProxyBase(ProxyEmitter);
 export type ProxyServer = typeof ProxyServer.prototype;
-

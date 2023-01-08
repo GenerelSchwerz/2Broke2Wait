@@ -1,11 +1,12 @@
-import type { Bot } from "mineflayer";
-import { DateTime, Duration } from "ts-luxon";
-import { ProxyServer } from "../abstract/proxyBuilder";
-import {
-  AntiAFKWebhookReporter, ClientWebhookReporter
-} from "../abstract/webhookReporters";
-import { AntiAFKServer } from "../impls/antiAfkServer";
 import { Options } from "./options";
+import type { Bot } from "mineflayer";
+import {
+  ClientWebhookReporter,
+  AntiAFKWebhookReporter,
+} from "../abstract/webhookReporters";
+import { DateTime, Duration } from "ts-luxon";
+import { OldProxyServer } from "../abstract/proxyServer";
+import { AntiAFKServer } from "../impls/antiAfkServer";
 
 function escapeMarkdown(...texts: string[]): string[] {
   for (let text in texts) {
@@ -18,7 +19,7 @@ function escapeMarkdown(...texts: string[]): string[] {
 
 // since chat is only triggered by players, no need to wait for in queue.
 class GameChatListener extends ClientWebhookReporter<Bot, "chat"> {
-  constructor(srv: ProxyServer, webhookUrl: string) {
+  constructor(srv: AntiAFKServer, webhookUrl: string) {
     super(srv, srv.remoteBot, "chat", webhookUrl);
   }
 
@@ -92,7 +93,7 @@ class ServerQueueUpdateMessenger extends AntiAFKWebhookReporter<"queueUpdate"> {
       `Current time: ${DateTime.local().toFormat("hh:mm a MM/dd/yyyy")}\n` +
       `Old position: ${oldPos}\n` +
       `New position: ${newPos}\n` +
-      `Estimated ETA: ${strETA}`
+      `Estimated ETA: ${strETA}`;
 
     const data = await this.webhookClient.send({
       embeds: [embed],
@@ -109,16 +110,15 @@ class ServerEnteredQueueMessenger extends AntiAFKWebhookReporter<"enteredQueue">
   protected listener = async () => {
     const embed = this.buildServerEmbed();
 
-    embed.description = `Entered queue at ${DateTime.local().toFormat("hh:mm a MM/dd/yyyy")}`
+    embed.description = `Entered queue at ${DateTime.local().toFormat(
+      "hh:mm a MM/dd/yyyy"
+    )}`;
 
     const data = await this.webhookClient.send({
       embeds: [embed],
     });
   };
-
 }
-
-
 
 export function applyWebhookListeners(
   srv: AntiAFKServer,

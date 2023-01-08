@@ -5,7 +5,7 @@ import { Conn } from "@rob9315/mcproxy";
 import { ClientListener, ClientEvent, ClientEmitters } from "../util/utilTypes";
 
 import type { Bot, BotEvents } from "mineflayer";
-import { IProxyServerEvents } from "./proxyServer";
+import { IProxyServerEvents, OldProxyServer } from "./proxyServer";
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from "./packetQueuePredictor";
 import { ProxyServer } from "./proxyBuilder";
 
@@ -40,17 +40,17 @@ export abstract class ClientEventRegister<
 }
 
 export abstract class ServerEventRegister<
-  K extends keyof T,
-  T extends IProxyServerEvents = IProxyServerEvents,
+  T extends IProxyServerEvents,
+  Key extends keyof T,
   Srv extends ProxyServer = ProxyServer,
 > implements EventRegister {
 
   constructor(
     protected readonly srv: Srv,
-    public readonly wantedEvent: K
+    public readonly wantedEvent: Key
   ) { }
 
-  protected abstract listener: T[K];
+  protected abstract listener: T[Key];
 
   public begin() {
     this.srv.on(this.wantedEvent as any, this.listener as any);

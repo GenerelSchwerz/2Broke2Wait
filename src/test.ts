@@ -27,7 +27,7 @@ function BuildProxyBase<Opts extends IProxyServerOpts, T extends BasicEmitter<IP
         private _runningClientListeners: ClientEventRegister<Bot | Client, any>[] = [];
 
         private _registeredServerListeners: Set<string> = new Set();
-        private _runningServerListeners: ServerEventRegister<any>[] = [];
+        private _runningServerListeners: ServerEventRegister<any, any>[] = [];
 
 
         /**

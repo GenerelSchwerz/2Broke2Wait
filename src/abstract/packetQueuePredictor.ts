@@ -12,7 +12,10 @@ export interface PacketQueuePredictorEvents {
   enteredQueue: () => PromiseLike;
   leftQueue: () => PromiseLike;
   queueUpdate: (oldPos: number, newPos: number, eta: number) => PromiseLike;
+  "*": PacketQueuePredictorEvents[Exclude<keyof PacketQueuePredictorEvents, "*">]
 }
+
+export type StrictPacketQueuePredictorEvents = Omit<PacketQueuePredictorEvents, "*">
 
 type PacketQueuePredictorEmitter<
   T extends PacketQueuePredictorEvents = PacketQueuePredictorEvents
