@@ -1,5 +1,5 @@
-import { PacketQueuePredictor } from "../abstract/packetQueuePredictor";
 import { Conn } from "@rob9315/mcproxy";
+import { PacketQueuePredictor } from "../abstract/packetQueuePredictor";
 import { getWaitTime } from "../util/remoteInfo";
 
 import type { Client, PacketMeta } from "minecraft-protocol";
@@ -9,7 +9,6 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, "packet"> {
 
   public constructor(conn: Conn) {
     super(conn, conn.stateData.bot._client, "packet");
-    this.begin();
   }
 
   public getPredictedEta(): number {

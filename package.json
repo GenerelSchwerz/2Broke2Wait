@@ -41,6 +41,7 @@
     "eventemitter2": "^6.4.9",
     "everpolate": "^0.0.3",
     "joi": "^17.7.0",
+    "strict-event-emitter": "^0.4.3",
     "strict-event-emitter-types": "^2.0.0",
     "ts-deepmerge": "^5.0.0",
     "ts-luxon": "^4.0.1"

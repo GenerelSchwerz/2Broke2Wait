@@ -1,11 +1,12 @@
-import { ServerLogic } from "../serverLogic";
 import { Options } from "./options";
 import type { Bot } from "mineflayer";
 import {
   ClientWebhookReporter,
-  ServerWebookReporter,
+  AntiAFKWebhookReporter,
 } from "../abstract/webhookReporters";
 import { DateTime, Duration } from "ts-luxon";
+import { ProxyServer } from "../abstract/proxyServer";
+import { AntiAFKServer } from "../impls/antiAfkServer";
 
 function escapeMarkdown(...texts: string[]): string[] {
   for (let text in texts) {
@@ -18,7 +19,7 @@ function escapeMarkdown(...texts: string[]): string[] {
 
 // since chat is only triggered by players, no need to wait for in queue.
 class GameChatListener extends ClientWebhookReporter<Bot, "chat"> {
-  constructor(srv: ServerLogic, webhookUrl: string) {
+  constructor(srv: ProxyServer, webhookUrl: string) {
     super(srv, srv.remoteBot, "chat", webhookUrl);
   }
 
@@ -31,7 +32,7 @@ class GameChatListener extends ClientWebhookReporter<Bot, "chat"> {
 
     embed.description = escapeMarkdown(...message).join("\n");
 
-    const data = await this._webhookClient.send({
+    const data = await this.webhookClient.send({
       embeds: [embed],
     });
 
@@ -40,8 +41,8 @@ class GameChatListener extends ClientWebhookReporter<Bot, "chat"> {
 }
 
 // Send started message when server starts.
-class ServerStartMessenger extends ServerWebookReporter<"started"> {
-  constructor(srv: ServerLogic, webhookUrl: string) {
+class ServerStartMessenger extends AntiAFKWebhookReporter<"started"> {
+  constructor(srv: AntiAFKServer, webhookUrl: string) {
     super(srv, "started", webhookUrl);
   }
 
@@ -56,8 +57,8 @@ class ServerStartMessenger extends ServerWebookReporter<"started"> {
 }
 
 // Send started message when server starts.
-class ServerStopMessenger extends ServerWebookReporter<"decidedClose"> {
-  constructor(srv: ServerLogic, webhookUrl: string) {
+class ServerStopMessenger extends AntiAFKWebhookReporter<"decidedClose"> {
+  constructor(srv: AntiAFKServer, webhookUrl: string) {
     super(srv, "decidedClose", webhookUrl);
   }
 
@@ -77,8 +78,8 @@ class ServerStopMessenger extends ServerWebookReporter<"decidedClose"> {
 }
 
 // Send started message when server starts.
-class ServerQueueUpdateMessenger extends ServerWebookReporter<"queueUpdate"> {
-  constructor(srv: ServerLogic, webhookUrl: string) {
+class ServerQueueUpdateMessenger extends AntiAFKWebhookReporter<"queueUpdate"> {
+  constructor(srv: AntiAFKServer, webhookUrl: string) {
     super(srv, "queueUpdate", webhookUrl);
   }
   protected listener = async (oldPos: number, newPos: number, eta: number) => {
@@ -101,10 +102,11 @@ class ServerQueueUpdateMessenger extends ServerWebookReporter<"queueUpdate"> {
 }
 
 // Send started message when server starts.
-class ServerEnteredQueueMessenger extends ServerWebookReporter<"enteredQueue"> {
-  constructor(srv: ServerLogic, webhookUrl: string) {
+class ServerEnteredQueueMessenger extends AntiAFKWebhookReporter<"enteredQueue"> {
+  constructor(srv: AntiAFKServer, webhookUrl: string) {
     super(srv, "enteredQueue", webhookUrl);
   }
+
   protected listener = async () => {
     const embed = this.buildServerEmbed();
 
@@ -114,12 +116,13 @@ class ServerEnteredQueueMessenger extends ServerWebookReporter<"enteredQueue"> {
       embeds: [embed],
     });
   };
+
 }
 
 
 
 export function applyWebhookListeners(
-  srv: ServerLogic,
+  srv: AntiAFKServer,
   config: Options["discord"]["webhooks"]
 ) {
   if (!config.enabled) return;
@@ -132,8 +135,11 @@ export function applyWebhookListeners(
   if (!!config.spam) {
     const start = new ServerStartMessenger(srv, config.spam);
     const stop = new ServerStopMessenger(srv, config.spam);
-    const queueUpdates = new ServerQueueUpdateMessenger(srv, config.spam);
-    const enteredQueue = new ServerEnteredQueueMessenger(srv, config.spam);
-    srv.registerServerListeners(start, stop, queueUpdates, enteredQueue);
+
+    srv.registerServerListeners(start, stop);
   }
+  
+  const queueUpdates = new ServerQueueUpdateMessenger(srv, config.spam);
+  const enteredQueue = new ServerEnteredQueueMessenger(srv, config.spam);
+  srv.registerQueueListeners(queueUpdates, enteredQueue);
 }

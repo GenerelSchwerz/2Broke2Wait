@@ -56,18 +56,24 @@ export const configSchema = joi.object({
             .boolean()
             .default(false)
             .description("Whether to use the discord webhooks or not."),
-          spam: joi
+          queue: joi
             .string()
             .allow("")
             .default("")
             .required()
-            .description("Default webhook URL (backup)."),
+            .description("Webhook URL for queue updates."),
           gameChat: joi
             .string()
             .allow("")
             .default("")
             .required()
             .description("Webhook URL for in-game chat."),
+          spam: joi
+            .string()
+            .allow("")
+            .default("")
+            .required()
+            .description("Default webhook URL (backup)."),
         })
         .default()
         .description("Webhook URLs for logging, if wanted."),

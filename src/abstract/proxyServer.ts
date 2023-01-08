@@ -1,17 +1,16 @@
-import {
-  createServer,
-  ServerOptions,
-  Server,
-  Client,
-  ServerClient,
-  PacketMeta,
-} from "minecraft-protocol";
-import merge from "ts-deepmerge";
 import { Conn } from "@rob9315/mcproxy";
 import { ConstructorOptions, EventEmitter2 } from "eventemitter2";
+import {
+  Client, createServer, PacketMeta, Server, ServerClient, ServerOptions
+} from "minecraft-protocol";
+import merge from "ts-deepmerge";
 
-import type { Bot, BotOptions } from "mineflayer";
-import StrictEventEmitter from "strict-event-emitter-types";
+import type { Bot, BotEvents, BotOptions } from "mineflayer";
+import { Emitter } from "strict-event-emitter";
+import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
+import { sleep } from "../util/index";
+import { ClientEventRegister, ServerEventRegister } from "./eventRegisters";
+import { TypedEventEmitter } from "../util/utilTypes";
 
 /**
  * Interface for the ProxyServer options.
@@ -25,9 +24,9 @@ export interface IProxyServerEvents {
   remoteKick: (reason: string) => void;
   remoteError: (error: Error) => void;
   decidedClose: (reason: string) => void;
+  started: (conn: Conn) => void;
 }
 
-type ProxyServerEmitter<T extends IProxyServerEvents = IProxyServerEvents> = StrictEventEmitter<EventEmitter2, T>;
 
 /**
  * This proxy server provides a wrapper around the connection to the remote server and
@@ -35,7 +34,16 @@ type ProxyServerEmitter<T extends IProxyServerEvents = IProxyServerEvents> = Str
  */
 export abstract class ProxyServer<
   T extends IProxyServerOpts = IProxyServerOpts,
-> extends (EventEmitter2 as { new(options?: ConstructorOptions): ProxyServerEmitter }) {
+  Events extends IProxyServerEvents = IProxyServerEvents
+> extends (EventEmitter2 as {new(options?: ConstructorOptions): StrictEventEmitter<EventEmitter2, IProxyServerEvents>}){
+
+  private _registeredClientListeners: Set<string> = new Set();
+  private _runningClientListeners: ClientEventRegister<Bot | Client, any>[] = [];
+
+  private _registeredServerListeners: Set<string> = new Set();
+  private _runningServerListeners: ServerEventRegister<any>[] = [];
+
+  
   /**
    * flag to reuse the internal server instance across proxy servers.
    *
@@ -49,7 +57,7 @@ export abstract class ProxyServer<
    * Options for the proxy server.
    * This is meant to be extended later.
    */
-  public opts: T;
+  public psOpts: T;
 
   /**
    * Internal server. Actual server clients connect to.
@@ -61,6 +69,14 @@ export abstract class ProxyServer<
    * Proxy instance. see Rob's proxy. {@link Conn}
    */
   private _proxy: Conn | null;
+
+
+  private _bOpts: BotOptions;
+
+
+  public get bOpts() {
+    return this._bOpts;
+  }
 
   /**
    * Proxy instance. see Rob's proxy. {@link Conn}
@@ -122,32 +138,28 @@ export abstract class ProxyServer<
    * @param {boolean} reuseServer Whether or not to destroy internal server on close.
    * @param {Server} server Internal minecraft-protocol server.
    * @param {Conn} proxy Proxy connection to remote server.
-   * @param {IProxyServerOpts} opts Options for ProxyServer.
+   * @param {IProxyServerOpts} psOpts Options for ProxyServer.
    */
   protected constructor(
     reuseServer: boolean,
     onlineMode: boolean,
+    bOpts: BotOptions,
     server: Server,
-    proxy: Conn,
-    opts: Partial<T> = {}
+    psOpts: Partial<T> = {}
   ) {
-    super({wildcard: true});
+    super({ wildcard: true });
     this.reuseServer = reuseServer;
     this.onlineMode = onlineMode;
     this.server = server;
 
     // TODO: somehow make this type-safe.
-    this.opts = merge.withOptions(
+    this.psOpts = merge.withOptions(
       { mergeArrays: false },
       <IProxyServerOpts>{ whitelist: [] },
-      opts
+      psOpts
     ) as any;
 
-
-    this._proxy = proxy;
-    this.setupProxy();
-    server.on("login", this.serverGoodLoginHandler);
-
+    this._bOpts = bOpts;
   }
 
   /**
@@ -162,7 +174,7 @@ export abstract class ProxyServer<
    *
    * Note: this is called before {@link ProxyServer.optionValidation | option validation}.
    */
-  protected initialBotSetup(bot: Bot): void {}
+  protected initialBotSetup(bot: Bot): void { }
 
   /**
    * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} disconnects.
@@ -259,15 +271,39 @@ export abstract class ProxyServer<
   }
 
   private isUserWhiteListed(user: ServerClient): boolean {
-    return !this.opts.whitelist || this.opts.whitelist.includes(user.username);
+    return !this.psOpts.whitelist || this.psOpts.whitelist.includes(user.username);
   }
-  
+
+  /**
+   * Custom version of minecraft-protocol's server close() to give a better message.
+   *
+   * Note: this also provides cleanup for the remote client and our proxy.
+   */
+  public closeConnections = (reason: string = "Proxy stopped.") => {
+
+    // close remote bot cleanly.
+    this._proxy.disconnect();
+
+    // disconnect all local clients cleanly.
+    Object.keys(this.server.clients).forEach((clientId) => {
+      const client: Client = this.server.clients[clientId];
+      client.end(reason);
+    });
+
+    // shutdown actual socket server.
+    if (!this.reuseServer) {
+      this.server["socketServer"].close();
+    }
+
+    this.emit("decidedClose", reason);
+  }
+
   /**
    * TODO: Add functionality to server (if reused) and remote is not currently connected.
    *
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
-  private serverGoodLoginHandler = (actualUser: ServerClient) => {
+  private whileConnectedLoginHandler = (actualUser: ServerClient) => {
     if (!this.isUserWhiteListed(actualUser)) {
       actualUser.end(
         "Not whitelisted!\n" + "You need to turn the whitelist off."
@@ -278,7 +314,7 @@ export abstract class ProxyServer<
     if (!this.isUserGood(actualUser)) {
       actualUser.end(
         "Not the same account!\n" +
-          "You need to use the same account as the 2b2w."
+        "You need to use the same account as the 2b2w."
       );
       return; // early end.
     }
@@ -293,7 +329,7 @@ export abstract class ProxyServer<
       this._controllingPlayer = null;
       this.beginBotLogic.bind(this)();
     });
-   
+
     // as player has just connected, end all bot activity and give control back to player.
     this.endBotLogic.bind(this)();
 
@@ -302,35 +338,129 @@ export abstract class ProxyServer<
     this._controllingPlayer = actualUser;
   };
   
-  
-  /**
-   * Custom version of minecraft-protocol's server close() to give a better message.
-   *
-   * Note: this also provides cleanup for the remote client and our proxy.
-   */
-  public stop = (reason: string = "Proxy stopped.") => {
 
-    // close remote bot cleanly.
-    this._proxy.disconnect();
-
-    // disconnect all local clients cleanly.
-    Object.keys(this.server.clients).forEach((clientId) => {
-      const client: Client = this.server.clients[clientId];
-      client.end(reason);
+  protected notConnectedLoginHandler = (actualUser: ServerClient) => {
+    actualUser.write('login', {
+        entityId: actualUser.id,
+        levelType: 'default',
+        gameMode: 0,
+        dimension: 0,
+        difficulty: 2,
+        maxPlayers: 1,
+        reducedDebugInfo: false
     });
+    actualUser.write('position', {
+        x: 0,
+        y: 1.62,
+        z: 0,
+        yaw: 0,
+        pitch: 0,
+        flags: 0x00
+    });
+}
 
 
-    this.server.removeListener("login", this.serverGoodLoginHandler);
-    // shutdown actual socket server.
-    if (!this.reuseServer) {
-      this.server["socketServer"].close();
-    }
-    
-    this.emit("decidedClose", reason);
-  }
 
   public start = () => {
-    
+    this._proxy = new Conn(this._bOpts);
+    this.server.on("login", this.whileConnectedLoginHandler);
+    this.convertToConnected();
+    this.emit("started", this._proxy)
+    return this._proxy;
   }
+
+
+  public stop = () => {
+    this.closeConnections();
+    this.convertToDisconnected();
+  }
+
+  public async restart(ms: number = 0) {
+    this.stop();
+    await sleep(ms);
+    this.start();
+}
+
+  public convertToConnected() {
+    this.server.on("login", this.whileConnectedLoginHandler);
+    this.server.on("login", this.whileConnectedCommandHandler);
+    this.server.off("login", this.notConnectedLoginHandler);
+    this.server.off("login", this.notConnectedCommandHandler);
+
+    for (const client in this.server.clients) {
+      this.whileConnectedCommandHandler(this.server.clients[client] as any);
+    }
+  }
+
+  public convertToDisconnected() {
+    this.server.on("login", this.notConnectedCommandHandler);
+    this.server.on("login", this.notConnectedLoginHandler);
+    this.server.off("login", this.whileConnectedLoginHandler);
+    this.server.off("login", this.whileConnectedCommandHandler);
+
+    for (const client in this.server.clients) {
+      this.notConnectedCommandHandler(this.server.clients[client] as any);
+    }
+  }
+
+
+  protected abstract notConnectedCommandHandler: (client: ServerClient) => void;
+
+  protected abstract whileConnectedCommandHandler: (client: ServerClient) => void;
+
+
+  public registerClientListeners(...listeners: ClientEventRegister<Bot | Client, any>[]) {
+    for (const listener of listeners) {
+      if (this._registeredClientListeners.has(listener.constructor.name)) continue;
+      this._registeredClientListeners.add(listener.constructor.name);
+      listener.begin();
+      this._runningClientListeners.push(listener);
+    }
+  }
+
+  public removeClientListeners(...listeners: ClientEventRegister<Bot | Client, any>[]) {
+    for (const listener of listeners) {
+      if (!this._registeredClientListeners.has(listener.constructor.name)) continue;
+      this._registeredClientListeners.delete(listener.constructor.name);
+      listener.end();
+      this._runningClientListeners = this._runningClientListeners.filter(l => l.constructor.name !== listener.constructor.name);
+    }
+  }
+
+  public removeAllClientListeners() {
+    this._registeredClientListeners.clear();
+    for (const listener of this._runningClientListeners) {
+      listener.end();
+    }
+    this._runningClientListeners = [];
+  }
+
+  public registerServerListeners(...listeners: ServerEventRegister<any, any>[]) {
+    for (const listener of listeners) {
+      if (this._registeredServerListeners.has(listener.constructor.name)) continue;
+      this._registeredServerListeners.add(listener.constructor.name);
+      listener.begin();
+      this._runningServerListeners.push(listener);
+    }
+  }
+
+  public removeServerListeners(...listeners: ServerEventRegister<any, any>[]) {
+    for (const listener of listeners) {
+      console.log(listener.constructor.name)
+      if (!this._registeredServerListeners.has(listener.constructor.name)) continue;
+      this._registeredServerListeners.delete(listener.constructor.name);
+      listener.end();
+      this._runningServerListeners = this._runningServerListeners.filter(l => l.constructor.name !== listener.constructor.name);
+    }
+  }
+
+  public removeAllServerListeners() {
+    this._registeredServerListeners.clear();
+    for (const listener of this._runningServerListeners) {
+      listener.end();
+    }
+    this._runningServerListeners = [];
+  }
+
 }
 

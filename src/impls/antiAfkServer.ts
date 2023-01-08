@@ -1,10 +1,12 @@
-import { ProxyServer } from "../abstract/proxyServer";
-import { Bot } from "mineflayer";
+import { IProxyServerEvents, ProxyServer } from "../abstract/proxyServer";
+import { Bot, BotOptions } from "mineflayer";
 import {
   ServerOptions,
   createServer,
   Server,
   ServerClient,
+  PacketMeta,
+  Client
 } from "minecraft-protocol";
 import { IProxyServerOpts } from "../abstract/proxyServer";
 import { Conn } from "@rob9315/mcproxy";
@@ -13,56 +15,49 @@ import antiAFK, {
   DEFAULT_PASSIVES,
 } from "@nxg-org/mineflayer-antiafk";
 import autoEat from "@nxg-org/mineflayer-auto-eat";
-import { PacketQueuePredictor } from "../abstract/packetQueuePredictor";
+import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../abstract/packetQueuePredictor";
+import { ClientEventRegister, ServerEventRegister } from "../abstract/eventRegisters";
+import { CombinedPredictor } from "./combinedPredictor";
+import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
+import EventEmitter2 from "eventemitter2";
 
 export interface AntiAFKOpts extends IProxyServerOpts {
   antiAFK: boolean;
   autoEat: boolean;
 }
 
-export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
 
-  private queue: PacketQueuePredictor<any, any>;
+export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
+  "*": AntiAFKEvents[Exclude<keyof AntiAFKEvents, "*">]
+}
+
+const t: keyof AntiAFKEvents = "*";
+
+export type StrictAntiAFKEvents = Omit<AntiAFKEvents, "*">
+
+
+export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents> {
+
+  private _queue: PacketQueuePredictor<any, any>;
+
+  public get queue() {
+    return this._queue;
+  }
+
+  private _registeredQueueListeners: Set<string>;
+  private _runningQueueListeners: any[];
 
   public constructor(
     reuseServer: boolean,
     onlineMode: boolean,
+    bOpts: BotOptions,
     server: Server,
-    proxy: Conn,
-    queue: PacketQueuePredictor<any, any>,
-    opts: Partial<AntiAFKOpts>
+    psOpts: Partial<AntiAFKOpts>
   ) {
-    super(reuseServer, onlineMode, server, proxy, opts);
-    this.queue = queue;
+    super(reuseServer, onlineMode, bOpts, server, psOpts);
   }
 
   /**
-   * Creates Proxy server based on given arguments.
-   *
-   * Does NOT re-use the server.
-   * @param {BotOptions} bOptions Mineflayer bot options.
-   * @param {Plugin[]} plugins Mineflayer bot plugins to load into the remote bot.
-   * @param {ServerOptions} sOptions Minecraft-protocol server options.
-   * @param {Partial<IProxyServerOpts>} psOptions Partial list of ProxyServer options.
-   * @returns {ProxyServer} Built proxy server.
-   */
-  public static createServer(
-    proxy: Conn,
-    queue: PacketQueuePredictor<any, any>,
-    sOptions: ServerOptions,
-    psOptions: Partial<AntiAFKOpts> = {}
-  ): AntiAFKServer {
-    return new AntiAFKServer(
-      false,
-      !!sOptions["online-mode"],
-      createServer(sOptions),
-      proxy,
-      queue,
-      psOptions
-    );
-  }
-
-    /**
    * Creates Proxy server based on given arguments.
    *
    * DOES re-use the server.
@@ -72,31 +67,43 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
    * @param {Partial<IProxyServerOpts>} psOptions Partial list of ProxyServer options.
    * @returns {ProxyServer} Built proxy server.
    */
-    public static wrapServer(
-      online: boolean,
-      proxy: Conn,
-      server: Server,
-      queue: PacketQueuePredictor<any, any>,
-      psOptions: Partial<AntiAFKOpts> = {}
-    ): AntiAFKServer {
-      return new AntiAFKServer(
-        true,
-        online,
-        server,
-        proxy,
-        queue,
-        psOptions
-      );
-    }
+  public static wrapServer(
+    online: boolean,
+    bOpts: BotOptions,
+    server: Server,
+    psOptions: Partial<AntiAFKOpts> = {}
+  ): AntiAFKServer {
+    return new AntiAFKServer(
+      true,
+      online,
+      bOpts,
+      server,
+      psOptions
+    );
+  }
+
+
+  public override start: () => Conn = () => {
+    const conn = super.start();
+    this._queue = new CombinedPredictor(conn);
+    this._queue.begin();
+    this._queue.on("*" as any, (...args: any[]) => { this.emit(this._queue["event"], ...args); });
+    return conn;
+  }
+  
+  public override stop = () => {
+    super.stop();
+    this._queue.end();
+  }
 
   protected override optionValidation(): AntiAFKOpts {
-    this.opts.antiAFK = this.opts.antiAFK && this.remoteBot.hasPlugin(antiAFK);
-    this.opts.autoEat = this.opts.autoEat && this.remoteBot.hasPlugin(autoEat);
-    return this.opts;
+    this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot.hasPlugin(antiAFK);
+    this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat);
+    return this.psOpts;
   }
 
   protected override initialBotSetup(bot: Bot): void {
-    if (this.opts.antiAFK) {
+    if (this.psOpts.antiAFK) {
       bot.loadPlugin(antiAFK);
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES["LookAroundModule"], {
@@ -119,9 +126,9 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
       });
     }
 
-    if (this.opts.autoEat) {
+    if (this.psOpts.autoEat) {
       bot.loadPlugin(autoEat);
-      
+
       bot.autoEat.setOptions({
         eatUntilFull: true,
         eatingTimeout: 3000,
@@ -141,22 +148,106 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts> {
   }
 
   protected override beginBotLogic() {
-    if (this.opts.antiAFK && !this.queue.inQueue) {
+    if (this.psOpts.antiAFK && !this._queue.inQueue) {
       this.remoteBot.antiafk.start();
     }
 
-    if (this.opts.autoEat && !this.queue.inQueue) {
+    if (this.psOpts.autoEat && !this._queue.inQueue) {
       this.remoteBot.autoEat.enable();
     }
   }
 
   protected override endBotLogic() {
-    if (this.opts.antiAFK) {
+    if (this.psOpts.antiAFK) {
       this.remoteBot.antiafk.forceStop();
     }
 
-    if (this.opts.autoEat) {
+    if (this.psOpts.autoEat) {
       this.remoteBot.autoEat.disable();
     }
   }
+
+  /**
+    * This WILL be moved later.
+    * @param actualUser 
+    */
+  protected notConnectedCommandHandler = (actualUser: ServerClient) => {
+    actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
+      switch (message) {
+        case "/start":
+
+
+          this.closeConnections("Host started proxy.");
+          this.start();
+          break;
+        default:
+          break;
+      }
+
+    })
+    actualUser.on("tab_complete", (packetData: { text: string, assumeCommand: boolean, lookedAtBlock?: any }, packetMeta: PacketMeta) => {
+      if ("/start".startsWith(packetData.text)) {
+        actualUser.write('tab_complete', {
+          matches: ["/start"]
+        })
+      }
+    });
+  };
+
+  /**
+   * This WILL be moved later.
+   * @param actualUser 
+   */
+  protected whileConnectedCommandHandler = (actualUser: ServerClient) => {
+    actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
+      switch (message) {
+        case "/stop":
+          this.stop();
+          break;
+        default:
+          break;
+      }
+
+    })
+    actualUser.on("tab_complete", (packetData: { text: string, assumeCommand: boolean, lookedAtBlock?: any }, packetMeta: PacketMeta) => {
+      if ("/stop".startsWith(packetData.text)) {
+        actualUser.write('tab_complete', {
+          matches: ["/stop"]
+        })
+      }
+    });
+  };
+
+  /// new
+
+
+
+  public registerQueueListeners(...listeners: ServerEventRegister<any>[]) {
+    for (const listener of listeners) {
+      if (this._registeredQueueListeners.has(listener.constructor.name)) continue;
+      this._registeredQueueListeners.add(listener.constructor.name);
+      listener.begin();
+      this._runningQueueListeners.push(listener);
+    }
+  }
+
+  public removeServerListeners(...listeners: ServerEventRegister<any>[]) {
+    for (const listener of listeners) {
+      console.log(listener.constructor.name)
+      if (!this._registeredQueueListeners.has(listener.constructor.name)) continue;
+      this._registeredQueueListeners.delete(listener.constructor.name);
+      listener.end();
+      this._runningQueueListeners = this._runningQueueListeners.filter(l => l.constructor.name !== listener.constructor.name);
+    }
+  }
+
+  public removeAllQueueListeners() {
+    this._registeredQueueListeners.clear();
+    for (const listener of this._runningQueueListeners) {
+      listener.end();
+    }
+    this._runningQueueListeners = [];
+  }
+
+
 }

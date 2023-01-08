@@ -1,5 +1,9 @@
-import type { Bot, BotEvents } from "mineflayer";
+import EventEmitter2, { ConstructorOptions } from "eventemitter2";
 import type { Client } from "minecraft-protocol";
+import type { Bot, BotEvents } from "mineflayer";
+import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
+import { IProxyServerEvents } from "../abstract/proxyServer";
+import { AntiAFKServer } from "../impls/antiAfkServer";
 
 export type Overloads<T extends (...args: any[]) => any> = T extends {
   (...args: infer A1): infer R1;
@@ -13,95 +17,95 @@ export type Overloads<T extends (...args: any[]) => any> = T extends {
   (...args: infer A9): infer R9;
 }
   ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-      | ((...args: A7) => R7)
-      | ((...args: A8) => R8)
-      | ((...args: A9) => R9)
+  | ((...args: A1) => R1)
+  | ((...args: A2) => R2)
+  | ((...args: A3) => R3)
+  | ((...args: A4) => R4)
+  | ((...args: A5) => R5)
+  | ((...args: A6) => R6)
+  | ((...args: A7) => R7)
+  | ((...args: A8) => R8)
+  | ((...args: A9) => R9)
   : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-      (...args: infer A6): infer R6;
-      (...args: infer A7): infer R7;
-      (...args: infer A8): infer R8;
-    }
+    (...args: infer A1): infer R1;
+    (...args: infer A2): infer R2;
+    (...args: infer A3): infer R3;
+    (...args: infer A4): infer R4;
+    (...args: infer A5): infer R5;
+    (...args: infer A6): infer R6;
+    (...args: infer A7): infer R7;
+    (...args: infer A8): infer R8;
+  }
   ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-      | ((...args: A7) => R7)
-      | ((...args: A8) => R8)
+  | ((...args: A1) => R1)
+  | ((...args: A2) => R2)
+  | ((...args: A3) => R3)
+  | ((...args: A4) => R4)
+  | ((...args: A5) => R5)
+  | ((...args: A6) => R6)
+  | ((...args: A7) => R7)
+  | ((...args: A8) => R8)
   : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-      (...args: infer A6): infer R6;
-      (...args: infer A7): infer R7;
-    }
+    (...args: infer A1): infer R1;
+    (...args: infer A2): infer R2;
+    (...args: infer A3): infer R3;
+    (...args: infer A4): infer R4;
+    (...args: infer A5): infer R5;
+    (...args: infer A6): infer R6;
+    (...args: infer A7): infer R7;
+  }
   ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-      | ((...args: A7) => R7)
+  | ((...args: A1) => R1)
+  | ((...args: A2) => R2)
+  | ((...args: A3) => R3)
+  | ((...args: A4) => R4)
+  | ((...args: A5) => R5)
+  | ((...args: A6) => R6)
+  | ((...args: A7) => R7)
   : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-      (...args: infer A6): infer R6;
-    }
+    (...args: infer A1): infer R1;
+    (...args: infer A2): infer R2;
+    (...args: infer A3): infer R3;
+    (...args: infer A4): infer R4;
+    (...args: infer A5): infer R5;
+    (...args: infer A6): infer R6;
+  }
   ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
+  | ((...args: A1) => R1)
+  | ((...args: A2) => R2)
+  | ((...args: A3) => R3)
+  | ((...args: A4) => R4)
+  | ((...args: A5) => R5)
+  | ((...args: A6) => R6)
   : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-      (...args: infer A5): infer R5;
-    }
+    (...args: infer A1): infer R1;
+    (...args: infer A2): infer R2;
+    (...args: infer A3): infer R3;
+    (...args: infer A4): infer R4;
+    (...args: infer A5): infer R5;
+  }
   ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
+  | ((...args: A1) => R1)
+  | ((...args: A2) => R2)
+  | ((...args: A3) => R3)
+  | ((...args: A4) => R4)
+  | ((...args: A5) => R5)
   : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-      (...args: infer A4): infer R4;
-    }
+    (...args: infer A1): infer R1;
+    (...args: infer A2): infer R2;
+    (...args: infer A3): infer R3;
+    (...args: infer A4): infer R4;
+  }
   ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
+  | ((...args: A1) => R1)
+  | ((...args: A2) => R2)
+  | ((...args: A3) => R3)
+  | ((...args: A4) => R4)
   : T extends {
-      (...args: infer A1): infer R1;
-      (...args: infer A2): infer R2;
-      (...args: infer A3): infer R3;
-    }
+    (...args: infer A1): infer R1;
+    (...args: infer A2): infer R2;
+    (...args: infer A3): infer R3;
+  }
   ? ((...args: A1) => R1) | ((...args: A2) => R2) | ((...args: A3) => R3)
   : T extends { (...args: infer A1): infer R1; (...args: infer A2): infer R2 }
   ? ((...args: A1) => R1) | ((...args: A2) => R2)
@@ -124,15 +128,15 @@ type CustomOverload<T extends (...args: any[]) => any> = T extends {
   (...args: infer A9): infer R9;
 }
   ?
-      | ((...args: A1) => R1)
-      | ((...args: A2) => R2)
-      | ((...args: A3) => R3)
-      | ((...args: A4) => R4)
-      | ((...args: A5) => R5)
-      | ((...args: A6) => R6)
-      | ((...args: A7) => R7)
+  | ((...args: A1) => R1)
+  | ((...args: A2) => R2)
+  | ((...args: A3) => R3)
+  | ((...args: A4) => R4)
+  | ((...args: A5) => R5)
+  | ((...args: A6) => R6)
+  | ((...args: A7) => R7)
   :
-    never;
+  never;
 
 type CustomOverloadedParameters<T extends (...args: any[]) => any> = Parameters<
   CustomOverload<T>
@@ -166,3 +170,79 @@ export type ClientEvent<T extends ClientEmitters> = T extends Bot
   : never;
 
 export type PromiseLike = void | Promise<void>;
+
+
+
+
+
+
+type ValidKey<Src, Key> = Key extends keyof Src ? true : false;
+
+type UnionToIntersection<U> =
+  (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never;
+
+// type IsValidArg<T> = T extends object ? keyof T extends never ? false : true : true;
+
+type OnSignatures<T> = { [P in keyof T]: (event: P, listener: T[P]) => void }
+type OnAll<T> = UnionToIntersection<OnSignatures<T>[keyof T]>
+
+type AddParameters<T, P> = T extends (...a: infer A) => infer R ? (event: keyof P, ...a: A) => R : never;
+
+type EmitSignatures<T> = { [P in keyof T]: AddParameters<T[P], T> };
+
+type EmitAll<T> = UnionToIntersection<EmitSignatures<T>[keyof T]>
+
+interface ITypedEventEmitter<T, K = T> {
+  on: OnAll<T>,
+  emit: EmitAll<K>
+}
+
+// Optional derived class if we need it (if we have nothing to add we can just us EventEmitter directly 
+class TypedEventEmitterImpl extends EventEmitter2 { }
+// Define the actual constructor, we need to use a type assertion to make the `EventEmitter` fit  in here 
+
+export const TypedEventEmitter: { 
+  new <T, K = T>(options?: ConstructorOptions): StrictEventEmitter<EventEmitter2, T, K> 
+} = TypedEventEmitterImpl as any;
+
+// Define the type for our emitter 
+export type TypedEventEmitter<T, K = T> = StrictEventEmitter<T, K> & ITypedEventEmitter<T, K> // Order matters here, we want our overloads to be considered first
+
+
+interface Events {
+  fuck: () => void;
+  fuck1: (reason: string) => void;
+}
+
+const test1: TypedEventEmitter<IProxyServerEvents> = TypedEventEmitter.prototype;
+test1.emit("remoteKick", {} as Error)
+test1.on("decidedClose", (reason) => {
+
+})
+
+test1.on("started", (conn) => {
+  
+})
+
+
+type CustomParams<T> = [T] extends [(...args: infer U) => any] ? U : [T] extends [void] ? [] : [T];
+type ListenerType<T> = [T] extends [(...args: infer U) => any] ? U : [T] extends [void] ? [] : [T];
+
+// expands object types one level deep
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+
+// expands object types recursively
+type ExpandRecursively<T> = T extends object
+  ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
+  : T;
+
+
+interface Events {
+  fuck: () => void;
+  fuck1: (reason: string) => void;
+}
+
+interface NewEvents extends Events {
+  fuck2: (num: number) => void 
+};
+

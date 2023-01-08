@@ -22,10 +22,10 @@ import * as fs from "fs";
 import { validateOptions } from "./util/config";
 import { botOptsFromConfig, Options } from "./util/options";
 import { Duration } from "ts-luxon";
-import { ServerLogic } from "./serverLogic";
 import {createServer} from "minecraft-protocol"
 import { buildClient } from "./discord/index";
 import { applyWebhookListeners } from "./util/chatting";
+import { AntiAFKServer } from "./impls/antiAfkServer";
 
 /////////////////////////////////////////////
 //              Initialization             //
@@ -43,16 +43,16 @@ const rawServer = createServer(checkedConfig.minecraft.localServer);
 
 console.log(checkedConfig.minecraft.localServer);
 
-const wrapper = new ServerLogic(true, rawServer, botOptions, checkedConfig.minecraft.localServerOptions);
+const wrapper = AntiAFKServer.wrapServer(true,botOptions,  rawServer, checkedConfig.minecraft.localServerOptions);
 
-wrapper.on("enteredQueue", () => {
+wrapper.queue.on("enteredQueue", () => {
   rawServer.motd = "Entered the queue!";
-  wrapper.on("queueUpdate", updateServerMotd);
+  wrapper.queue.on("queueUpdate", updateServerMotd);
 });
 
-wrapper.on("leftQueue", () => {
+wrapper.queue.on("leftQueue", () => {
   rawServer.motd = "In game!";
-  wrapper.removeListener("queueUpdate", updateServerMotd);
+  wrapper.queue.removeListener("queueUpdate", updateServerMotd);
 });
 
 wrapper.on("remoteKick", async (reason) => {
@@ -73,12 +73,13 @@ wrapper.on("decidedClose", (reason) => {
   console.log("STOPPED SERVER:", reason);
   wrapper.removeAllClientListeners();
   wrapper.removeAllServerListeners();
+  wrapper.removeAllQueueListeners();
 });
 
 
 wrapper.on("started", () => {
   if (checkedConfig.discord.webhooks.enabled) {
-    applyWebhookListeners(wrapper, checkedConfig.discord.webhooks)
+    applyWebhookListeners(wrapper, checkedConfig.discord.webhooks);
   }
 })
 

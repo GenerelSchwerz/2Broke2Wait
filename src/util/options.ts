@@ -11,8 +11,9 @@ export interface Options {
     },
     webhooks: {
       enabled: boolean;
-      spam: string;
+      queue: string;
       gameChat: string;
+      spam: string;
     }
   };
   minecraft: {
