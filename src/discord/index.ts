@@ -1,19 +1,19 @@
 import { Client } from "discordx";
 import { IntentsBitField } from "discord.js";
-import { ServerLogic } from "../serverLogic.js";
 
 import "./commands";
 import { Options } from "../util/options.js";
+import { AntiAFKServer } from "../impls/antiAfkServer";
 
 declare module "discordx" {
   interface Client {
-    mcServer: ServerLogic;
+    mcServer: AntiAFKServer;
   }
 }
 
 export async function buildClient(
   { botToken, prefix }: Options["discord"]["bot"],
-  server: ServerLogic
+  server: AntiAFKServer
 ): Promise<Client> {
   const client = new Client({
     simpleCommand: {

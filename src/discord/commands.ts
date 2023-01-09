@@ -87,7 +87,7 @@ export class LocalServerCommands {
       return;
     }
 
-    mcServer.shutdown();
+    mcServer.stop();
 
     interaction.reply(`Server stopped!`);
   }
@@ -122,7 +122,7 @@ export class LocalServerCommands {
       return;
     }
 
-    mcServer.playat(hour, minute);
+    // mcServer.playat(hour, minute);
 
     const secondsTilStart = await tentativeStartTime(hour, minute);
     const hoursTilStart = Math.floor(secondsTilStart / 3600);

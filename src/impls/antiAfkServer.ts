@@ -88,6 +88,7 @@ export class AntiAFKServer extends AntiAFKBase {
 
 
   public override start() {
+    if (this.isProxyConnected()) return this._proxy;
     const conn = super.start();
     this._queue = new CombinedPredictor(conn);
     this._queue.begin();
@@ -96,6 +97,7 @@ export class AntiAFKServer extends AntiAFKBase {
   }
   
   public override stop () {
+    if (!this.isProxyConnected()) return;
     this._queue.end();
     super.stop();
   }
@@ -179,8 +181,6 @@ export class AntiAFKServer extends AntiAFKBase {
     actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
       switch (message) {
         case "/start":
-
-
           this.closeConnections("Host started proxy.");
           this.start();
           break;

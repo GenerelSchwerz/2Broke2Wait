@@ -1,4 +1,4 @@
-const ppid = Number(process.argv[2])
+const ppid = Number(process.argv[2]);
 
 if (Number.isNaN(ppid)) {
   throw new Error("You're not supposed to be here.");
@@ -22,7 +22,7 @@ import * as fs from "fs";
 import { validateOptions } from "./util/config";
 import { botOptsFromConfig, Options } from "./util/options";
 import { Duration } from "ts-luxon";
-import {createServer} from "minecraft-protocol"
+import { createServer } from "minecraft-protocol";
 import { buildClient } from "./discord/index";
 import { applyWebhookListeners } from "./util/chatting";
 import { AntiAFKServer } from "./impls/antiAfkServer";
@@ -43,8 +43,12 @@ const rawServer = createServer(checkedConfig.minecraft.localServer);
 
 console.log(checkedConfig.minecraft.localServer);
 
-const wrapper = AntiAFKServer.wrapServer(true,botOptions,  rawServer, checkedConfig.minecraft.localServerOptions);
-
+const wrapper = AntiAFKServer.wrapServer(
+  true,
+  botOptions,
+  rawServer,
+  checkedConfig.minecraft.localServerOptions
+);
 
 wrapper.on("enteredQueue", () => {
   rawServer.motd = "Entered the queue!";
@@ -77,50 +81,47 @@ wrapper.on("decidedClose", (reason) => {
   wrapper.removeAllQueueListeners();
 });
 
-
 wrapper.on("started", () => {
+  console.log("Server started!");
   if (checkedConfig.discord.webhooks.enabled) {
     applyWebhookListeners(wrapper, checkedConfig.discord.webhooks);
   }
-})
-
-
+});
 
 if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
   const discord = buildClient(checkedConfig.discord.bot, wrapper);
   console.log("We are using a discord bot.");
 } else {
-  console.log("No discord token included. Going without it (No command functionality currently).");
-  wrapper.start();
+  console.log(
+    "No discord token included. Going without it (No command functionality currently)."
+  );
 }
-
 
 if (checkedConfig.discord.webhooks.enabled) {
   console.log("Using discord webhooks to relay information!");
 } else {
-  console.log("Discord webhooks are disabled. Will not be using them.")
+  console.log("Discord webhooks are disabled. Will not be using them.");
 }
-
 
 import * as rl from "readline";
 const inp = rl.createInterface({
   input: process.stdin,
-  output: process.stdout
-})
+  output: process.stdout,
+});
 
-inp.on("line", (inp) => {
-    switch (inp.split(' ')[0]) {
-      case "start":
-        wrapper.start()
-        break;
-      case "stop":
-        wrapper.stop()
-        break;
-      case "restart":
-        wrapper.restart(1000);
-        break;
-    }
-})
+const helpMsg =
+  `Help command:\n` +
+  "-------------------------------\n" +
+  "start    -> starts the server\n" +
+  "stop     -> stops the server\n" +
+  "restart  -> restarts the server\n" +
+  "status   -> displays info of service\n" +
+  "help     -> shows this message\n";
+
+
+
+ wrapper.start();
+
 
 /////////////////////////////////////////////
 //              functions                  //
@@ -134,6 +135,35 @@ function updateServerMotd(oldPos: number, newPos: number, eta: number) {
   ).toFormat("d'd', h'hr', m'min'")}`;
 }
 
+
 /////////////////////////////////////////////
-//                                         //
+//                Util                     //
 /////////////////////////////////////////////
+inp.on("line", (inp) => {
+  switch (inp.split(" ")[0]) {
+    case "help":
+      console.log(helpMsg);
+    case "start":
+      wrapper.start();
+      break;
+    case "stop":
+      wrapper.stop();
+      break;
+    case "restart":
+      wrapper.restart(1000);
+      break;
+    case "status":
+      if (wrapper.isProxyConnected()) {
+        console.log(`Proxy connected to ${wrapper.bOpts.host}:${wrapper.bOpts.port !== 25565 ? wrapper.bOpts.port : ""}`);
+        console.log(`Proxy in queue? ${wrapper.queue.inQueue}`);
+      } else {
+        console.log("Proxy is not connected.");
+      }
+
+      if (wrapper.isPlayerConnected()) {
+        console.log("Player connected.")
+      } else {
+        console.log("Player is not connected.");
+      }
+  }
+});

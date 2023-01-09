@@ -46,9 +46,9 @@ export function BuildProxyBase<
     /**
      * Proxy instance. see Rob's proxy. {@link Conn}
      */
-    private _proxy: Conn | null;
+    protected _proxy: Conn | null;
 
-    private _bOpts: BotOptions;
+    protected _bOpts: BotOptions;
 
     public get bOpts() {
       return this._bOpts;
@@ -83,7 +83,7 @@ export function BuildProxyBase<
     /**
      * Potential player that controls the remoteBot.
      */
-    private _controllingPlayer: ServerClient | null;
+    private _controllingPlayer: ServerClient | null = null;
 
     /**
      * Getter for {@link ProxyServer._controllingPlayer}
@@ -220,6 +220,7 @@ export function BuildProxyBase<
       this._controllingPlayer = null;
       this._remoteIsConnected = false;
       this.endBotLogic();
+      this.stop();
       if (info instanceof Error) {
         this.emit("remoteError" as any, info);
       } else {
@@ -327,6 +328,7 @@ export function BuildProxyBase<
     };
 
     public start() {
+      if (this.isProxyConnected()) return this._proxy;
       this.convertToConnected();
       this._proxy = new Conn(this._bOpts);
       this.setupProxy();
@@ -335,6 +337,7 @@ export function BuildProxyBase<
     }
 
     public stop() {
+      if (!this.isProxyConnected()) return;
       this.convertToDisconnected();
       this.closeConnections();
    
@@ -424,7 +427,6 @@ export function BuildProxyBase<
       ...listeners: ServerEventRegister<any, any>[]
     ) {
       for (const listener of listeners) {
-        console.log(listener.constructor.name);
         if (!this._registeredServerListeners.has(listener.constructor.name))
           continue;
         this._registeredServerListeners.delete(listener.constructor.name);
