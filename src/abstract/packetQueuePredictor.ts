@@ -69,6 +69,8 @@ export abstract class PacketQueuePredictor<
 
   public end() {
     this.emitter.removeListener(this.wantedEvent as any, this.listener);
+    this._eta = NaN;
+    this._lastPos = NaN;
   }
 
   public getInfo() {}

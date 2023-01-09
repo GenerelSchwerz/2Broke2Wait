@@ -24,19 +24,17 @@ class GameChatListener extends ClientWebhookReporter<Bot, "chat"> {
   }
 
   protected listener = async (username, message) => {
-    const embed = this.buildClientEmbed("chat");
+    const embed = this.buildClientEmbed();
     embed.author = {
       name: `Account: ${username}`,
       icon_url: `https://minotar.net/helm/${username}/69.png`,
     };
 
-    embed.description = escapeMarkdown(...message).join("\n");
+    embed.description = escapeMarkdown(message)[0];
 
     const data = await this.webhookClient.send({
       embeds: [embed],
     });
-
-    console.log(data);
   };
 }
 
@@ -51,8 +49,6 @@ class ServerStartMessenger extends AntiAFKWebhookReporter<"started"> {
     const data = await this.webhookClient.send({
       embeds: [embed],
     });
-
-    console.log(data);
   };
 }
 
@@ -72,8 +68,6 @@ class ServerStopMessenger extends AntiAFKWebhookReporter<"decidedClose"> {
     const data = await this.webhookClient.send({
       embeds: [embed],
     });
-
-    console.log(data);
   };
 }
 

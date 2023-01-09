@@ -1,12 +1,12 @@
 {
     "discord": {
         "bot": {
-            "enabled": true,
+            "enabled": false,
             "botToken": "MTA2MTA0NDgxNDU1NDA3MTExMA.GKY-MG.XvLXnb2P8oLgAa4vnqa1lmCu-zn20tUTO_DCQk",
             "prefix": "!"
         },
         "webhooks": {
-            "enabled": true,
+            "enabled": false,
             "queue": "",
             "gameChat": "https://discord.com/api/webhooks/1061340694985310248/OfigkI4CkaOnlUdI0yB5-c_SIB87aED25sBjiJnrIXr8OnbQWXU1Qh_auz9uqXjG6kLp",
             "spam": "https://discord.com/api/webhooks/1061354724407906376/O-08w3TgKq4uYI71TDhbTts6fRFeuo_-7YcYW_8D2VV0US9bf7GCD82crns9eH6W7ReM"
@@ -17,18 +17,18 @@
             "username": "Generel_Schwerz",
             "email": "generel@outlook.com",
             "password": "",
-            "auth": "microsoft"
+            "auth": "offline"
         },
         "remoteServer": {
-            "host": "2b2t.org",
-            "port": 25565,
+            "host": "localhost",
+            "port": 25566,
             "version": "1.12.2"
         },
         "localServer": {
             "host": "localhost",
             "port": 25565,
             "version": "1.12.2",
-            "online-mode": true,
+            "online-mode": false,
             "maxPlayers": 1
         },
         "localServerOptions": {

@@ -33,9 +33,9 @@ export abstract class ClientWebhookReporter<
     this.webhookClient = new WebhookClient({ url });
   }
 
-  protected buildClientEmbed(event: string): APIEmbed {
+  protected buildClientEmbed(): APIEmbed {
     const embed: APIEmbed = {
-      title: `Client: ${event}`,
+      title: `Client: ${this.wantedEvent}`,
     };
 
     if (!!this.srv.connectedPlayer) {
@@ -73,7 +73,6 @@ export abstract class AntiAFKWebhookReporter<
 
     const eta = !Number.isNaN(this.srv.queue.eta) ? Duration.fromMillis(this.srv.queue.eta * 1000 - Date.now()) : null;
 
-    console.log(this.srv.isProxyConnected());
     const embed: APIEmbed = {
       title: NiceServerNames[this.wantedEvent],
       footer: {

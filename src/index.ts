@@ -102,6 +102,26 @@ if (checkedConfig.discord.webhooks.enabled) {
 }
 
 
+import * as rl from "readline";
+const inp = rl.createInterface({
+  input: process.stdin,
+  output: process.stdout
+})
+
+inp.on("line", (inp) => {
+    switch (inp.split(' ')[0]) {
+      case "start":
+        wrapper.start()
+        break;
+      case "stop":
+        wrapper.stop()
+        break;
+      case "restart":
+        wrapper.restart(1000);
+        break;
+    }
+})
+
 /////////////////////////////////////////////
 //              functions                  //
 /////////////////////////////////////////////
@@ -109,9 +129,9 @@ if (checkedConfig.discord.webhooks.enabled) {
 function updateServerMotd(oldPos: number, newPos: number, eta: number) {
   if (Number.isNaN(eta)) return;
 
-  rawServer.motd = `Pos: ${newPos}, ETA: ${Duration.fromMillis(
+  rawServer.motd = `Pos: ${newPos} | ETA: ${Duration.fromMillis(
     eta * 1000 - Date.now()
-  ).toFormat("d 'days' h 'hours' m 'minutes'")}`;
+  ).toFormat("d'd', h'hr', m'min'")}`;
 }
 
 /////////////////////////////////////////////

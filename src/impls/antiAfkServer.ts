@@ -59,6 +59,7 @@ export class AntiAFKServer extends AntiAFKBase {
 
   public constructor(...args: any[]) {
     super(args[0], args[1], args[2], args[3]);
+    this.convertToDisconnected();
   }
 
   /**
@@ -95,8 +96,8 @@ export class AntiAFKServer extends AntiAFKBase {
   }
   
   public override stop () {
-    super.stop();
     this._queue.end();
+    super.stop();
   }
 
   protected override optionValidation = () => {
@@ -174,7 +175,7 @@ export class AntiAFKServer extends AntiAFKBase {
     * This WILL be moved later.
     * @param actualUser 
     */
-  protected notConnectedCommandHandler = (actualUser: ServerClient) => {
+  protected override notConnectedCommandHandler = (actualUser: ServerClient) => {
     actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
       switch (message) {
         case "/start":
