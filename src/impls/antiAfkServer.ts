@@ -1,5 +1,5 @@
 import { IProxyServerEvents, OldProxyServer } from "../abstract/proxyServer";
-import { Bot, BotOptions } from "mineflayer";
+import { Bot, BotOptions, BotEvents } from "mineflayer";
 import {
   ServerOptions,
   createServer,
@@ -21,6 +21,7 @@ import { CombinedPredictor } from "./combinedPredictor";
 import { BuildProxyBase, ProxyServer } from "../abstract/proxyBuilder";
 import EventEmitter2, { ConstructorOptions } from "eventemitter2";
 import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
+import { AntiAFK } from "@nxg-org/mineflayer-antiafk/lib/antiafk";
 
 export interface AntiAFKOpts extends IProxyServerOpts {
   antiAFK: boolean;
@@ -29,6 +30,8 @@ export interface AntiAFKOpts extends IProxyServerOpts {
 
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
+  "health": BotEvents["health"],
+  "breath": BotEvents["breath"],
   "*": AntiAFKEvents[Exclude<keyof AntiAFKEvents, "*">];
 }
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, "*">
@@ -84,6 +87,12 @@ export class AntiAFKServer extends AntiAFKBase {
       server,
       psOptions
     );
+  }
+
+  public override setupProxy(): void {
+      super.setupProxy();
+      this.remoteBot.on("health", () => { this.emit("health") });
+      this.remoteBot.on("breath", () => { this.emit("breath") });
   }
 
 

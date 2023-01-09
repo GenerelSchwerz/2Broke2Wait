@@ -172,12 +172,6 @@ export type ClientEvent<T extends ClientEmitters> = T extends Bot
 export type PromiseLike = void | Promise<void>;
 
 
-
-
-
-
-type ValidKey<Src, Key> = Key extends keyof Src ? true : false;
-
 type UnionToIntersection<U> =
   (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never;
 

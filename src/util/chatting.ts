@@ -120,19 +120,24 @@ export function applyWebhookListeners(
 ) {
   if (!config.enabled) return;
 
-  if (!!config.gameChat) {
-    const gameChatHelper = new GameChatListener(srv, config.gameChat);
+
+  if (!!config.queue || !!config.spam) {
+    const queueUpdates = new ServerQueueUpdateMessenger(srv, config.queue || config.spam);
+    const enteredQueue = new ServerEnteredQueueMessenger(srv, config.queue || config.spam);
+    srv.registerQueueListeners(queueUpdates, enteredQueue);
+  }
+  if (!!config.gameChat || !!config.spam) {
+    const gameChatHelper = new GameChatListener(srv, config.gameChat || config.spam);
     srv.registerClientListeners(gameChatHelper);
   }
 
   if (!!config.spam) {
     const start = new ServerStartMessenger(srv, config.spam);
     const stop = new ServerStopMessenger(srv, config.spam);
-
     srv.registerServerListeners(start, stop);
   }
 
-  const queueUpdates = new ServerQueueUpdateMessenger(srv, config.spam);
-  const enteredQueue = new ServerEnteredQueueMessenger(srv, config.spam);
-  srv.registerQueueListeners(queueUpdates, enteredQueue);
+
+
+
 }
