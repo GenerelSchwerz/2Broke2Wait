@@ -20,8 +20,8 @@
             "auth": "microsoft"
         },
         "remoteServer": {
-            "host": "2b2t.org",
-            "port": 25565,
+            "host": "localhost",
+            "port": 25566,
             "version": "1.12.2"
         },
         "localServer": {

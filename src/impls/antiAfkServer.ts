@@ -1,4 +1,4 @@
-import { IProxyServerEvents, OldProxyServer } from "../abstract/proxyServer";
+import { IProxyServerEvents, ProxyServer } from "../abstract/proxyServer";
 import { Bot, BotOptions, BotEvents } from "mineflayer";
 import {
   ServerOptions,
@@ -12,16 +12,13 @@ import { IProxyServerOpts } from "../abstract/proxyServer";
 import { Conn } from "@rob9315/mcproxy";
 import antiAFK, {
   DEFAULT_MODULES,
-  DEFAULT_PASSIVES
+  DEFAULT_PASSIVES,
+  unloadDefaultModules
 } from "@nxg-org/mineflayer-antiafk";
 import autoEat from "@nxg-org/mineflayer-auto-eat";
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../abstract/packetQueuePredictor";
 import { ClientEventRegister, ServerEventRegister } from "../abstract/eventRegisters";
 import { CombinedPredictor } from "./combinedPredictor";
-import { BuildProxyBase, ProxyServer } from "../abstract/proxyBuilder";
-import EventEmitter2, { ConstructorOptions } from "eventemitter2";
-import StrictEventEmitter from "strict-event-emitter-types/types/src/index";
-import { AntiAFK } from "@nxg-org/mineflayer-antiafk/lib/antiafk";
 
 export interface AntiAFKOpts extends IProxyServerOpts {
   antiAFK: boolean;
@@ -36,11 +33,7 @@ export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorE
 }
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, "*">
 
-class Shit extends (EventEmitter2 as { new(options?: ConstructorOptions): StrictEventEmitter<EventEmitter2, StrictAntiAFKEvents>}) {};
-
-const AntiAFKBase = BuildProxyBase<AntiAFKOpts, StrictAntiAFKEvents>(Shit);
-
-export class AntiAFKServer extends AntiAFKBase {
+export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents> {
 
   private _queue: PacketQueuePredictor<any, any>;
 
@@ -51,17 +44,13 @@ export class AntiAFKServer extends AntiAFKBase {
   private _registeredQueueListeners: Set<string> = new Set();
   private _runningQueueListeners: any[] = [];
 
-  // public constructor(
-  //   onlineMode: boolean,
-  //   bOpts: BotOptions,
-  //   server: Server,
-  //   psOpts: Partial<AntiAFKOpts>
-  // ) {
-  //   super(onlineMode, bOpts, server, psOpts);
-  // }
-
-  public constructor(...args: any[]) {
-    super(args[0], args[1], args[2], args[3]);
+  public constructor(
+    onlineMode: boolean,
+    bOpts: BotOptions,
+    server: Server,
+    psOpts: Partial<AntiAFKOpts>
+  ) {
+    super(onlineMode, bOpts, server, psOpts);
     this.convertToDisconnected();
   }
 
@@ -73,7 +62,7 @@ export class AntiAFKServer extends AntiAFKBase {
    * @param {Plugin[]} plugins Mineflayer bot plugins to load into the remote bot.
    * @param {ServerOptions} sOptions Minecraft-protocol server options.
    * @param {Partial<IProxyServerOpts>} psOptions Partial list of ProxyServer options.
-   * @returns {OldProxyServer} Built proxy server.
+   * @returns {ProxyServer} Built proxy server.
    */
   public static wrapServer(
     online: boolean,
@@ -105,7 +94,7 @@ export class AntiAFKServer extends AntiAFKBase {
     return conn;
   }
   
-  public override stop () {
+  public override stop() {
     if (!this.isProxyConnected()) return;
     this._queue.end();
     super.stop();
@@ -120,18 +109,24 @@ export class AntiAFKServer extends AntiAFKBase {
   protected override initialBotSetup(bot: Bot): void {
     if (this.psOpts.antiAFK) {
       bot.loadPlugin(antiAFK);
+      unloadDefaultModules(bot);
+      bot.antiafk.addModules(
+        DEFAULT_MODULES["BlockBreakModule"], 
+        DEFAULT_MODULES["LookAroundModule"], 
+        DEFAULT_MODULES["WalkAroundModule"]
+      );
+
+
+      bot.antiafk.setOptionsForModule(DEFAULT_MODULES["BlockBreakModule"], {
+        enabled: false
+      });
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES["LookAroundModule"], {
         enabled: true,
       });
 
-      bot.antiafk.setOptionsForModule(DEFAULT_MODULES["ChatBotModule"], {
-        enabled: true,
-        delay: 2000,
-      });
-
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES["WalkAroundModule"], {
-        enabled: true,
+        enabled: false,
         timeout: 10000,
       });
 
@@ -217,6 +212,7 @@ export class AntiAFKServer extends AntiAFKBase {
         case "/stop":
           this.stop();
           break;
+        case "assumeControl":
         default:
           break;
       }
@@ -230,37 +226,4 @@ export class AntiAFKServer extends AntiAFKBase {
       }
     });
   };
-
-  /// new
-
-
-
-  public registerQueueListeners(...listeners: ServerEventRegister<any, any>[]) {
-    for (const listener of listeners) {
-      if (this._registeredQueueListeners.has(listener.constructor.name)) continue;
-      this._registeredQueueListeners.add(listener.constructor.name);
-      listener.begin();
-      this._runningQueueListeners.push(listener);
-    }
-  }
-
-  public removeServerListeners(...listeners: ServerEventRegister<any, any>[]) {
-    for (const listener of listeners) {
-      console.log(listener.constructor.name)
-      if (!this._registeredQueueListeners.has(listener.constructor.name)) continue;
-      this._registeredQueueListeners.delete(listener.constructor.name);
-      listener.end();
-      this._runningQueueListeners = this._runningQueueListeners.filter(l => l.constructor.name !== listener.constructor.name);
-    }
-  }
-
-  public removeAllQueueListeners() {
-    this._registeredQueueListeners.clear();
-    for (const listener of this._runningQueueListeners) {
-      listener.end();
-    }
-    this._runningQueueListeners = [];
-  }
-
-
 }

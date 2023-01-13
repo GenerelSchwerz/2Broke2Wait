@@ -9,8 +9,7 @@ import { AntiAFKServer, StrictAntiAFKEvents } from "../impls/antiAfkServer";
 
 import { ClientEmitters, ClientEvent } from "../util/utilTypes";
 import { PacketQueuePredictorEvents } from "./packetQueuePredictor";
-import { ProxyServer } from "./proxyBuilder";
-import { IProxyServerEvents, OldProxyServer } from "./proxyServer";
+import { IProxyServerEvents, ProxyServer } from "./proxyServer";
 
 
 // const NiceClientNames: {[key in ClientEvent<ClientEmitters>]: string} = {
@@ -48,7 +47,7 @@ export abstract class ClientWebhookReporter<
 }
 
 const NiceServerNames: {[key in keyof StrictAntiAFKEvents]: string } = {
-  decidedClose: "Server closed!",
+  closedConnections: "Server closed!",
   enteredQueue: "Entered the queue!",
   invalidData: "Invalid queue data",
   leftQueue: "Left the queue!",

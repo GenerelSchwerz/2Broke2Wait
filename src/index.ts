@@ -83,16 +83,16 @@ afkServer.on("remoteError", async (error) => {
   }
 });
 
-afkServer.on("decidedClose", (reason) => {
+afkServer.on("closedConnections", (reason) => {
   console.log("STOPPED SERVER:", reason);
   disconnectedServerMotd();
   afkServer.removeAllClientListeners();
   afkServer.removeAllServerListeners();
-  afkServer.removeAllQueueListeners();
 });
 
-afkServer.on("started", () => {
-  console.log("Server started!");
+
+afkServer.on("started", () => { 
+  console.log("Server started!\n" + helpMsg);
   inGameServerMotd();
   if (checkedConfig.discord.webhooks.enabled) {
     applyWebhookListeners(afkServer, checkedConfig.discord.webhooks);
@@ -121,7 +121,6 @@ const inp = rl.createInterface({
 });
 
 const helpMsg =
-  `Help command:\n` +
   "-------------------------------\n" +
   "start    -> starts the server\n" +
   "stop     -> stops the server\n" +
@@ -143,11 +142,17 @@ function getServerName(): string {
 }
 
 function queueServerMotd(oldPos: number, newPos: number, eta: number) {
-  if (Number.isNaN(eta)) return;
+  if (Number.isNaN(eta)) {
+    rawServer.motd = `Pos: ${newPos} | ETA: Unknown.`;
+    return;
+  };
 
-  rawServer.motd = `Pos: ${newPos} | ETA: ${Duration.fromMillis(
+  const res = `Pos: ${newPos} | ETA: ${Duration.fromMillis(
     eta * 1000 - Date.now()
-  ).toFormat("d'd', h'hr', m'min'")}`;
+  ).toFormat("d'd', h'hr', m'min'")}`
+
+  console.log(`Queue update!\n` + res);
+  rawServer.motd = res;
 }
 
 function disconnectedServerMotd() {
@@ -172,7 +177,8 @@ function botUpdatesMotd(bot: Bot) {
 inp.on("line", (inp) => {
   switch (inp.split(" ")[0]) {
     case "help":
-      console.log(helpMsg);
+      console.log("Help message!\n" + helpMsg);
+      break;
     case "start":
       afkServer.start();
       break;
@@ -185,7 +191,9 @@ inp.on("line", (inp) => {
     case "status":
       if (afkServer.isProxyConnected()) {
         console.log(`Proxy connected to ${afkServer.bOpts.host}:${afkServer.bOpts.port !== 25565 ? afkServer.bOpts.port : ""}`);
+        if (afkServer.queue.inQueue)
         console.log(`Proxy in queue? ${afkServer.queue.inQueue}`);
+      
       } else {
         console.log("Proxy is not connected.");
       }

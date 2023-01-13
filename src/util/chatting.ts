@@ -5,7 +5,7 @@ import {
   AntiAFKWebhookReporter,
 } from "../abstract/webhookReporters";
 import { DateTime, Duration } from "ts-luxon";
-import { OldProxyServer } from "../abstract/proxyServer";
+import { ProxyServer } from "../abstract/proxyServer";
 import { AntiAFKServer } from "../impls/antiAfkServer";
 
 function escapeMarkdown(...texts: string[]): string[] {
@@ -53,9 +53,9 @@ class ServerStartMessenger extends AntiAFKWebhookReporter<"started"> {
 }
 
 // Send started message when server starts.
-class ServerStopMessenger extends AntiAFKWebhookReporter<"decidedClose"> {
+class ServerStopMessenger extends AntiAFKWebhookReporter<"closedConnections"> {
   constructor(srv: AntiAFKServer, webhookUrl: string) {
-    super(srv, "decidedClose", webhookUrl);
+    super(srv, "closedConnections", webhookUrl);
   }
 
   protected listener = async (reason: string) => {
@@ -124,7 +124,7 @@ export function applyWebhookListeners(
   if (!!config.queue || !!config.spam) {
     const queueUpdates = new ServerQueueUpdateMessenger(srv, config.queue || config.spam);
     const enteredQueue = new ServerEnteredQueueMessenger(srv, config.queue || config.spam);
-    srv.registerQueueListeners(queueUpdates, enteredQueue);
+    srv.registerServerListeners(queueUpdates, enteredQueue);
   }
   if (!!config.gameChat || !!config.spam) {
     const gameChatHelper = new GameChatListener(srv, config.gameChat || config.spam);

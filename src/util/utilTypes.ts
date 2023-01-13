@@ -206,13 +206,3 @@ export const TypedEventEmitter: {
 export type TypedEventEmitter<T, K = T> = StrictEventEmitter<EventEmitter2, T, K>  // Order matters here, we want our overloads to be considered first
 
 // ITypedEventEmitter<T, K> &
-
-
-interface Events {
-  fuck: (reason: string) => void;
-  fuck1: (num: number) => void;
-}
-interface NewEvents extends Events {
-  fuck2: (num: number, num1: number) => void;
-}
-
