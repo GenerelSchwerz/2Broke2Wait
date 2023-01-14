@@ -27,6 +27,7 @@ import { buildClient } from "./discord/index";
 import { applyWebhookListeners } from "./util/chatting";
 import { AntiAFKServer } from "./impls/antiAfkServer";
 import type {Bot} from "mineflayer";
+import { ProxyInspector } from "./wip/newProxyServer";
 
 /////////////////////////////////////////////
 //              Initialization             //
@@ -44,10 +45,11 @@ const rawServer = createServer(checkedConfig.minecraft.localServer);
 
 console.log(checkedConfig.minecraft.localServer);
 
-const afkServer = AntiAFKServer.wrapServer(
+const afkServer = ProxyInspector.wrapServer1(
   true,
-  botOptions,
   rawServer,
+  botOptions,
+  {},
   checkedConfig.minecraft.localServerOptions
 );
 
@@ -115,6 +117,7 @@ if (checkedConfig.discord.webhooks.enabled) {
 }
 
 import * as rl from "readline";
+import { goals } from "mineflayer-pathfinder";
 const inp = rl.createInterface({
   input: process.stdin,
   output: process.stdout,

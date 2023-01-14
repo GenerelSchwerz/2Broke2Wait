@@ -28,7 +28,7 @@
             "host": "localhost",
             "port": 25565,
             "version": "1.12.2",
-            "online-mode": true,
+            "online-mode": false,
             "maxPlayers": 1
         },
         "localServerOptions": {

@@ -9,7 +9,7 @@ import {
   Client
 } from "minecraft-protocol";
 import { IProxyServerOpts } from "../abstract/proxyServer";
-import { Conn } from "@rob9315/mcproxy";
+import { Conn, ConnOptions } from "@rob9315/mcproxy";
 import antiAFK, {
   DEFAULT_MODULES,
   DEFAULT_PASSIVES,
@@ -27,13 +27,14 @@ export interface AntiAFKOpts extends IProxyServerOpts {
 
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
+  "botSpawn": (bot: Bot) => void,
   "health": BotEvents["health"],
   "breath": BotEvents["breath"],
   "*": AntiAFKEvents[Exclude<keyof AntiAFKEvents, "*">];
 }
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, "*">
 
-export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents> {
+export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extends StrictAntiAFKEvents = StrictAntiAFKEvents> extends ProxyServer<Opts, Events> {
 
   private _queue: PacketQueuePredictor<any, any>;
 
@@ -46,11 +47,12 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents>
 
   public constructor(
     onlineMode: boolean,
-    bOpts: BotOptions,
     server: Server,
-    psOpts: Partial<AntiAFKOpts>
+    bOpts: BotOptions,
+    cOpts: Partial<ConnOptions> = {},
+    psOpts: Partial<Opts>
   ) {
-    super(onlineMode, bOpts, server, psOpts);
+    super(onlineMode, server, bOpts, cOpts, psOpts);
     this.convertToDisconnected();
   }
 
@@ -66,22 +68,25 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents>
    */
   public static wrapServer(
     online: boolean,
-    bOpts: BotOptions,
     server: Server,
+    bOpts: BotOptions,
+    cOpts: Partial<ConnOptions> = {},
     psOptions: Partial<AntiAFKOpts> = {}
   ): AntiAFKServer {
     return new AntiAFKServer(
       online,
-      bOpts,
       server,
+      bOpts,
+      cOpts,
       psOptions
     );
   }
 
   public override setupProxy(): void {
       super.setupProxy();
-      this.remoteBot.on("health", () => { this.emit("health") });
-      this.remoteBot.on("breath", () => { this.emit("breath") });
+      this.remoteBot.on("health", () => { this.emit("health" as any) });
+      this.remoteBot.on("breath", () => { this.emit("breath" as any) });
+      this.remoteBot.on("spawn", () => { this.emit("botSpawn" as any, this.remoteBot) });
   }
 
 
@@ -112,13 +117,20 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents>
       unloadDefaultModules(bot);
       bot.antiafk.addModules(
         DEFAULT_MODULES["BlockBreakModule"], 
-        DEFAULT_MODULES["LookAroundModule"], 
-        DEFAULT_MODULES["WalkAroundModule"]
+        // DEFAULT_MODULES["LookAroundModule"], 
+        DEFAULT_MODULES["WalkAroundModule"],
+        // DEFAULT_MODULES["ChatBotModule"]
       );
+
+      bot.antiafk.on('moduleStarted', (module) => console.log("started", module.constructor.name, ))
+
+
+      bot.antiafk.on('moduleCompleted', (module, success, reason) => console.log("completed", module.constructor.name, success, reason))
+
 
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES["BlockBreakModule"], {
-        enabled: false
+        enabled: true,
       });
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES["LookAroundModule"], {
@@ -126,7 +138,7 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents>
       });
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES["WalkAroundModule"], {
-        enabled: false,
+        enabled: true,
         timeout: 10000,
       });
 
@@ -167,13 +179,13 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents>
     }
   }
 
-  protected override endBotLogic = () => {
+  public override endBotLogic = () => {
     if (this.psOpts.antiAFK) {
-      this.remoteBot.antiafk.forceStop();
+      this.remoteBot?.antiafk.forceStop();
     }
 
     if (this.psOpts.autoEat) {
-      this.remoteBot.autoEat.disable();
+      this.remoteBot?.autoEat.disable();
     }
   }
 
@@ -181,17 +193,19 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents>
     * This WILL be moved later.
     * @param actualUser 
     */
-  protected override notConnectedCommandHandler = (actualUser: ServerClient) => {
+  protected override notConnectedCommandHandler(actualUser: ServerClient) {
     actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
       switch (message) {
         case "/start":
           this.closeConnections("Host started proxy.");
           this.start();
           break;
+        case "/fuck":
+          console.log("please be canceled.")
+          break;
         default:
           break;
       }
-
     })
     actualUser.on("tab_complete", (packetData: { text: string, assumeCommand: boolean, lookedAtBlock?: any }, packetMeta: PacketMeta) => {
       if ("/start".startsWith(packetData.text)) {
@@ -206,7 +220,8 @@ export class AntiAFKServer extends ProxyServer<AntiAFKOpts, StrictAntiAFKEvents>
    * This WILL be moved later.
    * @param actualUser 
    */
-  protected whileConnectedCommandHandler = (actualUser: ServerClient) => {
+  protected whileConnectedCommandHandler(actualUser: ServerClient) {
+
     actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
       switch (message) {
         case "/stop":

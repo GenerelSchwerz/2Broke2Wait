@@ -10,7 +10,7 @@ import { ServerClient, Client, Server, PacketMeta } from "minecraft-protocol";
 import StrictEventEmitter from "strict-event-emitter-types";
 import { sleep } from "../util/index";
 import { ClientEventRegister, ServerEventRegister } from "./eventRegisters";
-import { Conn, PacketMiddleware} from "@rob9315/mcproxy";
+import { Conn, ConnOptions, PacketMiddleware} from "@rob9315/mcproxy";
 import EventEmitter2, { ConstructorOptions } from "eventemitter2";
 import { TypedEventEmitter } from "../util/utilTypes";
 
@@ -22,7 +22,7 @@ import * as physics from "mineflayer/lib/plugins/physics"
  * Interface for the ProxyServer options.
  */
 export interface IProxyServerOpts {
-  whitelist?: string[];
+  whitelist?: string[] | ((username: string) => boolean);
   restartOnDisconnect: boolean;
 }
 
@@ -133,17 +133,24 @@ export abstract class ProxyServer<
 
   public psOpts: T;
 
+  private boundGoodCmds
+  private boundBadCmds;
+  private boundGoodLogin;
+  private boundBadLogin;
+
   /**
    * Hidden constructor. Use static methods.
-   * @param {boolean} reuseServer Whether or not to destroy internal server on close.
+   * @param {boolean} onlineMode Whether the server is online or not.
    * @param {Server} server Internal minecraft-protocol server.
-   * @param {Conn} proxy Proxy connection to remote server.
-   * @param {IProxyServerOpts} opts Options for ProxyServer.
+   * @param {BotOptions} bOpts mineflayer bot options.
+   * @param {Partial<ConnOptions>} cOpts Connection options to the server.
+   * @param {Partial<IProxyServerOpts>} opts Options for ProxyServer.
    */
   protected constructor(
     onlineMode: boolean,
-    bOpts: BotOptions,
     server: Server,
+    bOpts: BotOptions,
+    cOpts: Partial<ConnOptions> = {},
     opts: Partial<T> = {}
   ) {
     super({ wildcard: true });
@@ -158,6 +165,10 @@ export abstract class ProxyServer<
     ) as any;
 
     this._bOpts = bOpts;
+    this.boundGoodLogin = this.whileConnectedLoginHandler.bind(this);
+    this.boundGoodCmds =  this.whileConnectedCommandHandler.bind(this);
+    this.boundBadCmds = this.notConnectedCommandHandler.bind(this);
+    this.boundBadLogin = this.notConnectedLoginHandler.bind(this);
   }
 
   /**
@@ -175,7 +186,7 @@ export abstract class ProxyServer<
   protected initialBotSetup(bot: Bot): void {}
 
   /**
-   * Helper method when {@link ProxyServer._controllingPlayer | the controlling player} disconnects.
+   * Helper method when {@link ProxyServer["_controllingPlayer"] | the controlling player} disconnects.
    *
    * Begin certain bot logic here.
    *
@@ -231,10 +242,10 @@ export abstract class ProxyServer<
     if (this._controllingPlayer) {
       this._controllingPlayer.end("Connection reset by 2b2t server.");
     }
-    this._controllingPlayer = null;
-    this._remoteIsConnected = false;
     this.endBotLogic();
     this.stop();
+    this._controllingPlayer = null;
+    this._remoteIsConnected = false;
     if (info instanceof Error) {
       this.emit("remoteError" as any, info);
     } else {
@@ -248,7 +259,7 @@ export abstract class ProxyServer<
    *
    * @param {ServerClient} user Local connection to control the bot.
    */
-  private isUserGood(user: ServerClient): boolean {
+  protected isUserGood(user: ServerClient): boolean {
     if (this.onlineMode) {
       return this.remoteClient.uuid === user.uuid;
     } else {
@@ -256,10 +267,19 @@ export abstract class ProxyServer<
     }
   }
 
-  private isUserWhiteListed(user: ServerClient): boolean {
-    return (
-      !this.psOpts.whitelist || this.psOpts.whitelist.includes(user.username)
-    );
+  protected isUserWhiteListed(user: ServerClient): boolean {
+    if (!this.psOpts.whitelist) return true;
+    if (typeof this.psOpts.whitelist === "object") {
+      return this.psOpts.whitelist.find((n) => n.toLowerCase() === user.username.toLowerCase()) !== undefined;
+    } else if (typeof this.psOpts.whitelist === "function") {
+      try {
+        return !!this.psOpts.whitelist(user.username);
+      } catch (e) {
+        console.warn("allowlist callback had error", e);
+        return;
+      }
+    }
+    return;
   }
 
   /**
@@ -271,6 +291,7 @@ export abstract class ProxyServer<
     // close remote bot cleanly.
     this._proxy?.disconnect();
 
+
     // disconnect all local clients cleanly.
     Object.keys(this.server.clients).forEach((clientId) => {
       const client: Client = this.server.clients[clientId];
@@ -278,6 +299,9 @@ export abstract class ProxyServer<
     });
 
     this.emit("closedConnections" as any, reason);
+
+    // we no longer want to care about this proxy.
+    this._proxy = null;
   };
 
   /**
@@ -285,7 +309,8 @@ export abstract class ProxyServer<
    *
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
-  private whileConnectedLoginHandler = (actualUser: ServerClient) => {
+  protected whileConnectedLoginHandler(actualUser: ServerClient) {
+    console.trace("here");
     if (!this.isUserWhiteListed(actualUser)) {
       actualUser.end(
         "Not whitelisted!\n" + "You need to turn the whitelist off."
@@ -365,31 +390,38 @@ export abstract class ProxyServer<
 
   public convertToConnected() {
     if (this._remoteIsConnected) return;
-    this.server.on("login", this.whileConnectedLoginHandler);
-    this.server.on("login", this.whileConnectedCommandHandler);
-    this.server.off("login", this.notConnectedLoginHandler);
-    this.server.off("login", this.notConnectedCommandHandler);
+    // this.server.removeAllListeners("login");
+    this.server.on("login", this.boundGoodLogin);
+    this.server.on("login", this.boundGoodCmds);
+    this.server.off("login", this.boundBadLogin);
+    this.server.off("login", this.boundBadCmds);
 
     for (const client in this.server.clients) {
       this.whileConnectedCommandHandler(this.server.clients[client] as any);
     }
+    console.log("TO CONNECTED:", this.server.listeners("login"))
   }
 
   public convertToDisconnected() {
+    // console.trace("here", this._remoteIsConnected);
     if (!this._remoteIsConnected) return;
-    this.server.on("login", this.notConnectedCommandHandler);
-    this.server.on("login", this.notConnectedLoginHandler);
-    this.server.off("login", this.whileConnectedLoginHandler);
-    this.server.off("login", this.whileConnectedCommandHandler);
+    // this.server.removeAllListeners("login");
+    this.server.on("login", this.boundBadLogin);
+    this.server.on("login", this.boundBadCmds);
+    this.server.off("login", this.boundGoodLogin);
+    this.server.off("login", this.boundGoodCmds);
+
 
     for (const client in this.server.clients) {
       this.notConnectedCommandHandler(this.server.clients[client] as any);
     }
+
+    console.log("TO DISCONNECTED:", this.server.listeners("login"))
   }
 
-  protected notConnectedCommandHandler = (client: ServerClient) => {};
+  protected abstract notConnectedCommandHandler(client: ServerClient): void;
 
-  protected whileConnectedCommandHandler = (client: ServerClient) => {};
+  protected abstract whileConnectedCommandHandler(client: ServerClient): void;
 
   public registerClientListeners(
     ...listeners: ClientEventRegister<Bot | Client, any>[]
