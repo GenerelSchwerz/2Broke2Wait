@@ -16,7 +16,6 @@ import { AntiAFKServer, StrictAntiAFKEvents } from "../impls/antiAfkServer";
 import { pathfinder, goals } from "mineflayer-pathfinder";
 import { sleep } from "../util/index";
 
-
 // TODO: agnostic this.
 const ChatMessage: typeof AgnogChMsg = require("prismarine-chat")("1.12.2");
 
@@ -56,7 +55,7 @@ export interface ProxyInspectorEvents extends StrictAntiAFKEvents {
 }
 
 export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyInspectorEvents> {
-  public static readonly blockedPacketsWhenNotInControl: string[] = ["sprint", "abilities", "position"];
+  public static readonly blockedPacketsWhenNotInControl: string[] = ["entity_metadata", "abilities", "position"];
 
   public proxyChatPrefix: string = "§6Proxy >>§r";
 
@@ -75,7 +74,6 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     this.psOpts = merge(DefaultProxyOpts, this.psOpts);
   }
 
-
   public static wrapServer1(
     online: boolean,
     server: Server,
@@ -83,33 +81,24 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     cOpts: Partial<ConnOptions> = {},
     psOptions: Partial<ProxyInspectorOptions> = {}
   ): ProxyInspector {
-    return new ProxyInspector(
-      online,
-      server,
-      bOpts,
-      cOpts,
-      psOptions
-    );
+    return new ProxyInspector(online, server, bOpts, cOpts, psOptions);
   }
-
 
   // ======================= //
   //     internal utils      //
   // ======================= //
 
-
-  public override start() {
+  public override start(): Conn {
     super.start();
-    this.registerProxy(this._proxy);
-    return this._proxy;
+    this.registerProxy(this._proxy!);
+    return this._proxy!;
   }
 
   public override stop() {
     if (!this.isProxyConnected()) return;
-    this.removeProxy(this._proxy);
+    this.removeProxy(this._proxy!);
     super.stop();
   }
-
 
   botIsInControl() {
     return !this._proxy?.pclient;
@@ -128,7 +117,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
 
   makeViewFakePlayer(client: ServerClient | Client) {
     // if (!this._proxy?.pclient) return
-    if (client === this._proxy.pclient) {
+    if (client === this._proxy?.pclient) {
       this.message(client, `Cannot get into the view. You are controlling the bot`);
       return;
     }
@@ -137,7 +126,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
 
   makeViewNormal(client: ServerClient | Client) {
     // if (!this._proxy?.pclient) return false
-    if (client === this._proxy.pclient) {
+    if (client === this._proxy?.pclient) {
       this.message(client, "Cannot get out off the view. You are controlling the bot");
       return;
     }
@@ -224,10 +213,17 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
   }
 
   public removeProxy(conn: Conn) {
+    console.trace(conn);
     const clientMiddle = this.genToClientMiddleware();
     const serverMiddle = this.genToServerMiddleware();
-    conn.toClientDefaultMiddleware = conn.toClientDefaultMiddleware.filter(m => !clientMiddle.includes(m))
-    conn.toServerDefaultMiddleware = conn.toServerDefaultMiddleware.filter(m => !serverMiddle.includes(m))
+    if (conn.toClientDefaultMiddleware) {
+      conn.toClientDefaultMiddleware = conn.toClientDefaultMiddleware.filter((m) => !clientMiddle.includes(m));
+    }
+
+    if (conn.toServerDefaultMiddleware) {
+      conn.toServerDefaultMiddleware = conn.toServerDefaultMiddleware.filter((m) => !serverMiddle.includes(m));
+    }
+
     this.fakePlayer = null;
     this.fakeSpectator = null;
   }
@@ -260,7 +256,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
       return data;
     };
 
-    const inspector_toClientMiddlewareRecipesFix: PacketMiddleware = ({ meta, bound, isCanceled }) => {
+    const inspector_toClientMiddlewareRecipesFix: PacketMiddleware = ({ meta, data, bound, isCanceled }) => {
       if (isCanceled) return;
       if (bound !== "client") return;
       if (meta.name === "unlock_recipes") {
@@ -274,22 +270,19 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
   private genToServerMiddleware() {
     const inspector_toServerMiddleware: PacketMiddleware = ({ meta, pclient, data, isCanceled }) => {
       if (!this._proxy || !pclient) return;
-      let returnValue: false | undefined = undefined;
-
+      if (meta.name.includes("position") || meta.name.includes("look")) return;
       switch (meta.name) {
         case "use_entity":
-          if (
-            this.fakeSpectator?.clientsInCamera[pclient.uuid] &&
-            this.fakeSpectator?.clientsInCamera[pclient.uuid].status
-          ) {
+          if (!this.fakeSpectator?.clientsInCamera[pclient.uuid]) return data;
+          if (!this.fakeSpectator.clientsInCamera[pclient.uuid].status && data.target === FakePlayer.fakePlayerId) {
             if (data.mouse === 0 || data.mouse === 1) {
-              this.fakeSpectator.revertPov(pclient);
+              this.fakeSpectator.makeViewingBotPov(pclient);
               return;
             }
           }
           break;
       }
-      return returnValue;
+      return;
     };
 
     return [inspector_toServerMiddleware];
@@ -348,7 +341,6 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     this._proxy.sendPackets(client);
   }
 
-
   protected override async whileConnectedLoginHandler(client: ServerClient) {
     if (!this.isUserWhiteListed(client)) {
       const { address, family, port } = {
@@ -366,15 +358,13 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
       console.info(`Player ${client.username} joined the proxy`);
     }
 
-
-
     if (this.worldManager) {
-      const managedPlayer = this.worldManager.newManagedPlayer(client, this._proxy.bot.entity.position);
-      managedPlayer.loadedChunks = this._proxy.stateData.bot.world
-        .getColumns()
-        .map(({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) => new Vec3(chunkX * 16, 0, chunkZ * 16));
-      this._proxy.stateData.bot.on("spawn", () => {
-        managedPlayer.positionReference = this._proxy?.stateData.bot.entity.position;
+      const managedPlayer = this.worldManager.newManagedPlayer(client, this._proxy!.stateData.bot.entity.position);
+      managedPlayer.loadedChunks = this._proxy!.stateData.bot.world.getColumns().map(
+        ({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) => new Vec3(chunkX * 16, 0, chunkZ * 16)
+      );
+      this._proxy!.stateData.bot.on("spawn", () => {
+        managedPlayer.positionReference = this._proxy!.stateData.bot.entity.position;
       });
       this.attach(client, {
         toClientMiddleware: [...managedPlayer.getMiddlewareToClient()],
@@ -384,12 +374,8 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     }
     await this.sendPackets(client as unknown as Client);
 
-
-    
-    const connect = this.psOpts.linkOnConnect && !this._proxy.pclient;
-    this.broadcastMessage(
-      `User §3${client.username}§r logged in. ${connect ? "He is in control" : "He is not in control"}`
-    );
+    const connect = this.psOpts.linkOnConnect && !this._proxy?.pclient;
+    this.broadcastMessage(`User §3${client.username}§r logged in. ${connect ? "He is in control" : "He is not in control"}`);
     this.printHelp(client);
 
     if (!this._proxy?.pclient) {
@@ -400,6 +386,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
 
     if (!connect) {
       this.fakePlayer?.register(client);
+      this.fakeSpectator?.register(client);
       this.fakeSpectator?.makeSpectator(client);
     } else {
       this.link(client);
@@ -410,6 +397,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
         this.beginBotLogic();
       }
       this.fakePlayer?.unregister(client);
+      this.fakeSpectator?.register(client);
       this.unlink(client);
       this.emit("clientDisconnect", client);
       this.broadcastMessage(`${this.proxyChatPrefix} User §3${client.username}§r disconnected`);
@@ -419,16 +407,19 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     });
 
     this.emit("clientConnect", client);
-  };
+  }
 
   protected whileConnectedCommandHandler(client: ServerClient) {
     super.whileConnectedCommandHandler(client);
     client.on("chat", ({ message }: { message: string }, meta: PacketMeta) => {
-      if (!message.startsWith("/")) return;
+      if (!message.startsWith("/") && !this._controllingPlayer) {
+        this._proxy.write("chat", {message})
+        return;
+      };
       const [cmd, ...args] = message.trim().substring(1).split(" ");
       switch (cmd) {
         case "blocks":
-          this.message(client, `${this.remoteBot.findBlocks({matching: 3, count: 30})}`)
+          this.message(client, `${this.remoteBot!.findBlocks({ matching: 3, count: 30 })}`);
           return;
         case "stopbot":
           this.endBotLogic();
@@ -444,11 +435,11 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
           return;
         case "view":
           const res0 = this.makeViewFakePlayer(client);
-          if (res0) this.message(client, "Connecting to view. Type $unview to exit");
+          if (res0) this.message(client, "Connecting to view. Type /unview to exit");
           return;
         case "unview":
           const res1 = this.makeViewNormal(client);
-          if (res1) this.message(client, "Disconnecting from view. Type $view to connect");
+          if (res1) this.message(client, "Disconnecting from view. Type /view to connect");
           return;
         case "c":
           this.broadcastMessage(`[${client.username}] ${args.join(" ")}`);
@@ -492,32 +483,15 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
           return;
       }
     });
-  };
+  }
 
   protected notConnectedCommandHandler(client: ServerClient) {
     super.notConnectedCommandHandler(client);
     client.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
       switch (message) {
-        case "/start":
-          this.closeConnections("Host started proxy.");
-          this.start();
-          break;
-        case "/fuck":
-          console.log("please be canceled.");
-          break;
         default:
           break;
       }
     });
-    client.on(
-      "tab_complete",
-      (packetData: { text: string; assumeCommand: boolean; lookedAtBlock?: any }, packetMeta: PacketMeta) => {
-        if ("/start".startsWith(packetData.text)) {
-          client.write("tab_complete", {
-            matches: ["/start"],
-          });
-        }
-      }
-    );
-  };
+  }
 }

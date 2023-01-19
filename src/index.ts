@@ -53,12 +53,12 @@ const afkServer = ProxyInspector.wrapServer1(
   checkedConfig.minecraft.localServerOptions
 );
 
-afkServer.on("breath", () => {
-  botUpdatesMotd(afkServer.remoteBot);
+afkServer.on("breath", (bot) => {
+  botUpdatesMotd(bot);
 })
 
-afkServer.on("health", () => {
-  botUpdatesMotd(afkServer.remoteBot);
+afkServer.on("health", (bot) => {
+  botUpdatesMotd(bot);
 })
 
 afkServer.on("enteredQueue", () => {

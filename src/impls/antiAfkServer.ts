@@ -28,8 +28,8 @@ export interface AntiAFKOpts extends IProxyServerOpts {
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
   "botSpawn": (bot: Bot) => void,
-  "health": BotEvents["health"],
-  "breath": BotEvents["breath"],
+  "health":(bot: Bot) => void,
+  "breath":(bot: Bot) => void,
   "*": AntiAFKEvents[Exclude<keyof AntiAFKEvents, "*">];
 }
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, "*">
@@ -84,14 +84,14 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
 
   public override setupProxy(): void {
       super.setupProxy();
-      this.remoteBot.on("health", () => { this.emit("health" as any) });
-      this.remoteBot.on("breath", () => { this.emit("breath" as any) });
-      this.remoteBot.on("spawn", () => { this.emit("botSpawn" as any, this.remoteBot) });
+      this.remoteBot!.on("health", () => { this.emit("health" as any, this.remoteBot) });
+      this.remoteBot!.on("breath", () => { this.emit("breath" as any, this.remoteBot) });
+      this.remoteBot!.on("spawn", () => { this.emit("botSpawn" as any, this.remoteBot) });
   }
 
 
-  public override start() {
-    if (this.isProxyConnected()) return this._proxy;
+  public override start(): Conn {
+    if (this.isProxyConnected()) return this._proxy!;
     const conn = super.start();
     this._queue = new CombinedPredictor(conn);
     this._queue.begin();
@@ -106,8 +106,8 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
   }
 
   protected override optionValidation = () => {
-    this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot.hasPlugin(antiAFK);
-    this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat);
+    this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot!.hasPlugin(antiAFK);
+    this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot!.hasPlugin(autoEat);
     return this.psOpts;
   }
 
@@ -116,9 +116,9 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
       bot.loadPlugin(antiAFK);
       unloadDefaultModules(bot);
       bot.antiafk.addModules(
-        DEFAULT_MODULES["BlockBreakModule"], 
+        // DEFAULT_MODULES["BlockBreakModule"]!, 
         // DEFAULT_MODULES["LookAroundModule"], 
-        DEFAULT_MODULES["WalkAroundModule"],
+        DEFAULT_MODULES["WalkAroundModule"]!,
         // DEFAULT_MODULES["ChatBotModule"]
       );
 
@@ -129,7 +129,7 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
 
 
 
-      bot.antiafk.setOptionsForModule(DEFAULT_MODULES["BlockBreakModule"], {
+      bot.antiafk.setOptionsForModule(DEFAULT_MODULES["BlockBreakModule"]!, {
         enabled: true,
       });
 
@@ -137,7 +137,7 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
         enabled: true,
       });
 
-      bot.antiafk.setOptionsForModule(DEFAULT_MODULES["WalkAroundModule"], {
+      bot.antiafk.setOptionsForModule(DEFAULT_MODULES["WalkAroundModule"]!, {
         enabled: true,
         timeout: 10000,
       });
@@ -171,11 +171,11 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
 
   protected override beginBotLogic = () => {
     if (this.psOpts.antiAFK && !this._queue.inQueue) {
-      this.remoteBot.antiafk.start();
+      this.remoteBot!.antiafk.start();
     }
 
     if (this.psOpts.autoEat && !this._queue.inQueue) {
-      this.remoteBot.autoEat.enable();
+      this.remoteBot!.autoEat.enable();
     }
   }
 
@@ -200,9 +200,6 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
           this.closeConnections("Host started proxy.");
           this.start();
           break;
-        case "/fuck":
-          console.log("please be canceled.")
-          break;
         default:
           break;
       }
@@ -224,10 +221,10 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
 
     actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
       switch (message) {
+        case "/quit":
         case "/stop":
           this.stop();
           break;
-        case "assumeControl":
         default:
           break;
       }

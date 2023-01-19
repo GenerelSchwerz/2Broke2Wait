@@ -20,7 +20,7 @@ function escapeMarkdown(...texts: string[]): string[] {
 // since chat is only triggered by players, no need to wait for in queue.
 class GameChatListener extends ClientWebhookReporter<Bot, "chat"> {
   constructor(srv: AntiAFKServer, webhookUrl: string) {
-    super(srv, srv.remoteBot, "chat", webhookUrl);
+    super(srv, srv.remoteBot!, "chat", webhookUrl);
   }
 
   protected listener = async (username, message) => {
@@ -115,7 +115,7 @@ class ServerEnteredQueueMessenger extends AntiAFKWebhookReporter<"enteredQueue">
 }
 
 export function applyWebhookListeners(
-  srv: AntiAFKServer,
+  srv: AntiAFKServer<any, any>,
   config: Options["discord"]["webhooks"]
 ) {
   if (!config.enabled) return;

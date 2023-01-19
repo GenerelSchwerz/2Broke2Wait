@@ -37,9 +37,9 @@ export abstract class ClientWebhookReporter<
       title: `Client: ${this.wantedEvent}`  ,
     };
 
-    if (!!this.srv.connectedPlayer) {
+    if (!!this.srv.controllingPlayer) {
       embed.footer = {
-        text: "Connected player: " + this.srv.connectedPlayer.username,
+        text: "Connected player: " + this.srv.controllingPlayer.username,
       };
     }
     return embed;
@@ -47,6 +47,7 @@ export abstract class ClientWebhookReporter<
 }
 
 const NiceServerNames: {[key in keyof StrictAntiAFKEvents]: string } = {
+  botSpawn: "Bot has spawned!",
   closedConnections: "Server closed!",
   enteredQueue: "Entered the queue!",
   invalidData: "Invalid queue data",
@@ -78,7 +79,7 @@ export abstract class AntiAFKWebhookReporter<
       title: NiceServerNames[this.wantedEvent],
       footer: {
         text: (this.srv.isProxyConnected() ? `Connected to: ${this.srv.bOpts.host}${ this.srv.bOpts.port !== 25565 ? ":" + this.srv.bOpts.port : "" }\n` : `Not connected.\n`) +
-              (this.srv.connectedPlayer ? `Connected player: ${this.srv.connectedPlayer.username}\n` : "") + 
+              (this.srv.controllingPlayer ? `Connected player: ${this.srv.controllingPlayer.username}\n` : "") + 
               (this.srv.queue?.inQueue && !!eta ? `Join time: ${DateTime.local().plus(eta).toFormat("hh:mm a MM/dd/yyyy")}\n` : "")
       },
     };

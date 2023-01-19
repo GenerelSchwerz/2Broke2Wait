@@ -306,10 +306,14 @@ export class FakePlayer {
       let response
       try {
         response = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${this.uuid}?unsigned=false`)
-        const p = await response.json() as any
-        properties = p?.properties ?? []
-        if (properties?.length !== 1) {
-          console.warn('Skin lookup failed for', this.uuid)
+        if (response.status !== 204) {
+          const p = await response.json() as any
+          properties = p?.properties ?? []
+          if (properties?.length !== 1) {
+            console.warn('Skin lookup failed for', this.uuid)
+          }
+        } else {
+          console.warn('Offline mode, no skin for', this.uuid)
         }
       } catch (err) {
         console.error('Skin lookup failed', err, response)
@@ -489,6 +493,10 @@ export class FakeSpectator {
       ...(this.bot.entity.position)
     })
   }
+  register(client: Client | ServerClient, status: boolean = false, cleanup: () => void = () => {}) {
+    this.clientsInCamera[client.uuid]?.cleanup()
+    this.clientsInCamera[client.uuid] = {status, cleanup};
+  }
   makeViewingBotPov(client: Client | ServerClient) {
     if (this.clientsInCamera[client.uuid]) {
       if (this.clientsInCamera[client.uuid].status) {
@@ -517,7 +525,7 @@ export class FakeSpectator {
     this.bot.on('move', onMove)
     this.bot.once('end', cleanup)
     client.once('end', cleanup)
-    this.clientsInCamera[client.uuid] = { status: true, cleanup: cleanup }
+    this.register(client, true, cleanup)
     return true
   }
   revertPov(client: Client | ServerClient) {
@@ -533,9 +541,7 @@ export class FakeSpectator {
     this.writeRaw(client, 'camera', {
       cameraId: this.bot.entity.id
     })
-    this.clientsInCamera[client.uuid].cleanup()
-    this.clientsInCamera[client.uuid].status = false
-    this.clientsInCamera[client.uuid].cleanup = () => {}
+    this.register(client);
     return true
   }
 }

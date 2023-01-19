@@ -21,6 +21,7 @@ type PacketQueuePredictorEmitter<
   T extends PacketQueuePredictorEvents = PacketQueuePredictorEvents
 > = StrictEventEmitter<EventEmitter2, T>;
 
+
 export abstract class PacketQueuePredictor<
   Src extends ClientEmitters,
   T extends ClientEvent<Src>

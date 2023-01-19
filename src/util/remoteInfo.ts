@@ -13,7 +13,7 @@ import * as fetch from "node-fetch";
 //            Local Variables              //
 /////////////////////////////////////////////
 
-const c = 300;
+const c = 150;
 const queueData = {
   place: [257, 789, 93, 418, 666, 826, 231, 506, 550, 207, 586, 486, 412, 758],
   factor: [

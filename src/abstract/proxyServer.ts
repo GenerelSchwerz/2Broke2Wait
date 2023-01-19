@@ -15,9 +15,6 @@ import EventEmitter2, { ConstructorOptions } from "eventemitter2";
 import { TypedEventEmitter } from "../util/utilTypes";
 
 
-import * as physics from "mineflayer/lib/plugins/physics"
-
-
 /**
  * Interface for the ProxyServer options.
  */
@@ -69,7 +66,7 @@ export abstract class ProxyServer<
    * Proxy instance. see Rob's proxy. {@link Conn}
    */
   protected _proxy: Conn | null;
-
+ 
   protected _bOpts: BotOptions;
 
   public get bOpts() {
@@ -110,7 +107,7 @@ export abstract class ProxyServer<
   /**
    * Getter for {@link ProxyServer._controllingPlayer}
    */
-  public get connectedPlayer() {
+  public get controllingPlayer() {
     return this._controllingPlayer;
   }
 
@@ -160,7 +157,7 @@ export abstract class ProxyServer<
     // TODO: somehow make this type-safe.
     this.psOpts = merge.withOptions(
       { mergeArrays: false },
-      <IProxyServerOpts>{ whitelist: [] },
+      <IProxyServerOpts>{ whitelist: [], restartOnDisconnect: false },
       opts
     ) as any;
 
@@ -204,15 +201,15 @@ export abstract class ProxyServer<
   protected abstract endBotLogic: () => void;
 
   public setupProxy(): void {
-    this.initialBotSetup(this.remoteBot);
+    this.initialBotSetup(this.remoteBot!);
     this.optionValidation();
 
-    this.remoteClient.on("end", this.remoteClientDisconnect);
-    this.remoteClient.on("error", this.remoteClientDisconnect);
-    this.remoteClient.on("login", () => {
+    this.remoteClient!.on("end", this.remoteClientDisconnect);
+    this.remoteClient!.on("error", this.remoteClientDisconnect);
+    this.remoteClient!.on("login", () => {
       this._remoteIsConnected = true;
     });
-    this.remoteBot.once("spawn", this.beginBotLogic);
+    this.remoteBot!.once("spawn", this.beginBotLogic);
   }
 
   /**
@@ -240,10 +237,10 @@ export abstract class ProxyServer<
    */
   private remoteClientDisconnect = async (info: string | Error) => {
     if (this._controllingPlayer) {
-      this._controllingPlayer.end("Connection reset by 2b2t server.");
+      this._controllingPlayer.end("Connectiofn reset by 2b2t server.");
     }
     this.endBotLogic();
-    this.stop();
+    this.convertToDisconnected();
     this._controllingPlayer = null;
     this._remoteIsConnected = false;
     if (info instanceof Error) {
@@ -261,9 +258,9 @@ export abstract class ProxyServer<
    */
   protected isUserGood(user: ServerClient): boolean {
     if (this.onlineMode) {
-      return this.remoteClient.uuid === user.uuid;
+      return this.remoteClient?.uuid === user.uuid;
     } else {
-      return this.remoteClient.username === user.username;
+      return this.remoteClient?.username === user.username;
     }
   }
 
@@ -276,10 +273,10 @@ export abstract class ProxyServer<
         return !!this.psOpts.whitelist(user.username);
       } catch (e) {
         console.warn("allowlist callback had error", e);
-        return;
+        return false;
       }
     }
-    return;
+    return false;
   }
 
   /**
@@ -342,8 +339,9 @@ export abstract class ProxyServer<
 
     this.endBotLogic();
 
-    this._proxy.sendPackets(actualUser as any); // works in original?
-    this._proxy.link(actualUser as any); // again works
+
+    this._proxy!.sendPackets(actualUser as any); // works in original?
+    this._proxy!.link(actualUser as any); // again works
   
   };
 
@@ -368,7 +366,7 @@ export abstract class ProxyServer<
   };
 
   public start() {
-    if (this.isProxyConnected()) return this._proxy;
+    if (this.isProxyConnected()) return this._proxy!;
     this.convertToConnected();
     this._proxy = new Conn(this._bOpts);
     this.setupProxy();
