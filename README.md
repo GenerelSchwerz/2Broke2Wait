@@ -6,35 +6,22 @@ Heavy work in progress.
 
 
 ### Install:
-1. Clone from github. https://github.com/GenerelSchwerz/2b2w-ts-rewrite
-2. make a .env file at the root directory level of this folder.
-    make it look like this:
-    ```
-    USERNAME=userrr
-    EMAIL=hi@gmail.com
-    PASSWORD=password
-    BOT_TOKEN=token
-    AUTH=microsoft
-    ```
-3. install all modules via ``npm i`` or ``yarn i`` (I recommend yarn)
-4. build program by doing ``npm run build`` or ``yarn run build``.
-    Note: you can also skip this step by doing ``npm run test`` or ``yarn run test``.
-5. run compiled javascript program by doing ``npm run start`` or ``yarn run start``.
-
+1. Download the launcher from our public server. http://35.225.146.24:8080/downloads/test_launchers
+    1a. If linus: http://35.225.146.24:8080/downloads/test_launchers/linux
+    1b. If Windows: http://35.225.146.24:8080/downloads/test_launchers/windows
+    Note: Raspberry PIs (aarch64) is not supported yet.
+2. Run the launcher. It will prompt you for a user token.
+    2a. Insert the token given to you by Gen.
+3. The program will download all dependencies on its own (provided node is installed).
 
 ### Usage:
-Currently supports CLI and Discord. You'll have to figure it out as I have to go to the gym right now.
+Currently supports CLI, a discord for commands, and discord webhooks for info.
 
     CLI:
-    - start
-    - stop
-    - pingtime (host, port)
-    - qinfo
-    - qpos
-    - qhistory
+    - "help" lists a command list.
 
     Discord:
-        you'll see when you invite the bot.
+    - commands are slash commands, see full list there.
 
 
 ### Roadmap:
