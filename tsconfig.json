@@ -5,6 +5,7 @@
     "target": "ES2022",
     "sourceMap": true,
     "outDir": "lib",
+    "noImplicitAny": true,
     "experimentalDecorators": true
   },
   "include": ["src/**/*"],

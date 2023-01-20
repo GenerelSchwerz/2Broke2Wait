@@ -26,7 +26,7 @@ import { createServer } from "minecraft-protocol";
 import { buildClient } from "./discord/index";
 import { applyWebhookListeners } from "./util/chatting";
 import { AntiAFKServer } from "./impls/antiAfkServer";
-import type {Bot} from "mineflayer";
+import type { Bot } from "mineflayer";
 import { ProxyInspector } from "./wip/newProxyServer";
 
 /////////////////////////////////////////////
@@ -43,8 +43,6 @@ const botOptions = botOptsFromConfig(checkedConfig);
 
 const rawServer = createServer(checkedConfig.minecraft.localServer);
 
-console.log(checkedConfig.minecraft.localServer);
-
 const afkServer = ProxyInspector.wrapServer1(
   true,
   rawServer,
@@ -55,11 +53,11 @@ const afkServer = ProxyInspector.wrapServer1(
 
 afkServer.on("breath", (bot) => {
   botUpdatesMotd(bot);
-})
+});
 
 afkServer.on("health", (bot) => {
   botUpdatesMotd(bot);
-})
+});
 
 afkServer.on("enteredQueue", () => {
   queueEnterMotd();
@@ -72,7 +70,6 @@ afkServer.on("leftQueue", () => {
 });
 
 afkServer.on("remoteKick", async (reason) => {
-  console.log("remoteKick:", reason);
   if (afkServer.psOpts.restartOnDisconnect) {
     afkServer.restart(1000);
   }
@@ -86,14 +83,12 @@ afkServer.on("remoteError", async (error) => {
 });
 
 afkServer.on("closedConnections", (reason) => {
-  console.log("STOPPED SERVER:", reason);
   disconnectedServerMotd();
   afkServer.removeAllClientListeners();
   afkServer.removeAllServerListeners();
 });
 
-
-afkServer.on("started", () => { 
+afkServer.on("started", () => {
   console.log("Server started!\n" + helpMsg);
   inGameServerMotd();
   if (checkedConfig.discord.webhooks.enabled) {
@@ -105,9 +100,7 @@ if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
   const discord = buildClient(checkedConfig.discord.bot, afkServer);
   console.log("We are using a discord bot.");
 } else {
-  console.log(
-    "No discord token included. Going without it (No command functionality currently)."
-  );
+  console.log("No discord token included. Going without it (No command functionality currently).");
 }
 
 if (checkedConfig.discord.webhooks.enabled) {
@@ -117,7 +110,6 @@ if (checkedConfig.discord.webhooks.enabled) {
 }
 
 import * as rl from "readline";
-import { goals } from "mineflayer-pathfinder";
 const inp = rl.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -131,47 +123,46 @@ const helpMsg =
   "status   -> displays info of service\n" +
   "help     -> shows this message\n";
 
-
-
- afkServer.start();
-
+// afkServer.cmdHandler.prefix = "$";
+afkServer.start();
 
 /////////////////////////////////////////////
 //              functions                  //
 /////////////////////////////////////////////
 
 function getServerName(): string {
-  return checkedConfig.minecraft.remoteServer.host + (checkedConfig.minecraft.remoteServer.port !== 25565 ? ":" + checkedConfig.minecraft.remoteServer.port : "");
+  return (
+    checkedConfig.minecraft.remoteServer.host +
+    (checkedConfig.minecraft.remoteServer.port !== 25565 ? ":" + checkedConfig.minecraft.remoteServer.port : "")
+  );
 }
 
 function queueServerMotd(oldPos: number, newPos: number, eta: number) {
   if (Number.isNaN(eta)) {
     rawServer.motd = `Pos: ${newPos} | ETA: Unknown.`;
     return;
-  };
+  }
 
-  const res = `Pos: ${newPos} | ETA: ${Duration.fromMillis(
-    eta * 1000 - Date.now()
-  ).toFormat("d'd', h'hr', m'min'")}`
+  const res = `Pos: ${newPos} | ETA: ${Duration.fromMillis(eta * 1000 - Date.now()).toFormat("d'd', h'hr', m'min'")}`;
 
   console.log(`Queue update!\n` + res);
   rawServer.motd = res;
 }
 
 function disconnectedServerMotd() {
-  rawServer.motd = `Disconnected from ${getServerName()}`
+  rawServer.motd = `Disconnected from ${getServerName()}`;
 }
 
 function queueEnterMotd() {
-  rawServer.motd = `Entered queue on ${getServerName()}`
+  rawServer.motd = `Entered queue on ${getServerName()}`;
 }
 
 function inGameServerMotd() {
-  rawServer.motd = `Playing on ${getServerName()}!`
+  rawServer.motd = `Playing on ${getServerName()}!`;
 }
 
 function botUpdatesMotd(bot: Bot) {
-  rawServer.motd = `Health: ${bot.entity.health ?? 'unknown'}, Hunger: ${bot.entity.food ?? 'unknown'}`
+  rawServer.motd = `Health: ${bot.entity.health ?? "unknown"}, Hunger: ${bot.entity.food ?? "unknown"}`;
 }
 
 /////////////////////////////////////////////
@@ -193,16 +184,16 @@ inp.on("line", (inp) => {
       break;
     case "status":
       if (afkServer.isProxyConnected()) {
-        console.log(`Proxy connected to ${afkServer.bOpts.host}:${afkServer.bOpts.port !== 25565 ? afkServer.bOpts.port : ""}`);
-        if (afkServer.queue.inQueue)
-        console.log(`Proxy in queue? ${afkServer.queue.inQueue}`);
-      
+        console.log(
+          `Proxy connected to ${afkServer.bOpts.host}:${afkServer.bOpts.port !== 25565 ? afkServer.bOpts.port : ""}`
+        );
+        if (afkServer.queue.inQueue) console.log(`Proxy in queue? ${afkServer.queue.inQueue}`);
       } else {
         console.log("Proxy is not connected.");
       }
 
       if (afkServer.isPlayerConnected()) {
-        console.log("Player connected.")
+        console.log("Player connected.");
       } else {
         console.log("Player is not connected.");
       }

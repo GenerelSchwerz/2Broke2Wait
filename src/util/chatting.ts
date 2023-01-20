@@ -23,7 +23,7 @@ class GameChatListener extends ClientWebhookReporter<Bot, "chat"> {
     super(srv, srv.remoteBot!, "chat", webhookUrl);
   }
 
-  protected listener = async (username, message) => {
+  protected listener = async (username: string, message: string) => {
     const embed = this.buildClientEmbed();
     embed.author = {
       name: `Account: ${username}`,

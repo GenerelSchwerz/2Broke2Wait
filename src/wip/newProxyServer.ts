@@ -1,20 +1,16 @@
-import { StrictEventEmitter } from "strict-event-emitter-types";
 import { Client, Conn, ConnOptions, PacketMiddleware, SimplePositionTransformer } from "@rob9315/mcproxy";
-import { BotOptions } from "mineflayer";
-import { DefaultProxyOpts, ProxyInspectorOptions } from "./utils";
-import merge from "ts-deepmerge";
-import { createServer, Server, ServerClient, PacketMeta } from "minecraft-protocol";
-import EventEmitter from "events";
-import { Vec3 } from "vec3";
+import { EventEmitter } from "events";
+import { createServer, PacketMeta, Server, ServerClient } from "minecraft-protocol";
 import type { Bot } from "mineflayer";
+import { BotOptions } from "mineflayer";
 import { ChatMessage as AgnogChMsg } from "prismarine-chat";
-import { FakePlayer, FakeSpectator } from "./fakes";
-import { WorldManager } from "./worldManager";
-import { TypedEventEmitter } from "../util/utilTypes";
-import { IProxyServerEvents, ProxyServer } from "../abstract/proxyServer";
+import merge from "ts-deepmerge";
+import { Vec3 } from "vec3";
 import { AntiAFKServer, StrictAntiAFKEvents } from "../impls/antiAfkServer";
-import { pathfinder, goals } from "mineflayer-pathfinder";
 import { sleep } from "../util/index";
+import { FakePlayer, FakeSpectator } from "./fakes";
+import { DefaultProxyOpts, ProxyInspectorOptions } from "./utils";
+import { WorldManager } from "./worldManager";
 
 // TODO: agnostic this.
 const ChatMessage: typeof AgnogChMsg = require("prismarine-chat")("1.12.2");
@@ -47,7 +43,6 @@ export class BotProxyUtil extends EventEmitter {
 }
 
 export interface ProxyInspectorEvents extends StrictAntiAFKEvents {
-  serverStart: () => void;
   clientChatRaw: (pclient: Client, message: string) => void;
   clientChat: (pclient: Client, message: string) => void;
   clientConnect: (client: ServerClient) => void;
@@ -57,7 +52,7 @@ export interface ProxyInspectorEvents extends StrictAntiAFKEvents {
 export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyInspectorEvents> {
   public static readonly blockedPacketsWhenNotInControl: string[] = ["entity_metadata", "abilities", "position"];
 
-  public proxyChatPrefix: string = "§6Proxy >>§r";
+  public proxyChatPrefix: string = "§6P >>§r";
 
   public worldManager: WorldManager | null = null;
   public fakeSpectator: FakeSpectator | null = null;
@@ -72,6 +67,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
   ) {
     super(onlineMode, rawServer, bOpts, cOpts, pOpts);
     this.psOpts = merge(DefaultProxyOpts, this.psOpts);
+    this.loadCmds();
   }
 
   public static wrapServer1(
@@ -89,6 +85,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
   // ======================= //
 
   public override start(): Conn {
+    if (this.isProxyConnected()) return this.proxy!;
     super.start();
     this.registerProxy(this._proxy!);
     return this._proxy!;
@@ -105,14 +102,14 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
   }
 
   printHelp(client: Client | ServerClient) {
-    this.message(client, "Available commands:");
-    this.message(client, "/c [msg]    Send a message to all other connected clients");
-    this.message(client, "/link       Links to the proxy if no one else is linked");
-    this.message(client, "/unlink     Unlink and put into spectator mode");
-    this.message(client, "/view       Connect into the view off the person currently connected");
-    this.message(client, "/unview     Disconnect from the view");
-    this.message(client, "/tp         Tp the spectator to the current proxy");
-    this.message(client, "/help       This");
+    this.message(client, "---------- Proxy Commands: ------------- ", false);
+    this.message(client, "§6/c [msg]:§r Send a message to all other connected clients", false);
+    this.message(client, "§6/link:§r Links to the proxy if no one else is linked", false);
+    this.message(client, "§6/unlink:§r Unlink and put into spectator mode", false);
+    this.message(client, "§6/view:§r Connect to the view connected person's view", false);
+    this.message(client, "§6/unview:§r Disconnect from the view", false);
+    this.message(client, "§6/tp:§r Tp the spectator to the current proxy", false);
+    this.message(client, "§6/phelp:§r This message", false);
   }
 
   makeViewFakePlayer(client: ServerClient | Client) {
@@ -148,7 +145,7 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
       this.fakeSpectator?.revertToNormal(client as unknown as ServerClient);
       this._controllingPlayer = client as unknown as ServerClient;
     } else {
-      const mes = `Cannot link. User §3${this._proxy.pclient.username}§r is linked.`;
+      const mes = `Cannot link. User §3${this._proxy.pclient.username}:§r is linked.`;
       this.message(client, mes);
     }
   }
@@ -174,10 +171,6 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
   //     server utils        //
   // ======================= //
 
-  // ======================= //
-  //        bot utils        //
-  // ======================= //
-
   private buildFakeData() {
     if (!this._proxy) return;
     this.fakePlayer = new FakePlayer(this._proxy.stateData.bot as any, {
@@ -193,10 +186,11 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     this._proxy.stateData.bot.once("end", () => {
       this.fakePlayer?.destroy();
       if (this.psOpts.disconnectAllOnEnd) {
-        Object.values(this.server.clients).forEach((p) => p.end("Remote proxy disconnected."));
+        this.closeConnections();
       }
     });
   }
+
 
   public registerProxy(conn: Conn) {
     conn.toClientDefaultMiddleware = [...this.genToClientMiddleware(), ...(conn.toClientDefaultMiddleware || [])];
@@ -213,7 +207,6 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
   }
 
   public removeProxy(conn: Conn) {
-    console.trace(conn);
     const clientMiddle = this.genToClientMiddleware();
     const serverMiddle = this.genToServerMiddleware();
     if (conn.toClientDefaultMiddleware) {
@@ -228,8 +221,13 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     this.fakeSpectator = null;
   }
 
+  // ======================= //
+  //        bot utils        //
+  // ======================= //
+
   private genToClientMiddleware() {
     const inspector_toClientMiddleware: PacketMiddleware = ({ meta, isCanceled, bound }) => {
+      // console.log(meta, data)
       if (!this._proxy || isCanceled || bound !== "client") return;
       if (this.botIsInControl() && ProxyInspector.blockedPacketsWhenNotInControl.includes(meta.name)) {
         return;
@@ -239,7 +237,6 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     const inspector_toClientFakePlayerSync: PacketMiddleware = ({ isCanceled, pclient, data, meta }) => {
       if (isCanceled || pclient === this._proxy?.pclient) return;
       if (!this._proxy) return;
-
       if (data.collectorEntityId === this._proxy.stateData.bot.entity.id) {
         switch (meta.name) {
           case "collect":
@@ -251,6 +248,16 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
           case "entity_update_attributes":
             data.entityId = FakePlayer.fakePlayerId;
             break;
+          case "entity_velocity":
+            data.entityId = FakePlayer.fakePlayerId;
+            break;
+        }
+      }
+      if (data.entityId === this.remoteBot.entity.id) {
+        switch (meta.name) {
+          case "entity_velocity":
+            data.entityId = FakePlayer.fakePlayerId;
+            return false; // can't sim, so might as well ignore for now.
         }
       }
       return data;
@@ -271,8 +278,10 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     const inspector_toServerMiddleware: PacketMiddleware = ({ meta, pclient, data, isCanceled }) => {
       if (!this._proxy || !pclient) return;
       if (meta.name.includes("position") || meta.name.includes("look")) return;
+      // console.log(meta, data)
       switch (meta.name) {
         case "use_entity":
+       
           if (!this.fakeSpectator?.clientsInCamera[pclient.uuid]) return data;
           if (!this.fakeSpectator.clientsInCamera[pclient.uuid].status && data.target === FakePlayer.fakePlayerId) {
             if (data.mouse === 0 || data.mouse === 1) {
@@ -375,7 +384,9 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     await this.sendPackets(client as unknown as Client);
 
     const connect = this.psOpts.linkOnConnect && !this._proxy?.pclient;
-    this.broadcastMessage(`User §3${client.username}§r logged in. ${connect ? "He is in control" : "He is not in control"}`);
+    this.broadcastMessage(
+      `User §3${client.username}§r logged in. ${connect ? "He is in control" : "He is not in control"}`
+    );
     this.printHelp(client);
 
     if (!this._proxy?.pclient) {
@@ -385,9 +396,10 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     }
 
     if (!connect) {
-      this.fakePlayer?.register(client);
-      this.fakeSpectator?.register(client);
-      this.fakeSpectator?.makeSpectator(client);
+      this.fakePlayer!.register(client);
+      this.fakeSpectator.register(client);
+      // this.fakeSpectator!.clientsInCamera[client.uuid] = {status: false, cleanup: () => {}};
+      this.fakeSpectator!.makeSpectator(client);
     } else {
       this.link(client);
     }
@@ -397,10 +409,12 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
         this.beginBotLogic();
       }
       this.fakePlayer?.unregister(client);
-      this.fakeSpectator?.register(client);
+      this.fakeSpectator?.clientsInCamera[client.uuid]?.cleanup();
+      this.fakeSpectator.register(client);
+      // this.fakeSpectator!.clientsInCamera[client.uuid] = {status: false, cleanup: () => {}};
       this.unlink(client);
       this.emit("clientDisconnect", client);
-      this.broadcastMessage(`${this.proxyChatPrefix} User §3${client.username}§r disconnected`);
+      this.broadcastMessage(`${this.proxyChatPrefix} User §3${client.username}:§r disconnected`);
       if (this.psOpts.logPlayerJoinLeave) {
         console.info(`Player ${client.username} disconnected from the proxy`);
       }
@@ -409,89 +423,77 @@ export class ProxyInspector extends AntiAFKServer<ProxyInspectorOptions, ProxyIn
     this.emit("clientConnect", client);
   }
 
-  protected whileConnectedCommandHandler(client: ServerClient) {
-    super.whileConnectedCommandHandler(client);
-    client.on("chat", ({ message }: { message: string }, meta: PacketMeta) => {
-      if (!message.startsWith("/") && !this._controllingPlayer) {
-        this._proxy.write("chat", {message})
-        return;
-      };
-      const [cmd, ...args] = message.trim().substring(1).split(" ");
-      switch (cmd) {
-        case "blocks":
-          this.message(client, `${this.remoteBot!.findBlocks({ matching: 3, count: 30 })}`);
-          return;
-        case "stopbot":
-          this.endBotLogic();
-          return;
-        case "startbot":
-          this.beginBotLogic();
-          return;
-        case "link":
-          this.link(client as unknown as ServerClient);
-          return;
-        case "unlink":
-          this.unlink(client);
-          return;
-        case "view":
-          const res0 = this.makeViewFakePlayer(client);
-          if (res0) this.message(client, "Connecting to view. Type /unview to exit");
-          return;
-        case "unview":
-          const res1 = this.makeViewNormal(client);
-          if (res1) this.message(client, "Disconnecting from view. Type /view to connect");
-          return;
-        case "c":
-          this.broadcastMessage(`[${client.username}] ${args.join(" ")}`);
-          return;
-        case "tp":
-          // fix later.
-          if (client.uuid === this._proxy?.pclient?.uuid) {
-            this.message(client, `Cannot tp. You are controlling the bot.`);
-            return;
-          }
-          this.fakeSpectator?.revertPov(client);
-          this.fakeSpectator?.tpToOrigin(client);
-          return;
-        case "viewdistance":
-          if (!this.worldManager) {
-            this.message(client, "World caching not enabled");
-            return;
-          }
-          if (args[0] === "disable") {
-            this.message(client, "Disabling extended render distance");
-            this.worldManager.disableClientExtension(client);
-            return;
-          }
-          let chunkViewDistance = Number(args[0]);
-          if (isNaN(chunkViewDistance)) {
-            chunkViewDistance = 20;
-          }
-          this.message(client, `Setting player view distance to ${chunkViewDistance}`, true, true);
-          this.worldManager.setClientView(client, chunkViewDistance);
-          return;
-        case "reloadchunks":
-          if (!this.worldManager) {
-            this.message(client, "World caching not enabled");
-            return;
-          }
-          this.message(client, "Reloading chunks", true, true);
-          this.worldManager.reloadClientChunks(client, 2);
-          return;
-        default:
-          this.printHelp(client);
-          return;
-      }
+  protected loadCmds() {
+    this.cmdHandler.loadDisconnectedCommands({
+      start: this.start
     });
-  }
 
-  protected notConnectedCommandHandler(client: ServerClient) {
-    super.notConnectedCommandHandler(client);
-    client.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
-      switch (message) {
-        default:
-          break;
-      }
+    this.cmdHandler.loadProxyCommands({
+      default: (client) => this.printHelp(client),
+      phelp: (client) => this.printHelp(client),
+      link: (client) => this.link(client),
+      unlink: (client) => this.unlink(client),
+      c: (client, ...args) => this.broadcastMessage(`[${client.username}] ${args.join(" ")}`),
+
+      stopbot: (client) => {
+        if (!this.botIsInControl()) return this.message(client, "Bot is not running.");
+        this.endBotLogic();
+      },
+      startbot: (client) => {
+        if (this.botIsInControl()) return this.message(client, "Bot is already in control.");
+        this.beginBotLogic();
+      },
+
+      view: (client) => {
+        const res0 = this.makeViewFakePlayer(client);
+        if (res0) this.message(client, "Connecting to view. Type /unview to exit");
+      },
+
+      unview: (client) => {
+        const res1 = this.makeViewNormal(client);
+        if (res1) this.message(client, "Disconnecting from view. Type /view to connect");
+      },
+
+      tp: (client, ...args) => {
+        if (client.uuid === this._proxy?.pclient?.uuid) {
+          this.message(client, `Cannot tp. You are controlling the bot.`);
+          return;
+        }
+        if (args.length !== 0) {
+          this.proxy.write("chat", {message: ["/tp", ...args].join(" ")})
+          return;
+        }
+        this.fakeSpectator?.revertPov(client);
+        this.fakeSpectator?.tpToOrigin(client);
+      },
+
+      viewdistance: (client, ...args) => {
+        if (!this.worldManager) {
+          this.message(client, "World caching not enabled");
+          return;
+        }
+        if (args[0] === "disable") {
+          this.message(client, "Disabling extended render distance");
+          this.worldManager.disableClientExtension(client);
+          return;
+        }
+        let chunkViewDistance = Number(args[0]);
+        if (isNaN(chunkViewDistance)) {
+          chunkViewDistance = 20;
+        }
+        this.message(client, `Setting player view distance to ${chunkViewDistance}`, true, true);
+        this.worldManager.setClientView(client, chunkViewDistance);
+      },
+
+      reloadchunks: (client) => {
+        if (!this.worldManager) {
+          this.message(client, "World caching not enabled");
+          return;
+        }
+        this.message(client, "Reloading chunks", true, true);
+        this.worldManager.reloadClientChunks(client, 2);
+      },
+
     });
   }
 }

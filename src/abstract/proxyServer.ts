@@ -13,6 +13,7 @@ import { ClientEventRegister, ServerEventRegister } from "./eventRegisters";
 import { Conn, ConnOptions, PacketMiddleware} from "@rob9315/mcproxy";
 import EventEmitter2, { ConstructorOptions } from "eventemitter2";
 import { TypedEventEmitter } from "../util/utilTypes";
+import { CommandHandler } from "../util/commandHandler";
 
 
 /**
@@ -55,12 +56,6 @@ export abstract class ProxyServer<
    *  {@link }.
    */
   public readonly reuseServer: boolean = true;
-
-  //   private _registeredClientListeners: Set<string> = new Set();
-  //   private _runningClientListeners: ClientEventRegister<Bot | Client, any>[] = [];
-
-  //   private _registeredServerListeners: Set<string> = new Set();
-  //   private _runningServerListeners: ServerEventRegister<any>[] = [];
 
   /**
    * Proxy instance. see Rob's proxy. {@link Conn}
@@ -130,10 +125,8 @@ export abstract class ProxyServer<
 
   public psOpts: T;
 
-  private boundGoodCmds
-  private boundBadCmds;
-  private boundGoodLogin;
-  private boundBadLogin;
+  public readonly cmdHandler: CommandHandler<ProxyServer<T, Events>>
+
 
   /**
    * Hidden constructor. Use static methods.
@@ -162,10 +155,14 @@ export abstract class ProxyServer<
     ) as any;
 
     this._bOpts = bOpts;
-    this.boundGoodLogin = this.whileConnectedLoginHandler.bind(this);
-    this.boundGoodCmds =  this.whileConnectedCommandHandler.bind(this);
-    this.boundBadCmds = this.notConnectedCommandHandler.bind(this);
-    this.boundBadLogin = this.notConnectedLoginHandler.bind(this);
+    this.cmdHandler = new CommandHandler(this);
+    this.server.on("login", this.loginHandler);
+    this.cmdHandler.loadDisconnectedCommands({
+      start: this.start
+    });
+    this.cmdHandler.loadProxyCommands({
+      stop: this.stop
+    })
   }
 
   /**
@@ -213,23 +210,6 @@ export abstract class ProxyServer<
   }
 
   /**
-   * Function to filter out some packets that would make us disconnect otherwise.
-   *
-   * Note: This is where you could filter out packets with sign data to prevent chunk bans.
-   * @param {any} data data from the server
-   * @param {PacketMeta} meta metadata name of the packet
-   * @param {Client} dest ServerClient to proxy data to.
-   */
-  protected proxyPacketToDest(data, meta: PacketMeta, dest: Client) {
-    if (meta.name !== "keep_alive" && meta.name !== "update_time") {
-      //keep alive packets are handled by the client we created,
-      // so if we were to forward them, the minecraft client would respond too
-      // and the server would kick us for responding twice.
-      dest.writeRaw(data);
-    }
-  }
-
-  /**
    * Handler for when the remote client disconnects from remote server.
    *
    * Usually, we do not know the reason. So for now, we emit an event.
@@ -237,16 +217,17 @@ export abstract class ProxyServer<
    */
   private remoteClientDisconnect = async (info: string | Error) => {
     if (this._controllingPlayer) {
-      this._controllingPlayer.end("Connectiofn reset by 2b2t server.");
+      this._controllingPlayer.end("Connection reset by 2b2t server.");
     }
     this.endBotLogic();
-    this.convertToDisconnected();
     this._controllingPlayer = null;
     this._remoteIsConnected = false;
     if (info instanceof Error) {
       this.emit("remoteError" as any, info);
+      this.closeConnections("Connection reset by 2b2t server.")
     } else {
       this.emit("remoteKick" as any, info);
+      this.closeConnections("Connection reset by 2b2t server.\n" + info);
     }
   };
 
@@ -291,7 +272,7 @@ export abstract class ProxyServer<
 
     // disconnect all local clients cleanly.
     Object.keys(this.server.clients).forEach((clientId) => {
-      const client: Client = this.server.clients[clientId];
+      const client: Client = this.server.clients[clientId as any];
       client.end(reason);
     });
 
@@ -307,7 +288,6 @@ export abstract class ProxyServer<
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
   protected whileConnectedLoginHandler(actualUser: ServerClient) {
-    console.trace("here");
     if (!this.isUserWhiteListed(actualUser)) {
       actualUser.end(
         "Not whitelisted!\n" + "You need to turn the whitelist off."
@@ -325,11 +305,6 @@ export abstract class ProxyServer<
 
     this._controllingPlayer = actualUser;
 
-    // proxy data.
-    // actualUser.on("packet", (packetData, packetMeta, rawBuffer) =>
-    //   this.proxyPacketToDest(rawBuffer, packetMeta, this.remoteClient)
-    // );
-
     // set event for when they end.
     actualUser.on("end", (reason) => {
       this._controllingPlayer = null;
@@ -338,8 +313,6 @@ export abstract class ProxyServer<
 
 
     this.endBotLogic();
-
-
     this._proxy!.sendPackets(actualUser as any); // works in original?
     this._proxy!.link(actualUser as any); // again works
   
@@ -367,16 +340,18 @@ export abstract class ProxyServer<
 
   public start() {
     if (this.isProxyConnected()) return this._proxy!;
-    this.convertToConnected();
     this._proxy = new Conn(this._bOpts);
     this.setupProxy();
     this.emit("started" as any, this._proxy);
+    Object.keys(this.server.clients).forEach((clientId) => {
+      const client: Client = this.server.clients[clientId as any];
+      client.end("Proxy has started! Rejoin.");
+    });
     return this._proxy;
   }
 
   public stop() {
     if (!this.isProxyConnected()) return;
-    this.convertToDisconnected();
     this.closeConnections();
   }
 
@@ -386,40 +361,18 @@ export abstract class ProxyServer<
     this.start();
   }
 
-  public convertToConnected() {
-    if (this._remoteIsConnected) return;
-    // this.server.removeAllListeners("login");
-    this.server.on("login", this.boundGoodLogin);
-    this.server.on("login", this.boundGoodCmds);
-    this.server.off("login", this.boundBadLogin);
-    this.server.off("login", this.boundBadCmds);
-
-    for (const client in this.server.clients) {
-      this.whileConnectedCommandHandler(this.server.clients[client] as any);
-    }
-    console.log("TO CONNECTED:", this.server.listeners("login"))
-  }
-
-  public convertToDisconnected() {
-    // console.trace("here", this._remoteIsConnected);
-    if (!this._remoteIsConnected) return;
-    // this.server.removeAllListeners("login");
-    this.server.on("login", this.boundBadLogin);
-    this.server.on("login", this.boundBadCmds);
-    this.server.off("login", this.boundGoodLogin);
-    this.server.off("login", this.boundGoodCmds);
 
 
-    for (const client in this.server.clients) {
-      this.notConnectedCommandHandler(this.server.clients[client] as any);
+  private loginHandler = (actualUser: ServerClient) => {
+    this.cmdHandler.updateClientCmds(actualUser);
+    if (this.isProxyConnected()) {
+      this.whileConnectedLoginHandler(actualUser);
+    } else {
+      this.notConnectedLoginHandler(actualUser);
     }
 
-    console.log("TO DISCONNECTED:", this.server.listeners("login"))
   }
 
-  protected abstract notConnectedCommandHandler(client: ServerClient): void;
-
-  protected abstract whileConnectedCommandHandler(client: ServerClient): void;
 
   public registerClientListeners(
     ...listeners: ClientEventRegister<Bot | Client, any>[]

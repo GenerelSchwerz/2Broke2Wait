@@ -17,7 +17,6 @@ import antiAFK, {
 } from "@nxg-org/mineflayer-antiafk";
 import autoEat from "@nxg-org/mineflayer-auto-eat";
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../abstract/packetQueuePredictor";
-import { ClientEventRegister, ServerEventRegister } from "../abstract/eventRegisters";
 import { CombinedPredictor } from "./combinedPredictor";
 
 export interface AntiAFKOpts extends IProxyServerOpts {
@@ -42,8 +41,6 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
     return this._queue;
   }
 
-  private _registeredQueueListeners: Set<string> = new Set();
-  private _runningQueueListeners: any[] = [];
 
   public constructor(
     onlineMode: boolean,
@@ -53,7 +50,12 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
     psOpts: Partial<Opts>
   ) {
     super(onlineMode, server, bOpts, cOpts, psOpts);
-    this.convertToDisconnected();
+    // this.cmdHandler.loadProxyCommands({
+    //   stop: this.stop,
+    // })
+    // this.cmdHandler.loadDisconnectedCommands({
+    //   start: this.start
+    // })
   }
 
   /**
@@ -95,7 +97,7 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
     const conn = super.start();
     this._queue = new CombinedPredictor(conn);
     this._queue.begin();
-    this._queue.on("*", (...args: any[]) => { this.emit(this._queue["event"], ...args); });
+    this._queue.on("*", (...args: any[]) => { this.emit((this._queue as any).event, ...args); });
     return conn;
   }
   
@@ -172,6 +174,7 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
   protected override beginBotLogic = () => {
     if (this.psOpts.antiAFK && !this._queue.inQueue) {
       this.remoteBot!.antiafk.start();
+      this.remoteBot!.setControlState("forward", true)
     }
 
     if (this.psOpts.autoEat && !this._queue.inQueue) {
@@ -188,54 +191,4 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
       this.remoteBot?.autoEat.disable();
     }
   }
-
-  /**
-    * This WILL be moved later.
-    * @param actualUser 
-    */
-  protected override notConnectedCommandHandler(actualUser: ServerClient) {
-    actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
-      switch (message) {
-        case "/start":
-          this.closeConnections("Host started proxy.");
-          this.start();
-          break;
-        default:
-          break;
-      }
-    })
-    actualUser.on("tab_complete", (packetData: { text: string, assumeCommand: boolean, lookedAtBlock?: any }, packetMeta: PacketMeta) => {
-      if ("/start".startsWith(packetData.text)) {
-        actualUser.write('tab_complete', {
-          matches: ["/start"]
-        })
-      }
-    });
-  };
-
-  /**
-   * This WILL be moved later.
-   * @param actualUser 
-   */
-  protected whileConnectedCommandHandler(actualUser: ServerClient) {
-
-    actualUser.on("chat", ({ message }: { message: string }, packetMeta: PacketMeta) => {
-      switch (message) {
-        case "/quit":
-        case "/stop":
-          this.stop();
-          break;
-        default:
-          break;
-      }
-
-    })
-    actualUser.on("tab_complete", (packetData: { text: string, assumeCommand: boolean, lookedAtBlock?: any }, packetMeta: PacketMeta) => {
-      if ("/stop".startsWith(packetData.text)) {
-        actualUser.write('tab_complete', {
-          matches: ["/stop"]
-        })
-      }
-    });
-  };
 }

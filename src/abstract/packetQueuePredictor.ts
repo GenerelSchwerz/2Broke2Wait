@@ -45,7 +45,6 @@ export abstract class PacketQueuePredictor<
   }
 
   public readonly remoteBot;
-
   public readonly remoteClient;
 
   constructor(

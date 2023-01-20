@@ -3,11 +3,12 @@
 /////////////////////////////////////////////
 
 import { sleep } from "./index";
-import * as everpolate from "everpolate";
+
 import * as mc from "minecraft-protocol";
 import { DateTime } from "ts-luxon";
 import { Task } from "./index";
-import * as fetch from "node-fetch";
+const everpolate = require("everpolate");
+const fetch = require("node-fetch");
 
 /////////////////////////////////////////////
 //            Local Variables              //
@@ -240,7 +241,7 @@ export class QueueLookup {
   private static parseQueueLength(motd: mc.NewPingResult): QueueLength | null {
     if (!motd) return null;
 
-    const returnValue = {};
+    const returnValue = {} as any;
     for (const server of motd.players.sample) {
       const serverName = server.name.split(":")[0].replace(/§./g, "");
       const matches = server.name.match(/normal: (\d+), priority: (\d+)/);
