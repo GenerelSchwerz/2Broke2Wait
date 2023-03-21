@@ -1,0 +1,10 @@
+node_modules/
+lib/
+dist/
+pkg/
+ncc/
+worlds/
+yarn-error.log
+*.lock
+.env
+options.json
