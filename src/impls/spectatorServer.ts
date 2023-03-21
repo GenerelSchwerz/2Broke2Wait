@@ -7,20 +7,20 @@ import { Vec3 } from "vec3";
 import { AntiAFKServer, StrictAntiAFKEvents } from "./antiAfkServer";
 import { sleep } from "../util/index";
 import { FakePlayer, FakeSpectator } from "./spectatorServer/fakes";
-import { DefaultProxyOpts, ProxyInspectorOptions } from "./spectatorServer/utils";
+import { DefaultProxyOpts, ServerSpectatorOptions } from "./spectatorServer/utils";
 import { WorldManager } from "./spectatorServer/worldManager";
 
-export interface ProxyInspectorEvents extends StrictAntiAFKEvents {
+export interface SpectatorServerEvents extends StrictAntiAFKEvents {
   clientChatRaw: (pclient: Client, message: string) => void;
   clientChat: (pclient: Client, message: string) => void;
   clientConnect: (client: ServerClient) => void;
   clientDisconnect: (client: ServerClient) => void;
 }
 
-export type StrictProxyInspectorEvents = Omit<ProxyInspectorEvents, '*'>
+export type StrictProxyInspectorEvents = Omit<SpectatorServerEvents, '*'>
 
 
-export class SpectatorServer extends AntiAFKServer<ProxyInspectorOptions, StrictProxyInspectorEvents> {
+export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, StrictProxyInspectorEvents> {
   public static readonly blockedPacketsWhenNotInControl: string[] = ["entity_metadata", "abilities", "entity_status", "position"];
 
   public proxyChatPrefix: string = "§6P>> §r";
@@ -36,7 +36,7 @@ export class SpectatorServer extends AntiAFKServer<ProxyInspectorOptions, Strict
     rawServer: Server,
     bOpts: BotOptions,
     cOpts: Partial<ConnOptions> = {},
-    pOpts: Partial<ProxyInspectorOptions> = {}
+    pOpts: Partial<ServerSpectatorOptions> = {}
   ) {
     super(onlineMode, rawServer, bOpts, cOpts, pOpts);
     this.psOpts = merge(DefaultProxyOpts, this.psOpts) as any;
@@ -62,7 +62,7 @@ export class SpectatorServer extends AntiAFKServer<ProxyInspectorOptions, Strict
     server: Server,
     bOpts: BotOptions,
     cOpts: Partial<ConnOptions> = {},
-    psOptions: Partial<ProxyInspectorOptions> = {}
+    psOptions: Partial<ServerSpectatorOptions> = {}
   ): SpectatorServer {
     return new SpectatorServer(online, server, bOpts, cOpts, psOptions);
   }

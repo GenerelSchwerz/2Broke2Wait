@@ -5,7 +5,7 @@ import { AntiAFKOpts } from '../antiAfkServer'
 
 type AllowListCallback = (username: string) => boolean
 
-export interface ProxyInspectorOptions extends AntiAFKOpts {
+export interface ServerSpectatorOptions extends AntiAFKOpts {
   security: {
     /** Optional. If not set all players are allowed to join. Either a list off players allowed to connect to the proxy or a function that returns a boolean value. */
     allowList?: string[] | AllowListCallback
@@ -21,7 +21,7 @@ export interface ProxyInspectorOptions extends AntiAFKOpts {
   worldCaching: boolean
 }
 
-export const DefaultProxyOpts: ProxyInspectorOptions = {
+export const DefaultProxyOpts: ServerSpectatorOptions = {
   security: {
     allowList: undefined,
     kickMessage: 'Default kick message'
@@ -32,6 +32,20 @@ export const DefaultProxyOpts: ProxyInspectorOptions = {
   worldCaching: false,
   logPlayerJoinLeave: false,
   restartOnDisconnect: false,
-  antiAFK: false,
-  autoEat: false
+  antiAFK: {
+    enabled: true,
+    modules: {
+      RandomMovementModule: {enabled: false}
+    },
+    passives: {
+      KillAuraPassive: {
+        playerWhitelist: [],
+        reach: 5,
+        entityBlacklist: [],
+        multi: false,
+        enabled: true
+      }
+    }
+  },
+  autoEat: true
 }

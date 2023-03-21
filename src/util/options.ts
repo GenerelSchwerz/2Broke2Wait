@@ -1,5 +1,6 @@
 import type { BotOptions } from 'mineflayer'
 import merge from 'ts-deepmerge'
+import { ServerSpectatorOptions } from '../impls/spectatorServer/utils'
 
 // Minecraft and discord options such as discord bot prefix and minecraft login info
 export interface Options {
@@ -35,12 +36,7 @@ export interface Options {
       'online-mode': boolean
       maxPlayers: number
     }
-    localServerOptions: {
-      restartOnDisconnect: boolean
-      autoEat: boolean
-      antiAFK: boolean
-      whitelist?: string[]
-    }
+    localServerOptions: ServerSpectatorOptions
   }
 }
 

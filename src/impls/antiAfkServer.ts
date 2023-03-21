@@ -17,10 +17,15 @@ import { CombinedPredictor } from './combinedPredictor'
 import { pathfinder } from 'mineflayer-pathfinder'
 import merge from 'ts-deepmerge'
 import { WalkAroundModuleOptions } from '@nxg-org/mineflayer-antiafk/lib/modules/index'
+import { DeepPartial } from '../util/utilTypes'
 
 
-export interface AntiAFKOpts extends IProxyServerOpts, Partial<AllModuleSettings>, Partial<AllPassiveSettings> {
-  antiAFK: boolean;
+export interface AntiAFKOpts extends IProxyServerOpts {
+  antiAFK: {
+    enabled: boolean,
+    modules: Partial<AllModuleSettings>,
+    passives: Partial<AllPassiveSettings>
+  },
   autoEat: boolean;
 }
 
@@ -113,7 +118,7 @@ export class AntiAFKServer<
   protected override optionValidation () {
     if (this.remoteBot == null) return this.psOpts
     this.psOpts = merge(MODULE_DEFAULT_SETTINGS(this.remoteBot), this.psOpts) as any;
-    this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot.hasPlugin(antiAFK)
+    this.psOpts.antiAFK.enabled = this.psOpts.antiAFK.enabled && this.remoteBot.hasPlugin(antiAFK)
     this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat)
     return this.psOpts
   }
@@ -128,31 +133,24 @@ export class AntiAFKServer<
         bot.antiafk.addModules(DEFAULT_MODULES.WalkAroundModule)
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, {
           ...WalkAroundModuleOptions.TwoBTwoT(bot),
-          ...this.psOpts.WalkAroundModule
+          ...this.psOpts.antiAFK.modules.WalkAroundModule
         })
       }
 
-      if (DEFAULT_MODULES.BlockBreakModule != null) {
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, {
-          enabled: true,
-          ...this.psOpts.BlockBreakModule
+      if (DEFAULT_MODULES.BlockBreakModule != null && this.psOpts.antiAFK.modules.BlockBreakModule) 
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, this.psOpts.antiAFK.modules.BlockBreakModule)
+      
+
+      if (this.psOpts.antiAFK.modules.RandomMovementModule) 
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, this.psOpts.antiAFK.modules.RandomMovementModule);
+
+      if (this.psOpts.antiAFK.modules.LookAroundModule) 
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, this.psOpts.antiAFK.modules.LookAroundModule)
+
+      if(this.psOpts.antiAFK.passives.KillAuraPassive)
+        bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, {
+          ...this.psOpts.antiAFK.passives.KillAuraPassive
         })
-      }
-
-      bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, {
-        enabled: false,
-        ...this.psOpts.RandomMovementModule
-      }),
-
-      bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, {
-        enabled: true,
-        ...this.psOpts.LookAroundModule
-      })
-
-      bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, {
-        enabled: true,
-        ...this.psOpts.KillAuraPassive
-      })
     }
 
     if (this.psOpts.autoEat) {

@@ -33,8 +33,6 @@
     },
     "localServerOptions": {
       "restartOnDisconnect": false,
-      "antiAFK": true,
-      "autoEat": true,
       "security": {
         "allowList": null,
         "kickMessage": "Default kick message"
@@ -43,7 +41,32 @@
       "disabledCommands": false,
       "disconnectAllOnEnd": true,
       "worldCaching": false,
-      "logPlayerJoinLeave": false
+      "logPlayerJoinLeave": false,
+
+      "antiAFK": {
+        "enabled": true,
+
+        "modules": {
+          "RandomMovementModule": {
+            "enabled": false
+          },
+          "ChatBotModule": {
+            "messages": ["hi"],
+            "count": 2
+          }
+        },
+
+        "passives": {
+          "KillAuraPassive": {
+            "playerWhitelist": [],
+            "reach": 5,
+            "multi": false,
+            "enabled": true
+          }
+        }
+      },
+      
+      "autoEat": true
     }
   }
 }
