@@ -38,4 +38,4 @@ Currently supports CLI, a discord for commands, and discord webhooks for info.
 
 
 ### Known Issues:
-1. Program's strong event st
+1. Program's strong event structure is ugly
