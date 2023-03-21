@@ -3,22 +3,26 @@
     "bot": {
       "enabled": false,
       "botToken": "",
-      "prefix": "!",
-      "announcements": {
-        "enabled": true,
-        "pingIds": []
-      }
+      "prefix": "!"
     },
     "webhooks": {
       "enabled": false,
-      "queue": "",
       "gameChat": "",
-      "spam": ""
+      "spam": "",
+      "queue": {
+        "url": "",
+        "minCount": 100
+      }
+    },
+    "announcements": {
+      "modes": ["bot", "webhook"],
+      "enabled": true,
+      "pingIds": [984923209944141895]
     }
   },
   "minecraft": {
     "account": {
-      "username": "Generel_Schwerz",
+      "username": "fuck",
       "email": "",
       "password": "",
       "auth": "microsoft"

@@ -35,7 +35,7 @@ export const DefaultProxyOpts: ServerSpectatorOptions = {
   antiAFK: {
     enabled: true,
     modules: {
-      RandomMovementModule: {enabled: false}
+      RandomMovementModule: { enabled: false }
     },
     passives: {
       KillAuraPassive: {

@@ -240,7 +240,7 @@ export class QueueLookup {
 
   private static parseQueueLength (motd: mc.NewPingResult): QueueLength | null {
     if (!motd) return null
-    if (motd.players.sample == null) return null;
+    if (motd.players.sample == null) return null
     const returnValue = {} as any
     for (const server of motd.players.sample) {
       const serverName = server.name.split(':')[0].replace(/§./g, '')

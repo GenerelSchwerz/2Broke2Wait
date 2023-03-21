@@ -61,6 +61,7 @@ afkServer.on('leftQueue', () => {
 })
 
 afkServer.on('remoteKick', async (reason) => {
+  afkServer.removeListener('queueUpdate', queueServerMotd)
   if (afkServer.psOpts.restartOnDisconnect) {
     afkServer.restart(1000)
   }
@@ -68,6 +69,7 @@ afkServer.on('remoteKick', async (reason) => {
 
 afkServer.on('remoteError', async (error) => {
   console.log('remoteError:', error)
+  afkServer.removeListener('queueUpdate', queueServerMotd)
   if (afkServer.psOpts.restartOnDisconnect) {
     afkServer.restart(1000)
   }

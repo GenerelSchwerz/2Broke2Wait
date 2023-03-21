@@ -132,7 +132,7 @@ export class CommandHandler<Server extends ProxyServer> extends TypedEventEmitte
   proxyTabCompleteIntercepter: PacketMiddleware = async ({ meta, data, pclient }) => {
     if ((this.srv.proxy == null) || (pclient == null)) return
     if (meta.name !== 'tab_complete') return
-    const { text, assumeCommand, lookedAtBlock } = data;
+    const { text, assumeCommand, lookedAtBlock } = data
     const matches = []
     const cmds = this.srv.isProxyConnected() ? Object.keys(this.proxyCmds) : Object.keys(this.disconnectedCmds)
     for (const cmd of cmds) {
@@ -162,7 +162,7 @@ export class CommandHandler<Server extends ProxyServer> extends TypedEventEmitte
 
   updateClientCmds (client: Client | ServerClient) {
     this.srv.proxy?.attach(client as any, { toServerMiddleware: [this.proxyCommandHandler, this.proxyTabCompleteIntercepter] })
-    client.on('chat', (...args) => this.unlinkedChatHandler(client, ...args))
+    client.on('chat', async (...args) => await this.unlinkedChatHandler(client, ...args))
     client.on('tab_complete', (...args) => this.tabCompleteHandler(client, ...args))
   }
 

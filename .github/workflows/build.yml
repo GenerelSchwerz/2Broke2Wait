@@ -31,7 +31,7 @@ jobs:
       - name: Use the Upload Artifact GitHub Action (Linux)
         uses: actions/upload-artifact@v2
         with: 
-          name: 2b2w-ts-rewrite-linux
+          name: 2broke2wait-linux
           path: pkg
 
       - name: Reset and build package to binaries
@@ -40,7 +40,7 @@ jobs:
       - name: Use the Upload Artifact GitHub Action (MacOS)
         uses: actions/upload-artifact@v2
         with: 
-          name: 2b2w-ts-rewrite-macos
+          name: 2broke2wait-macos
           path: pkg
 
       - name: Reset and build package to binaries
@@ -49,5 +49,17 @@ jobs:
       - name: Use the Upload Artifact GitHub Action (Windows)
         uses: actions/upload-artifact@v2
         with: 
-          name: 2b2w-ts-rewrite-win.exe
+          name: 2broke2wait-win.exe
           path: pkg
+
+      - name: Reset and build package to binaries
+        run: rm -rf pkg/* && npx pkg . --target node16-linux-arm64
+
+
+      - name: Use the Upload Artifact GitHub Action (Rasp Pi)
+        uses: actions/upload-artifact@v2
+        with: 
+          name: 2broke2wait-rasppi
+          path: pkg
+
+  

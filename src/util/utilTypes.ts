@@ -5,9 +5,9 @@ import StrictEventEmitter from 'strict-event-emitter-types/types/src/index'
 import { IProxyServerEvents } from '../abstract/proxyServer'
 import { AntiAFKServer } from '../impls/antiAfkServer'
 
-export type DeepPartial<T, Num extends number = 9999, Temp extends any[] = []> = Temp["length"] extends Num ? T : T extends object ? {
-  [P in keyof T]?: DeepPartial<T[P],  Temp["length"], [...Temp, 0]>;
-} : T;
+export type DeepPartial<T, Num extends number = 9999, Temp extends any[] = []> = Temp['length'] extends Num ? T : T extends object ? {
+  [P in keyof T]?: DeepPartial<T[P], Temp['length'], [...Temp, 0]>;
+} : T
 
 export type Overloads<T extends (...args: any[]) => any> = T extends {
   (...args: infer A1): infer R1
@@ -177,9 +177,7 @@ export type ClientEvent<T extends ClientEmitters> = T extends Bot
     ? ValidClientEvents
     : never
 
-
 export type PromiseLike = void | Promise<void>
-
 
 // Optional derived class if we need it (if we have nothing to add we can just us EventEmitter directly
 // (EventEmitter2 as { new(): StrictEventEmitter<EventEmitter2, any, any> }) {

@@ -32,48 +32,33 @@ export const configSchema = joi.object({
     .object({
       bot: joi
         .object({
-          enabled: joi
-            .boolean()
-            .default(false)
-            .description('Whether to use the discord bot or not.'),
+          enabled: joi.boolean().default(false).description('Whether to use the discord bot or not.'),
           botToken: tokenSchema
             .allow('')
             .default('')
             .required()
             .description('The discord bot token to send updates to.'),
-          prefix: joi
-            .string()
-            .default('!')
-            .description(
-              'The prefix for the discord bot (using simple commands).'
-            )
+          prefix: joi.string().default('!').description('The prefix for the discord bot (using simple commands).')
         })
         .default()
         .description("Discord's configuration for an interactive bot."),
       webhooks: joi
         .object({
-          enabled: joi
-            .boolean()
-            .default(false)
-            .description('Whether to use the discord webhooks or not.'),
+          enabled: joi.boolean().default(false).description('Whether to use the discord webhooks or not.'),
           queue: joi
-            .string()
-            .allow('')
-            .default('')
+            .object({
+              url: joi.string().allow('').default('').required().description('Webhook URL for queue updates.'),
+              maxCount: joi
+                .number()
+                .min(0)
+                .default(9999)
+                .required()
+                .description('Begin sending updates from this number and under')
+            })
             .required()
-            .description('Webhook URL for queue updates.'),
-          gameChat: joi
-            .string()
-            .allow('')
-            .default('')
-            .required()
-            .description('Webhook URL for in-game chat.'),
-          spam: joi
-            .string()
-            .allow('')
-            .default('')
-            .required()
-            .description('Default webhook URL (backup).')
+            .description('Info for queue updates.'),
+          gameChat: joi.string().allow('').default('').required().description('Webhook URL for in-game chat.'),
+          spam: joi.string().allow('').default('').required().description('Default webhook URL (backup).')
         })
         .default()
         .description('Webhook URLs for logging, if wanted.')
@@ -86,17 +71,13 @@ export const configSchema = joi.object({
         .object({
           username: usernameSchema
             .default('default-username')
-            .description(
-              'The in-game playername of the account (only significant in offline mode).'
-            ),
+            .description('The in-game playername of the account (only significant in offline mode).'),
           email: joi
             .string()
             .email()
             .allow('')
             .default('')
-            .description(
-              'The email of the account. Leave empty for offline accounts.'
-            ),
+            .description('The email of the account. Leave empty for offline accounts.'),
           password: joi
             .string()
             .empty('')
@@ -108,9 +89,7 @@ export const configSchema = joi.object({
             .string()
             .valid('microsoft', 'mojang', 'offline')
             .default('microsoft')
-            .description(
-              "Authentication type (options: 'microsoft', 'mojang', 'offline')"
-            )
+            .description("Authentication type (options: 'microsoft', 'mojang', 'offline')")
         })
         .default()
         .description('Minecraft account details.'),
@@ -121,11 +100,7 @@ export const configSchema = joi.object({
             .hostname()
             .default('connect.2b2t.org')
             .description('Address of the server to connect the bot to'),
-          port: joi
-            .number()
-            .port()
-            .default(25565)
-            .description('Port of the server to connect to'),
+          port: joi.number().port().default(25565).description('Port of the server to connect to'),
           version: joi
             .string()
             .regex(/1\.([1-9](\.|[0-9]\.)|0\.)[0-9]{1,2}$/)
@@ -141,11 +116,7 @@ export const configSchema = joi.object({
             .hostname()
             .default('connect.2b2t.org')
             .description('Address of the server for proxy users to connect to'),
-          port: joi
-            .number()
-            .port()
-            .default(25565)
-            .description('Port on the machine to connect to the proxy'),
+          port: joi.number().port().default(25565).description('Port on the machine to connect to the proxy'),
           version: joi
             .string()
             .regex(/1\.([1-9](\.|[0-9]\.)|0\.)[0-9]{1,2}$/)
@@ -154,16 +125,12 @@ export const configSchema = joi.object({
           'online-mode': joi
             .boolean()
             .default(true)
-            .description(
-              'Whether to enable online-mode on the proxy. This probably should never be touched'
-            ),
+            .description('Whether to enable online-mode on the proxy. This probably should never be touched'),
           maxPlayers: joi
             .number()
             .min(1)
             .default(1)
-            .description(
-              'Maximum allowed players to connect to the local server.'
-            )
+            .description('Maximum allowed players to connect to the local server.')
         })
         .default()
         .description('Settings for how you connect to the proxy'),
@@ -172,30 +139,17 @@ export const configSchema = joi.object({
           restartOnDisconnect: joi
             .boolean()
             .default(true)
-            .description(
-              'Whether or not the bot should reconnect when disconnected.'
-            ),
-          antiAFK: joi
-            .object({
-              
-            })
-            .description('AntiAFK options.'),
-          autoEat: joi
-            .boolean()
-            .default(true)
-            .description('Whether or not the bot should eat automatically.'),
+            .description('Whether or not the bot should reconnect when disconnected.'),
+          antiAFK: joi.object({}).description('AntiAFK options.'),
+          autoEat: joi.boolean().default(true).description('Whether or not the bot should eat automatically.'),
           whitelist: joi
             .array()
             .items(usernameSchema)
             .optional()
-            .description(
-              'Playernames of accounts that are allowed to connect to the proxy'
-            )
+            .description('Playernames of accounts that are allowed to connect to the proxy')
         })
         .default()
-        .description(
-          'Custom server options not normally found on minecraft-protocol'
-        )
+        .description('Custom server options not normally found on minecraft-protocol')
     })
     .default()
     .description('All minecraft related settings.')

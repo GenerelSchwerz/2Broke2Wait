@@ -19,14 +19,13 @@ import merge from 'ts-deepmerge'
 import { WalkAroundModuleOptions } from '@nxg-org/mineflayer-antiafk/lib/modules/index'
 import { DeepPartial } from '../util/utilTypes'
 
-
 export interface AntiAFKOpts extends IProxyServerOpts {
   antiAFK: {
-    enabled: boolean,
-    modules: Partial<AllModuleSettings>,
+    enabled: boolean
+    modules: Partial<AllModuleSettings>
     passives: Partial<AllPassiveSettings>
-  },
-  autoEat: boolean;
+  }
+  autoEat: boolean
 }
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
@@ -38,10 +37,9 @@ export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorE
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, '*'>
 
 export class AntiAFKServer<
-    Opts extends AntiAFKOpts = AntiAFKOpts, 
+    Opts extends AntiAFKOpts = AntiAFKOpts,
     Events extends StrictAntiAFKEvents = StrictAntiAFKEvents
   > extends ProxyServer<Opts, Events> {
-  
   private _queue?: PacketQueuePredictor<any, any>
 
   public get queue () {
@@ -101,7 +99,7 @@ export class AntiAFKServer<
   public override start (): Conn {
     if (this.isProxyConnected()) return this._proxy as Conn
     const conn = super.start()
-    this.setupAntiAfk();
+    this.setupAntiAfk()
     this._queue = new CombinedPredictor(conn)
     this._queue.begin()
     this._queue.on('*', (...args: any[]) => { this.emit((this._queue as any).event, ...args) })
@@ -111,49 +109,37 @@ export class AntiAFKServer<
   public override stop () {
     if (!this.isProxyConnected()) return
     if (this._queue != null) this._queue.end()
-    this.emit('leftQueue' as any)
     super.stop()
   }
 
   protected override optionValidation () {
     if (this.remoteBot == null) return this.psOpts
-    this.psOpts = merge(MODULE_DEFAULT_SETTINGS(this.remoteBot), this.psOpts) as any;
+    this.psOpts = merge(MODULE_DEFAULT_SETTINGS(this.remoteBot), this.psOpts) as any
     return this.psOpts
   }
 
   protected override initialBotSetup (bot: Bot): void {
-    
     if (this.psOpts.antiAFK) {
       bot.loadPlugin(pathfinder)
       bot.loadPlugin(antiAFK)
-      // unloadDefaultModules(bot)
 
       if (DEFAULT_MODULES.WalkAroundModule != null) {
-     
         bot.antiafk.addModules(DEFAULT_MODULES.WalkAroundModule)
 
-        if (this.bOpts.host?.includes('2b2t'))
-          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, WalkAroundModuleOptions.TwoBTwoT(bot))
+        if (this.bOpts.host?.includes('2b2t')) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, WalkAroundModuleOptions.TwoBTwoT(bot)) }
 
-        if (this.psOpts.antiAFK.modules.WalkAroundModule)
-          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, this.psOpts.antiAFK.modules.WalkAroundModule)
+        if (this.psOpts.antiAFK.modules.WalkAroundModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, this.psOpts.antiAFK.modules.WalkAroundModule) }
       }
 
-      if (DEFAULT_MODULES.BlockBreakModule != null && this.psOpts.antiAFK.modules.BlockBreakModule) 
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, this.psOpts.antiAFK.modules.BlockBreakModule)
-      
-      if (this.psOpts.antiAFK.modules.RandomMovementModule) 
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, this.psOpts.antiAFK.modules.RandomMovementModule);
+      if (DEFAULT_MODULES.BlockBreakModule != null && (this.psOpts.antiAFK.modules.BlockBreakModule != null)) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, this.psOpts.antiAFK.modules.BlockBreakModule) }
 
-      if (this.psOpts.antiAFK.modules.LookAroundModule) 
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, this.psOpts.antiAFK.modules.LookAroundModule)
+      if (this.psOpts.antiAFK.modules.RandomMovementModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, this.psOpts.antiAFK.modules.RandomMovementModule) }
 
-      if (this.psOpts.antiAFK.modules.ChatBotModule) 
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBotModule, this.psOpts.antiAFK.modules.ChatBotModule)
+      if (this.psOpts.antiAFK.modules.LookAroundModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, this.psOpts.antiAFK.modules.LookAroundModule) }
 
+      if (this.psOpts.antiAFK.modules.ChatBotModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBotModule, this.psOpts.antiAFK.modules.ChatBotModule) }
 
-      if (this.psOpts.antiAFK.passives.KillAuraPassive)
-        bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, this.psOpts.antiAFK.passives.KillAuraPassive)
+      if (this.psOpts.antiAFK.passives.KillAuraPassive != null) { bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, this.psOpts.antiAFK.passives.KillAuraPassive) }
 
       // bot.antiafk.on("moduleCompleted", (mod, suc, res) => console.log(mod.constructor.name, suc, res))
     }
@@ -183,7 +169,6 @@ export class AntiAFKServer<
     if (this.remoteBot == null) return
     const inQueue = this._queue != null ? this._queue.inQueue : false
     if (this.psOpts.antiAFK && !inQueue) {
-  
       this.remoteBot.antiafk.start()
     }
 
