@@ -3,8 +3,8 @@ lib/
 dist/
 pkg/
 ncc/
-unused/
 worlds/
+src/unused/
 yarn-error.log
 *.lock
 .env
