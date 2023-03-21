@@ -154,6 +154,8 @@ export class AntiAFKServer<
         bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, {
           ...this.psOpts.antiAFK.passives.KillAuraPassive
         })
+
+      // bot.antiafk.on("moduleCompleted", (mod, suc, res) => console.log(mod.constructor.name, suc, res))
     }
 
     if (this.psOpts.autoEat) {
