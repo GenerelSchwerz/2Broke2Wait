@@ -11,32 +11,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Step 1 - Create a temporary artifact downloads folder
+      - name: Use Node16
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Create a temporary artifact downloads folder
         run: mkdir pkg
         
-      - name: step 2 - Install all packages
+      - name: Install all packages
         run: npm install
 
-      - name: step 3 - Build package to binaries
-        run: npm run package
+      - name: Build package to binaries
+        run: npm run package --target node16-linux-x64
     
-      - name: Step 4 - Use the Upload Artifact GitHub Action (Linux)
+      - name: Use the Upload Artifact GitHub Action (Linux)
         uses: actions/upload-artifact@v2
         with: 
           name: 2b2w-ts-rewrite-linux
           path: pkg
 
-
+      - name: Reset and build package to binaries
+        run: rm -rf pkg/* && npm run package --target node16-macos-x64
+    
       - name: Step 5 - Use the Upload Artifact GitHub Action (MacOS)
         uses: actions/upload-artifact@v2
         with: 
           name: 2b2w-ts-rewrite-macos
           path: pkg
 
+      - name: Reset and build package to binaries
+        run: rm -rf pkg/* && npm run package --target node16-win-x64
 
       - name: Step 6 - Use the Upload Artifact GitHub Action (Windows)
         uses: actions/upload-artifact@v2
