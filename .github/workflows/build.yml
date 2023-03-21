@@ -1,5 +1,5 @@
 # Publish GitHub workflow artifacts tutorial example
-name: Build to Executable
+name: Build To Executable
 
 on:
   push:
