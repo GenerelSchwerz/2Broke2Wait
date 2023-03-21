@@ -12,7 +12,10 @@ export interface Options {
     }
     webhooks: {
       enabled: boolean
-      queue: string
+      queue: {
+        url: string,
+        reportAt: number
+      },
       gameChat: string
       spam: string
     }
@@ -20,7 +23,7 @@ export interface Options {
   minecraft: {
     account: {
       username: string
-      email: string
+      email?: string
       password?: string
       auth: 'microsoft' | 'mojang' | 'offline'
     }

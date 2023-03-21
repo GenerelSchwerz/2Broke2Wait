@@ -36,7 +36,6 @@ export const configSchema = joi.object({
           botToken: tokenSchema
             .allow('')
             .default('')
-            .required()
             .description('The discord bot token to send updates to.'),
           prefix: joi.string().default('!').description('The prefix for the discord bot (using simple commands).')
         })
@@ -47,18 +46,17 @@ export const configSchema = joi.object({
           enabled: joi.boolean().default(false).description('Whether to use the discord webhooks or not.'),
           queue: joi
             .object({
-              url: joi.string().allow('').default('').required().description('Webhook URL for queue updates.'),
-              maxCount: joi
+              url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
+              reportAt: joi
                 .number()
                 .min(0)
                 .default(9999)
-                .required()
                 .description('Begin sending updates from this number and under')
             })
             .required()
             .description('Info for queue updates.'),
-          gameChat: joi.string().allow('').default('').required().description('Webhook URL for in-game chat.'),
-          spam: joi.string().allow('').default('').required().description('Default webhook URL (backup).')
+          gameChat: joi.string().allow('').default('').description('Webhook URL for in-game chat.'),
+          spam: joi.string().allow('').default('').description('Default webhook URL (backup).')
         })
         .default()
         .description('Webhook URLs for logging, if wanted.')
@@ -98,7 +96,7 @@ export const configSchema = joi.object({
           host: joi
             .string()
             .hostname()
-            .default('connect.2b2t.org')
+            .default('2b2t.org')
             .description('Address of the server to connect the bot to'),
           port: joi.number().port().default(25565).description('Port of the server to connect to'),
           version: joi

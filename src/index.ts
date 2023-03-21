@@ -89,6 +89,10 @@ afkServer.on('started', () => {
   }
 })
 
+afkServer.on('stopped', () => {
+  console.log('Server stopped!\n\tYou can start it with \"start\"')
+})
+
 if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
   buildClient(checkedConfig.discord.bot, afkServer)
   console.log('We are using a discord bot.')

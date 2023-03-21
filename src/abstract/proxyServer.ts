@@ -20,7 +20,8 @@ export interface IProxyServerEvents {
   remoteKick: (reason: string) => void
   remoteError: (error: Error) => void
   closedConnections: (reason: string) => void
-  started: (conn: Conn) => void
+  started: (conn: Conn) => void,
+  stopped: () => void
 }
 
 /**
@@ -344,6 +345,7 @@ export abstract class ProxyServer<
   public stop () {
     if (!this.isProxyConnected()) return
     this.closeConnections()
+    this.emit('stopped' as any)
   }
 
   public async restart (ms: number = 0) {

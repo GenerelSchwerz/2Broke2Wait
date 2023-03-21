@@ -73,11 +73,17 @@ class ServerStopMessenger extends AntiAFKWebhookReporter<'closedConnections'> {
 
 // Send started message when server starts.
 class ServerQueueUpdateMessenger extends AntiAFKWebhookReporter<'queueUpdate'> {
-  constructor (srv: AntiAFKServer, webhookUrl: string) {
-    super(srv, 'queueUpdate', webhookUrl)
+
+  public reportAt: number;
+  constructor (srv: AntiAFKServer, queueWebhook: Options['discord']['webhooks']['queue']) {
+    super(srv, 'queueUpdate', queueWebhook.url)
+    this.reportAt = queueWebhook.reportAt
   }
 
   protected listener = async (oldPos: number, newPos: number, eta: number) => {
+
+    if (newPos > this.reportAt) return;
+
     const embed = this.buildServerEmbed()
 
     const strETA = !Number.isNaN(eta)
@@ -121,11 +127,22 @@ export function applyWebhookListeners (
 ) {
   if (!config.enabled) return
 
-  if (!!config.queue || !!config.spam) {
-    const queueUpdates = new ServerQueueUpdateMessenger(srv, config.queue || config.spam)
-    const enteredQueue = new ServerEnteredQueueMessenger(srv, config.queue || config.spam)
-    srv.registerServerListeners(queueUpdates, enteredQueue)
+  if (!!config.queue) {
+    const queueUpdates = new ServerQueueUpdateMessenger(srv, config.queue)
+    srv.registerServerListeners(queueUpdates);
+  } else {
+    const queueUpdates = new ServerQueueUpdateMessenger(srv, {
+      url: config.spam,
+      reportAt: 9999
+    })
+    srv.registerServerListeners(queueUpdates);
   }
+  
+  if (!!config.queue || !!config.spam) {
+    const enteredQueue = new ServerEnteredQueueMessenger(srv, config.queue.url || config.spam)
+    srv.registerServerListeners(enteredQueue)
+  }
+
   if (!!config.gameChat || !!config.spam) {
     const gameChatHelper = new GameChatListener(srv, config.gameChat || config.spam)
     srv.registerClientListeners(gameChatHelper)

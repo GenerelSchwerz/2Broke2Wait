@@ -55,6 +55,7 @@ const NiceServerNames: { [key in keyof StrictAntiAFKEvents]: string } = {
   remoteError: 'Remote disconnect (Error)',
   remoteKick: 'Remote disconnect (Kicked)',
   started: 'Server started!',
+  stopped: 'Server stopped!',
   health: 'Bot health update!',
   breath: 'Bot breath update!'
 } as const

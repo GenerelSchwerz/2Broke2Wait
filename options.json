@@ -11,13 +11,8 @@
       "spam": "",
       "queue": {
         "url": "",
-        "minCount": 100
+        "reportAt": 100
       }
-    },
-    "announcements": {
-      "modes": ["bot", "webhook"],
-      "enabled": true,
-      "pingIds": [984923209944141895]
     }
   },
   "minecraft": {
