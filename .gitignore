@@ -3,6 +3,7 @@ lib/
 dist/
 pkg/
 ncc/
+unused/
 worlds/
 yarn-error.log
 *.lock
