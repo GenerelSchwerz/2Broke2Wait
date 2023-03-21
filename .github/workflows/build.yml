@@ -12,18 +12,27 @@ jobs:
     steps:
 
       - name: Step 1 - Create a temporary artifact downloads folder
-        run: mkdir downloads
+        run: mkdir pkg
         
       - name: step 2 - Add artifacts to publish to the temp folder
-        run: |
-          cd downloads
-          echo 'alpha'    > alpha.html
-          echo 'bravo'    > bravo.html
-          echo 'charlie'  > charlie.html
-          cd ..
+        run: yarn run package
     
-      - name: Step 3 - Use the Upload Artifact GitHub Action
+      - name: Step 3 - Use the Upload Artifact GitHub Action (Linux)
         uses: actions/upload-artifact@v2
         with: 
-          name: assets-for-download
-          path: downloads
+          name: 2b2w-ts-rewrite-linux
+          path: pkg
+
+
+      - name: Step 4 - Use the Upload Artifact GitHub Action (MacOS)
+        uses: actions/upload-artifact@v2
+        with: 
+          name: 2b2w-ts-rewrite-macos
+          path: pkg
+
+
+      - name: Step 5 - Use the Upload Artifact GitHub Action (Windows)
+        uses: actions/upload-artifact@v2
+        with: 
+          name: 2b2w-ts-rewrite-win.exe
+          path: pkg
