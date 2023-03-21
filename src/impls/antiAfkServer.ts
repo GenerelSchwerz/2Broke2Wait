@@ -13,11 +13,15 @@ import autoEat from '@nxg-org/mineflayer-auto-eat'
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../abstract/packetQueuePredictor'
 import { CombinedPredictor } from './combinedPredictor'
 import { pathfinder } from 'mineflayer-pathfinder'
-import { WalkAroundModuleOptions } from '@nxg-org/mineflayer-antiafk/lib/modules/walkAround'
+import { AllModuleSettings, MODULE_DEFAULT_SETTINGS } from '@nxg-org/mineflayer-antiafk'
+import { DeepPartial } from '../util/utilTypes'
+import merge from 'ts-deepmerge'
+import { WalkAroundModuleOptions } from '@nxg-org/mineflayer-antiafk/lib/modules/index'
 
-export interface AntiAFKOpts extends IProxyServerOpts {
-  antiAFK: boolean
-  autoEat: boolean
+
+export interface AntiAFKOpts extends IProxyServerOpts, Partial<AllModuleSettings> {
+  antiAFK: boolean;
+  autoEat: boolean;
 }
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
@@ -104,8 +108,9 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
 
   protected override optionValidation () {
     if (this.remoteBot == null) return this.psOpts
-    this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot.hasPlugin(antiAFK)
-    this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat)
+    this.psOpts = merge(MODULE_DEFAULT_SETTINGS(this.remoteBot), this.psOpts) as any;
+    // this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot.hasPlugin(antiAFK)
+    // this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat)
     return this.psOpts
   }
 
@@ -119,14 +124,14 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
         bot.antiafk.addModules(DEFAULT_MODULES.WalkAroundModule)
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, {
           ...WalkAroundModuleOptions.TwoBTwoT(bot),
-          enabled: true,
-          timeout: 10000
+          ...this.psOpts.WalkAroundModule
         })
       }
 
       if (DEFAULT_MODULES.BlockBreakModule != null) {
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, {
-          enabled: true
+          enabled: true,
+          ...this.psOpts.BlockBreakModule
         })
       }
 
@@ -142,9 +147,6 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
         enabled: true,
         playerWhitelist: new Set(['Generel_Schwerz'])
       })
-
-      bot.antiafk.on('moduleStarted', (module) => console.log('started', module.constructor.name))
-      bot.antiafk.on('moduleCompleted', (module, success, reason) => console.log('completed', module.constructor.name, success, reason))
     }
 
     if (this.psOpts.autoEat) {

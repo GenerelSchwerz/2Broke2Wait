@@ -5,6 +5,10 @@ import StrictEventEmitter from 'strict-event-emitter-types/types/src/index'
 import { IProxyServerEvents } from '../abstract/proxyServer'
 import { AntiAFKServer } from '../impls/antiAfkServer'
 
+export type DeepPartial<T> = T extends object ? {
+  [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
 export type Overloads<T extends (...args: any[]) => any> = T extends {
   (...args: infer A1): infer R1
   (...args: infer A2): infer R2
