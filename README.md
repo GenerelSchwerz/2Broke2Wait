@@ -4,17 +4,11 @@ This project is made to skip the queue of 2b2t.
 
 Heavy work in progress.
 
-
 ### Install:
-1. Download the launcher from our public server. http://35.225.146.24:8080/downloads/test_launchers
-- If linux: http://35.225.146.24:8080/downloads/test_launchers/linux
-- If Windows: http://35.225.146.24:8080/downloads/test_launchers/windows
-  - Note: Raspberry PIs (aarch64) is not supported yet.
-
-2. Run the launcher. It will prompt you for a user token.
-- Insert the token given to you by Gen.
-
-3. The program will download all dependencies on its own (provided node is installed).
+1. Download Node16.
+2. Download our repository.
+3. run "npm build"
+4. run "npm run"
 
 ### Usage:
 Currently supports CLI, a discord for commands, and discord webhooks for info.
