@@ -26,7 +26,7 @@ jobs:
         run: npm install
 
       - name: Build package to binaries
-        run: npm run package --target node16-linux-x64
+        run: npx pkg . --target node16-linux-x64
     
       - name: Use the Upload Artifact GitHub Action (Linux)
         uses: actions/upload-artifact@v2
@@ -35,7 +35,7 @@ jobs:
           path: pkg
 
       - name: Reset and build package to binaries
-        run: rm -rf pkg/* && npm run package --target node16-macos-x64
+        run: rm -rf pkg/* && npx pkg . --target node16-macos-x64
     
       - name: Step 5 - Use the Upload Artifact GitHub Action (MacOS)
         uses: actions/upload-artifact@v2
@@ -44,7 +44,7 @@ jobs:
           path: pkg
 
       - name: Reset and build package to binaries
-        run: rm -rf pkg/* && npm run package --target node16-win-x64
+        run: rm -rf pkg/* && npx pkg . --target node16-win-x64
 
       - name: Step 6 - Use the Upload Artifact GitHub Action (Windows)
         uses: actions/upload-artifact@v2
