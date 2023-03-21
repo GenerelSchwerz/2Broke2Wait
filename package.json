@@ -25,7 +25,7 @@
   "dependencies": {
     "@discordx/importer": "^1.1.10",
     "@nxg-org/mineflayer-antiafk": "^1.4.11",
-    "@nxg-org/mineflayer-auto-eat": "^2.1.5",
+    "@nxg-org/mineflayer-auto-eat": "^2.1.6",
     "@rob9315/mcproxy": "IceTank/mcproxy-1.git#position-spoofing",
     "discord.js": "^14.7.1",
     "discordx": "^11.5.2",
