@@ -176,9 +176,10 @@ export const configSchema = joi.object({
               'Whether or not the bot should reconnect when disconnected.'
             ),
           antiAFK: joi
-            .boolean()
-            .default(true)
-            .description('Whether or not the bot should antiAFK.'),
+            .object({
+              
+            })
+            .description('AntiAFK options.'),
           autoEat: joi
             .boolean()
             .default(true)

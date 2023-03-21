@@ -124,28 +124,31 @@ export class AntiAFKServer<
   }
 
   protected override initialBotSetup (bot: Bot): void {
+    console.log(this.psOpts.antiAFK)
     if (this.psOpts.antiAFK) {
       bot.loadPlugin(pathfinder)
       bot.loadPlugin(antiAFK)
       // unloadDefaultModules(bot)
 
-      if (DEFAULT_MODULES.WalkAroundModule != null) {
+      if (DEFAULT_MODULES.WalkAroundModule != null && this.psOpts.antiAFK.modules.WalkAroundModule) {
+     
         bot.antiafk.addModules(DEFAULT_MODULES.WalkAroundModule)
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, {
-          ...WalkAroundModuleOptions.TwoBTwoT(bot),
-          ...this.psOpts.antiAFK.modules.WalkAroundModule
-        })
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, WalkAroundModuleOptions.TwoBTwoT(bot))
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, this.psOpts.antiAFK.modules.WalkAroundModule)
       }
 
       if (DEFAULT_MODULES.BlockBreakModule != null && this.psOpts.antiAFK.modules.BlockBreakModule) 
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, this.psOpts.antiAFK.modules.BlockBreakModule)
       
-
       if (this.psOpts.antiAFK.modules.RandomMovementModule) 
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, this.psOpts.antiAFK.modules.RandomMovementModule);
 
       if (this.psOpts.antiAFK.modules.LookAroundModule) 
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, this.psOpts.antiAFK.modules.LookAroundModule)
+
+      if (this.psOpts.antiAFK.modules.ChatBotModule) 
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBotModule, this.psOpts.antiAFK.modules.ChatBotModule)
+
 
       if(this.psOpts.antiAFK.passives.KillAuraPassive)
         bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, {
