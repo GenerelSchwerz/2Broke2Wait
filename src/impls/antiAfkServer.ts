@@ -118,8 +118,6 @@ export class AntiAFKServer<
   protected override optionValidation () {
     if (this.remoteBot == null) return this.psOpts
     this.psOpts = merge(MODULE_DEFAULT_SETTINGS(this.remoteBot), this.psOpts) as any;
-    this.psOpts.antiAFK.enabled = this.psOpts.antiAFK.enabled && this.remoteBot.hasPlugin(antiAFK)
-    this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat)
     return this.psOpts
   }
 
@@ -130,11 +128,15 @@ export class AntiAFKServer<
       bot.loadPlugin(antiAFK)
       // unloadDefaultModules(bot)
 
-      if (DEFAULT_MODULES.WalkAroundModule != null && this.psOpts.antiAFK.modules.WalkAroundModule) {
+      if (DEFAULT_MODULES.WalkAroundModule != null) {
      
         bot.antiafk.addModules(DEFAULT_MODULES.WalkAroundModule)
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, WalkAroundModuleOptions.TwoBTwoT(bot))
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, this.psOpts.antiAFK.modules.WalkAroundModule)
+
+        if (this.bOpts.host?.includes('2b2t'))
+          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, WalkAroundModuleOptions.TwoBTwoT(bot))
+
+        if (this.psOpts.antiAFK.modules.WalkAroundModule)
+          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, this.psOpts.antiAFK.modules.WalkAroundModule)
       }
 
       if (DEFAULT_MODULES.BlockBreakModule != null && this.psOpts.antiAFK.modules.BlockBreakModule) 
@@ -150,10 +152,8 @@ export class AntiAFKServer<
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBotModule, this.psOpts.antiAFK.modules.ChatBotModule)
 
 
-      if(this.psOpts.antiAFK.passives.KillAuraPassive)
-        bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, {
-          ...this.psOpts.antiAFK.passives.KillAuraPassive
-        })
+      if (this.psOpts.antiAFK.passives.KillAuraPassive)
+        bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, this.psOpts.antiAFK.passives.KillAuraPassive)
 
       // bot.antiafk.on("moduleCompleted", (mod, suc, res) => console.log(mod.constructor.name, suc, res))
     }

@@ -3,7 +3,11 @@
     "bot": {
       "enabled": false,
       "botToken": "",
-      "prefix": "!"
+      "prefix": "!",
+      "announcements": {
+        "enabled": true,
+        "pingIds": []
+      }
     },
     "webhooks": {
       "enabled": false,
