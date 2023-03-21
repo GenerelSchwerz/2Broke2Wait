@@ -1,5 +1,5 @@
 # Publish GitHub workflow artifacts tutorial example
-name: Publish GitHub Actions Artifacts Example
+name: Build to Executable
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
         run: mkdir pkg
         
       - name: step 2 - Add artifacts to publish to the temp folder
-        run: yarn run package
+        run: ls
     
       - name: Step 3 - Use the Upload Artifact GitHub Action (Linux)
         uses: actions/upload-artifact@v2
