@@ -5,21 +5,21 @@ import {
 } from 'minecraft-protocol'
 import { Conn, ConnOptions } from '@rob9315/mcproxy'
 import antiAFK, {
+  AllPassiveSettings,
   DEFAULT_MODULES,
   DEFAULT_PASSIVES,
+  AllModuleSettings, MODULE_DEFAULT_SETTINGS,
   unloadDefaultModules
 } from '@nxg-org/mineflayer-antiafk'
 import autoEat from '@nxg-org/mineflayer-auto-eat'
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../abstract/packetQueuePredictor'
 import { CombinedPredictor } from './combinedPredictor'
 import { pathfinder } from 'mineflayer-pathfinder'
-import { AllModuleSettings, MODULE_DEFAULT_SETTINGS } from '@nxg-org/mineflayer-antiafk'
-import { DeepPartial } from '../util/utilTypes'
 import merge from 'ts-deepmerge'
 import { WalkAroundModuleOptions } from '@nxg-org/mineflayer-antiafk/lib/modules/index'
 
 
-export interface AntiAFKOpts extends IProxyServerOpts, Partial<AllModuleSettings> {
+export interface AntiAFKOpts extends IProxyServerOpts, Partial<AllModuleSettings>, Partial<AllPassiveSettings> {
   antiAFK: boolean;
   autoEat: boolean;
 }
@@ -32,7 +32,11 @@ export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorE
 }
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, '*'>
 
-export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extends StrictAntiAFKEvents = StrictAntiAFKEvents> extends ProxyServer<Opts, Events> {
+export class AntiAFKServer<
+    Opts extends AntiAFKOpts = AntiAFKOpts, 
+    Events extends StrictAntiAFKEvents = StrictAntiAFKEvents
+  > extends ProxyServer<Opts, Events> {
+  
   private _queue?: PacketQueuePredictor<any, any>
 
   public get queue () {
@@ -109,8 +113,8 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
   protected override optionValidation () {
     if (this.remoteBot == null) return this.psOpts
     this.psOpts = merge(MODULE_DEFAULT_SETTINGS(this.remoteBot), this.psOpts) as any;
-    // this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot.hasPlugin(antiAFK)
-    // this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat)
+    this.psOpts.antiAFK = this.psOpts.antiAFK && this.remoteBot.hasPlugin(antiAFK)
+    this.psOpts.autoEat = this.psOpts.autoEat && this.remoteBot.hasPlugin(autoEat)
     return this.psOpts
   }
 
@@ -136,16 +140,18 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
       }
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, {
-        enabled: false
+        enabled: false,
+        ...this.psOpts.RandomMovementModule
       }),
 
       bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, {
-        enabled: true
+        enabled: true,
+        ...this.psOpts.LookAroundModule
       })
 
       bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, {
         enabled: true,
-        playerWhitelist: new Set(['Generel_Schwerz'])
+        ...this.psOpts.KillAuraPassive
       })
     }
 
