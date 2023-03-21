@@ -12,7 +12,6 @@ import antiAFK, {
 import autoEat from '@nxg-org/mineflayer-auto-eat'
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../abstract/packetQueuePredictor'
 import { CombinedPredictor } from './combinedPredictor'
-import { sleep } from '../util/index'
 import { pathfinder } from 'mineflayer-pathfinder'
 import { WalkAroundModuleOptions } from '@nxg-org/mineflayer-antiafk/lib/modules/walkAround'
 
@@ -22,9 +21,9 @@ export interface AntiAFKOpts extends IProxyServerOpts {
 }
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
-  'botSpawn': (bot: Bot) => void
-  'health': (bot: Bot) => void
-  'breath': (bot: Bot) => void
+  botSpawn: (bot: Bot) => void
+  health: (bot: Bot) => void
+  breath: (bot: Bot) => void
   '*': AntiAFKEvents[Exclude<keyof AntiAFKEvents, '*'>]
 }
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, '*'>
