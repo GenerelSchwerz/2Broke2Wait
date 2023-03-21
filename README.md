@@ -7,6 +7,8 @@ Heavy work in progress.
 ### Install:
 1. Download Node16.
 2. Download our repository.
+  - *Top right, green button, click that.*
+  - "Download zip"
 3. run "npm run build"
 4. run "npm run start"
 
@@ -33,3 +35,7 @@ Currently supports CLI, a discord for commands, and discord webhooks for info.
       - Currently iffy, but more accurate than 2b2t's standard prediction
     2. Log data appropiately.
       - Interface is rough, will update when more people start using it
+
+
+### Known Issues:
+1. Program's strong event st

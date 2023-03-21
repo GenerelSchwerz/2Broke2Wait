@@ -1,17 +1,10 @@
-// import { Conn } from "@rob9315/mcproxy";
-// import { ConstructorOptions, EventEmitter2 } from "eventemitter2";
-// import {
-//   Client, createServer, PacketMeta, Server, ServerClient, ServerOptions
-// } from "minecraft-protocol";
 import merge from "ts-deepmerge";
 
 import type { Bot, BotOptions } from "mineflayer";
 import { ServerClient, Client, Server, PacketMeta } from "minecraft-protocol";
-import StrictEventEmitter from "strict-event-emitter-types";
 import { sleep } from "../util/index";
 import { ClientEventRegister, ServerEventRegister } from "./eventRegisters";
-import { Conn, ConnOptions, PacketMiddleware } from "@rob9315/mcproxy";
-import EventEmitter2, { ConstructorOptions } from "eventemitter2";
+import { Conn, ConnOptions } from "@rob9315/mcproxy";
 import { TypedEventEmitter } from "../util/utilTypes";
 import { CommandHandler } from "../util/commandHandler";
 
