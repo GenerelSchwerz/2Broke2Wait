@@ -7,8 +7,8 @@ Heavy work in progress.
 ### Install:
 1. Download Node16.
 2. Download our repository.
-3. run "npm build"
-4. run "npm run"
+3. run "npm run build"
+4. run "npm run start"
 
 ### Usage:
 Currently supports CLI, a discord for commands, and discord webhooks for info.
@@ -21,5 +21,8 @@ Currently supports CLI, a discord for commands, and discord webhooks for info.
 
 
 ### Roadmap:
+
     1. Predict Queue time.
+      - Currently iffy, but more accurate than 2b2t's standard prediction
     2. Log data appropiately.
+      - Interface is rough, will update when more people start using it

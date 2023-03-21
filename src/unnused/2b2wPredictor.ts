@@ -64,7 +64,7 @@ export class OldPredictor extends PacketQueuePredictor<Bot, 'message'> {
             this._posHistory.push({
               time: Math.floor(Date.now() / 1000),
               position: pos,
-              currentQueueLength: queueLengths.main?.normal ?? 0
+              currentQueueLength: queueLengths?.main?.normal ?? 0
             })
             this.emit('queueUpdate', this._lastPos, pos, this.getPredictedEta())
           }
