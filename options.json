@@ -51,8 +51,7 @@
             "enabled": false
           },
           "ChatBotModule": {
-            "messages": ["hi"],
-            "count": 2
+            "enabled": false
           }
         },
 
