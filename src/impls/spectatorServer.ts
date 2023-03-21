@@ -21,7 +21,7 @@ export type StrictProxyInspectorEvents = Omit<SpectatorServerEvents, '*'>
 
 
 export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, StrictProxyInspectorEvents> {
-  public static readonly blockedPacketsWhenNotInControl: string[] = ["entity_metadata", "abilities", "entity_status", "position"];
+  public static readonly blockedPacketsWhenNotInControl: string[] = ["entity_metadata", "abilities", "position"];
 
   public proxyChatPrefix: string = "§6P>> §r";
 
