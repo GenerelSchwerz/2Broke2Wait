@@ -107,10 +107,11 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
 
     if (this._proxy.pclient == null) {
       this.message(client, "Linking");
-      this._proxy.link(client as unknown as Client);
+
       this.fakeSpectator?.revertPov(client);
       this.fakePlayer?.unregister(client as unknown as ServerClient);
       this.fakeSpectator?.revertToNormal(client as unknown as ServerClient);
+      this._proxy.link(client as unknown as Client);
       this._controllingPlayer = client as unknown as ServerClient;
       this.endBotLogic();
     } else {
