@@ -124,7 +124,7 @@ export class AntiAFKServer<
   }
 
   protected override initialBotSetup (bot: Bot): void {
-    console.log(this.psOpts.antiAFK)
+    
     if (this.psOpts.antiAFK) {
       bot.loadPlugin(pathfinder)
       bot.loadPlugin(antiAFK)
