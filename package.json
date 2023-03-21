@@ -41,5 +41,8 @@
   },
   "resolutions": {
     "mineflayer/prismarine-world": "IceTank/prismarine-world.git#storage-provider-save-fix"
+  },
+  "engines": {
+    "node": ">=16.0.0 <17.0.0"
   }
 }
