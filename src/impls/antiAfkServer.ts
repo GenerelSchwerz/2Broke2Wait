@@ -98,6 +98,7 @@ export class AntiAFKServer<Opts extends AntiAFKOpts = AntiAFKOpts, Events extend
   public override stop () {
     if (!this.isProxyConnected()) return
     if (this._queue != null) this._queue.end()
+    this.emit('leftQueue' as any)
     super.stop()
   }
 

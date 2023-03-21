@@ -109,7 +109,6 @@ export class CommandHandler<Server extends ProxyServer> extends TypedEventEmitte
       if (!cmd.startsWith(this.prefix)) return true
       const cmdRunner = this.proxyCmds
       const cmdFunc = cmdRunner[cmd]
-      console.log(cmd, ...args)
       if (cmdFunc) cmdFunc.call(this.srv, pclient, ...args)
       else cmdRunner[this.prefix + 'default']?.call(this.srv, pclient, ...args)
       return !cmdFunc
