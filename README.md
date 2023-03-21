@@ -10,6 +10,13 @@ Heavy work in progress.
 3. run "npm run build"
 4. run "npm run start"
 
+### configuration:
+Everything to configure is available under `options.json`.
+Simply edit that, the names are self-evident.
+
+There are also hardcoded options deeper within the files, I will soon update those to be read from the configuration file.
+
+
 ### Usage:
 Currently supports CLI, a discord for commands, and discord webhooks for info.
 
