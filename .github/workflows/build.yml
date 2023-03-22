@@ -89,8 +89,8 @@ jobs:
             apt-get update -q -y
             apt-get install -q -y git
             apt-get install -q -y wget
-            wget https://deb.nodesource.com/setup_16.x | sudo -E bash -
-            sudo apt install -y nodejs
+            wget https://deb.nodesource.com/setup_16.x | bash -
+            apt install -y nodejs
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
