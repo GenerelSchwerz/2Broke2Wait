@@ -48,7 +48,7 @@ jobs:
         os: [macos-latest, ubuntu-latest]
         include:
           - os: macos-latest
-            build: npx pkg . --target node16-macos-arm64
+            build: npx caxa -i . -o "pkg/2bored2wait-macos-arm64-${{github.sha}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
             artifact: "2bored2wait-macos-arm64-${{github.sha}}"
           - os: ubuntu-latest
             build: npx pkg . --target node16-linux-arm64
