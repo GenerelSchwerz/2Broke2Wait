@@ -62,4 +62,15 @@ jobs:
           name: 2broke2wait-rasppi
           path: pkg
 
+
+      - name: Reset and build package to binaries
+        run: rm -rf pkg/* && npx pkg . --target node16-linux-armv7
+
+      - name: Use the Upload Artifact GitHub Action (Rasp Pi 32bit)
+        uses: actions/upload-artifact@v2
+        with: 
+          name: 2broke2wait-rasppi-x32
+          path: pkg
+
+
   

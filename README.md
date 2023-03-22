@@ -1,4 +1,4 @@
-# 2b2w-ts-rewrite
+# 2Broke2Wait
 
 This project is made to skip the queue of 2b2t.
 
