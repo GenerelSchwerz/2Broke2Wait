@@ -6,24 +6,24 @@
       "prefix": "!"
     },
     "webhooks": {
-      "enabled": false,
-      "gameChat": "",
-      "spam": "",
+      "enabled": true,
+      "gameChat": "https://canary.discord.com/api/webhooks/1061340694985310248/OfigkI4CkaOnlUdI0yB5-c_SIB87aED25sBjiJnrIXr8OnbQWXU1Qh_auz9uqXjG6kLp",
+      "spam": "https://canary.discord.com/api/webhooks/1061354724407906376/O-08w3TgKq4uYI71TDhbTts6fRFeuo_-7YcYW_8D2VV0US9bf7GCD82crns9eH6W7ReM",
       "queue": {
-        "url": "",
+        "url": "https://canary.discord.com/api/webhooks/1062118206057238528/loOlNX7v5pKYyQ_k7f2l0moMfcGFzYWLsMk6rpvfNdkSNyqgpnoPpus5Y4V3jmShA96V",
         "reportAt": 100
       }
     }
   },
   "minecraft": {
     "account": {
-      "username": "fuck",
+      "username": "Generel_Schwerz",
       "email": "",
       "password": "",
       "auth": "microsoft"
     },
     "remoteServer": {
-      "host": "2b2t.org",
+      "host": "localhost",
       "port": 25565,
       "version": "1.12.2"
     },
@@ -40,7 +40,7 @@
         "allowList": null,
         "kickMessage": "Default kick message"
       },
-      "linkOnConnect": false,
+      "linkOnConnect": true,
       "disabledCommands": false,
       "disconnectAllOnEnd": true,
       "worldCaching": false,
@@ -61,7 +61,7 @@
         "passives": {
           "KillAuraPassive": {
             "playerWhitelist": [],
-            "reach": 5,
+            "reach": 4,
             "multi": false,
             "enabled": true
           }

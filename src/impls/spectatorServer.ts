@@ -71,6 +71,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
   // ======================= //
 
   public override start (): Conn {
+    console.log(this.isProxyConnected())
     if (this.isProxyConnected()) return this.proxy as Conn
     const conn = super.start()
     this.setupMiddleware()
@@ -194,7 +195,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
 
   protected override whileConnectedLoginHandler = async (client: ServerClient) => {
     if (this.remoteBot == null) return
-    if (!this.isUserWhiteListed(client)) {
+    if (!this.isUserWhitelisted(client)) {
       const { address, family, port } = {
         address: 'unknown',
         family: 'unknown',
@@ -239,7 +240,6 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
     }
 
     client.once('end', () => {
-      console.log('shit!')
       if (client.uuid === this._proxy?.pclient?.uuid) {
         this.beginBotLogic()
       }
@@ -366,7 +366,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
             break
         }
       }
-      if (data.entityId === this.remoteBot?.entity.id) {
+      if (data.entityId === this.remoteBot?.entity?.id) {
         switch (meta.name) {
           case 'entity_velocity':
             data.entityId = FakePlayer.fakePlayerId

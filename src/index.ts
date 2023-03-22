@@ -90,7 +90,7 @@ afkServer.on('started', () => {
 })
 
 afkServer.on('stopped', () => {
-  console.log('Server stopped!\n\tYou can start it with \"start\"')
+  console.log('Server stopped!\nYou can start it with \"start\"')
 })
 
 if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {

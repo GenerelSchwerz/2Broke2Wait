@@ -237,7 +237,7 @@ export abstract class ProxyServer<
    *
    * @param {ServerClient} user Local connection to control the bot.
    */
-  protected isUserAllowedToControl = (user: ServerClient): boolean => {
+  public isUserAllowedToControl = (user: ServerClient): boolean => {
     if (this.onlineMode) {
       return this.remoteClient?.uuid === user.uuid
     } else {
@@ -245,7 +245,7 @@ export abstract class ProxyServer<
     }
   }
 
-  protected isUserWhiteListed = (user: ServerClient): boolean => {
+  public isUserWhitelisted = (user: ServerClient): boolean => {
     if (this.psOpts.whitelist == null) return true
     if (this.psOpts.whitelist instanceof Array) {
       return this.psOpts.whitelist.find((n) => n.toLowerCase() === user.username.toLowerCase()) !== undefined
@@ -276,6 +276,7 @@ export abstract class ProxyServer<
     })
 
     this.emit('closedConnections' as any, reason)
+    this._remoteIsConnected = false;
 
     // we no longer want to care about this proxy.
     this._proxy = null
@@ -287,7 +288,7 @@ export abstract class ProxyServer<
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
   protected whileConnectedLoginHandler = (actualUser: ServerClient) => {
-    if (!this.isUserWhiteListed(actualUser)) {
+    if (!this.isUserWhitelisted(actualUser)) {
       actualUser.end('Not whitelisted!\n' + 'You need to turn the whitelist off.')
       return // early end.
     }
@@ -355,6 +356,7 @@ export abstract class ProxyServer<
   }
 
   private readonly loginHandler = (actualUser: ServerClient) => {
+    console.log("login", this.isProxyConnected())
     this.cmdHandler.updateClientCmds(actualUser)
     if (this.isProxyConnected()) this.whileConnectedLoginHandler(actualUser)
     else this.notConnectedLoginHandler(actualUser)

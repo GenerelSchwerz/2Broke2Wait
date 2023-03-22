@@ -74,7 +74,7 @@ export class CommandHandler<Server extends ProxyServer> extends TypedEventEmitte
     meta: PacketMeta
   ) => {
     if (this.srv.isProxyConnected()) return
-    if (this.srv.controllingPlayer !== client) return
+    if (!this.srv.isUserWhitelisted(client as ServerClient)) return
     const cmds = message.split('|')
     if (cmds.length === 1) {
       const [cmd, ...args] = cmds
