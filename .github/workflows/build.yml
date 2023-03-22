@@ -27,8 +27,14 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: |
-          npm i
+      - name: Install Dependencies
+        run: npm i
+
+      - name: Dedup
+        run: npm dedup --production
+        
+      - name: Build
+        run: |
           mkdir pkg
           ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
@@ -56,8 +62,14 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: |
-          npm i
+      - name: Install Dependencies
+        run: npm i
+
+      - name: Dedup
+        run: npm dedup --production
+
+      - name: Build
+        run: |
           mkdir pkg
           ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
@@ -73,8 +85,15 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: |
-          npm i
+
+      - name: Install Dependencies
+        run: npm i
+
+      - name: Dedup
+        run: npm dedup --production
+
+      - name: Build
+        run: |
           mkdir pkg
           npx caxa -i . -o "pkg/2bored2wait-linux-armv7-${{github.sha}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
       - uses: actions/upload-artifact@v3
