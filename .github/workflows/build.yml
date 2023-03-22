@@ -32,7 +32,7 @@ jobs:
 
       - name: Dedup
         run: npm dedup --production
-        
+
       - name: Build
         run: |
           mkdir pkg
@@ -45,11 +45,8 @@ jobs:
   backend-build-arm64:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
         include:
-          - os: windows-latest
-            build: npx pkg . --target node16-win-arm64
-            artifact: "2bored2wait-win-arm64-${{github.sha}}.exe"
           - os: macos-latest
             build: npx pkg . --target node16-macos-arm64
             artifact: "2bored2wait-macos-arm64-${{github.sha}}"
