@@ -48,16 +48,13 @@ jobs:
         os: [macos-latest, ubuntu-latest]
         include:
           - os: macos-latest
-            build: npx caxa -i . -o "pkg/2bored2wait-macos-arm64-${{github.sha}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            build: npx pkg . --target node16-macos-arm64
             artifact: "2bored2wait-macos-arm64-${{github.sha}}"
           - os: ubuntu-latest
             build: npx pkg . --target node16-linux-arm64
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
-    runs-on: ${{ matrix.os }} 
+    runs-on: ubuntu-latest
     steps:
-
-
-
       - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
@@ -119,7 +116,7 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
-          npx caxa -i . -o "pkg/2bored2wait-linux-armv7-${{github.sha}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+          npx pkg . --target node16-linux-armv7 -o "pkg/2bored2wait-linux-armv7"
       - uses: actions/upload-artifact@v3
         with:
           name: "2bored2wait-linux-armv7-${{github.sha}}"
