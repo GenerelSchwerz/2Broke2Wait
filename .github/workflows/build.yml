@@ -28,6 +28,7 @@ jobs:
         with:
           node-version: 16
       - run: |
+          npm i
           mkdir pkg
           ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
@@ -56,6 +57,7 @@ jobs:
         with:
           node-version: 16
       - run: |
+          npm i
           mkdir pkg
           ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
@@ -72,6 +74,7 @@ jobs:
         with:
           node-version: 16
       - run: |
+          npm i
           mkdir pkg
           npx caxa -i . -o "pkg/2bored2wait-linux-armv7-${{github.sha}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
       - uses: actions/upload-artifact@v3
