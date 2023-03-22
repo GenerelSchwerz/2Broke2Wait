@@ -7,108 +7,110 @@ on:
 
 jobs:
        
-  backend-build-x64:
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        include:
-          - os: windows-latest
-            build: npx pkg . --target node16-win-x64
-            artifact: "2bored2wait-win-x64-${{github.sha}}.exe"
-          - os: macos-latest
-            build: npx pkg . --target node16-macos-x64
-            artifact: "2bored2wait-macos-x64-${{github.sha}}"
-          - os: ubuntu-latest
-            build: npx pkg . --target node16-linux-x64
-            artifact: "2bored2wait-linux-x64-${{github.sha}}"
-    runs-on: ${{ matrix.os }} 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - name: Install Dependencies
-        run: npm i
+  # backend-build-x64:
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest, macos-latest, ubuntu-latest]
+  #       include:
+  #         - os: windows-latest
+  #           build: npx pkg . --target node16-win-x64
+  #           artifact: "2bored2wait-win-x64-${{github.sha}}.exe"
+  #         - os: macos-latest
+  #           build: npx pkg . --target node16-macos-x64
+  #           artifact: "2bored2wait-macos-x64-${{github.sha}}"
+  #         - os: ubuntu-latest
+  #           build: npx pkg . --target node16-linux-x64
+  #           artifact: "2bored2wait-linux-x64-${{github.sha}}"
+  #   runs-on: ${{ matrix.os }} 
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 16
+  #     - name: Install Dependencies
+  #       run: npm i
 
-      - name: Dedup
-        run: npm dedup --production
+  #     - name: Dedup
+  #       run: npm dedup --production
 
-      - name: Build
-        run: |
-          mkdir pkg
-          ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact }}
-          path: "pkg/${{matrix.artifact}}"
+  #     - name: Build
+  #       run: |
+  #         mkdir pkg
+  #         ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ matrix.artifact }}
+  #         path: "pkg/${{matrix.artifact}}"
 
-  backend-build-arm64:
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
-        include:
-          - os: macos-latest
-            build: npx pkg . --target node16-macos-arm64
-            artifact: "2bored2wait-macos-arm64-${{github.sha}}"
-          - os: ubuntu-latest
-            build: npx pkg . --target node16-linux-arm64
-            artifact: "2bored2wait-linux-arm64-${{github.sha}}"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  # backend-build-arm64:
+  #   strategy:
+  #     matrix:
+  #       os: [macos-latest, ubuntu-latest]
+  #       include:
+  #         - os: macos-latest
+  #           build: npx pkg . --target node16-macos-arm64
+  #           artifact: "2bored2wait-macos-arm64-${{github.sha}}"
+  #         - os: ubuntu-latest
+  #           build: npx pkg . --target node16-linux-arm64
+  #           artifact: "2bored2wait-linux-arm64-${{github.sha}}"
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - uses: uraimo/run-on-arch-action@v2.5.0
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ${{matrix.os}}
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 16
+  #     - uses: uraimo/run-on-arch-action@v2.5.0
+  #       name: Run commands
+  #       id: runcmd
+  #       with:
+  #         arch: aarch64
+  #         distro: ${{matrix.os}}
 
-          # Not required, but speeds up builds by storing container images in
-          # a GitHub package registry.
-          githubToken: ${{ github.token }}
-
-
-      - name: Install Dependencies
-        run: npm i
-
-      - name: Dedup
-        run: npm dedup --production
-
-      - name: Build
-        run: |
-          mkdir pkg
-          ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact }}
-          path: "pkg/${{matrix.artifact}}"
+  #         # Not required, but speeds up builds by storing container images in
+  #         # a GitHub package registry.
+  #         githubToken: ${{ github.token }}
 
 
-  backend-build-armv7:
+  #     - name: Install Dependencies
+  #       run: npm i
+
+  #     - name: Dedup
+  #       run: npm dedup --production
+
+  #     - name: Build
+  #       run: |
+  #         mkdir pkg
+  #         ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ matrix.artifact }}
+  #         path: "pkg/${{matrix.artifact}}"
+
+
+  armv7_job:
+    # The host should always be Linux
     runs-on: ubuntu-18.04
+    name: Build on ubuntu-18.04 armv7
     steps:
       - uses: actions/checkout@v3
-      - uses: uraimo/run-on-arch-action@v2.5.0
+      - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
         with:
           arch: armv7
-          distro: ubuntu-18.04
+          distro: ubuntu18.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
           githubToken: ${{ github.token }}
 
+          # Set an output parameter `uname` for use in subsequent steps
           run: |
             uname -a
             echo ::set-output name=uname::$(uname -a)
-            echo "shit"
-  
+
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
         run: |
