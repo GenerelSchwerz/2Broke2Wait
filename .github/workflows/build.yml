@@ -78,8 +78,17 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
-      
+
+          # Install some dependencies in the container. This speeds up builds if
+          # you are also using githubToken. Any dependencies installed here will
+          # be part of the container image that gets cached, so subsequent
+          # builds don't have to re-install them. The image layer is cached
+          # publicly in your project's package repository, so it is vital that
+          # no secrets are present in the container state or logs.
           install: |
+            apt-get update -q -y
+            apt-get install -q -y git
+            apt-get install -q -y wget
             wget https://deb.nodesource.com/setup_16.x | sudo -E bash -
             sudo apt install -y nodejs
 
@@ -132,8 +141,11 @@ jobs:
             --volume "${PWD}/artifacts:/artifacts"
       
           install: |
-            wget https://deb.nodesource.com/setup_16.x | sudo -E bash -
-            sudo apt install -y nodejs
+            apt-get update -q -y
+            apt-get install -q -y git
+            apt-get install -q -y wget
+            wget https://deb.nodesource.com/setup_16.x | bash -
+            apt install -y nodejs
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
