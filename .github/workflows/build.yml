@@ -7,78 +7,74 @@ on:
 
 jobs:
        
-  archive-build-artifacts:
-    runs-on: ubuntu-latest
+  backend-build-x64:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            build: npx pkg . --target node16-win-x64
+            artifact: "2bored2wait-win-x64-${{github.sha}}.exe"
+          - os: macos-latest
+            build: npx pkg . --target node16-macos-x64
+            artifact: "2bored2wait-macos-x64-${{github.sha}}"
+          - os: ubuntu-latest
+            build: npx pkg . --target node16-linux-x64
+            artifact: "2bored2wait-linux-x64-${{github.sha}}"
+    runs-on: ${{ matrix.os }} 
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Use Node16
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: 16
+      - run: |
+          mkdir pkg
+          ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact }}
+          path: "pkg/${{matrix.artifact}}"
 
-      - name: Create a temporary artifact downloads folder
-        run: mkdir pkg
-        
-      - name: Install all packages
-        run: npm install
-
-      - name: Build package to binaries
-        run: npx pkg . --target node16-linux-x64
-    
-      - name: Use the Upload Artifact GitHub Action (Linux)
-        uses: actions/upload-artifact@v3
-        with: 
-          name: 2broke2wait-linux
-          path: pkg
-
-      - name: Reset and build package to binaries
-        run: |
-          rm -rf pkg/* 
-          npx pkg . --target node16-macos-x64
-    
-      - name: Use the Upload Artifact GitHub Action (MacOS)
-        uses: actions/upload-artifact@v3
-        with: 
-          name: 2broke2wait-macos
-          path: pkg
-
-      - name: Reset and build package to binaries
-        run: |
-          rm -rf pkg/*
-          npx pkg . --target node16-win-x64
-
-      - name: Use the Upload Artifact GitHub Action (Windows)
-        uses: actions/upload-artifact@v3
-        with: 
-          name: 2broke2wait-win.exe
-          path: pkg
-
-      - name: Reset and build package to binaries
-        run: |
-          rm -rf pkg/*
-          npx pkg . --target node16-linux-arm64
+  backend-build-arm64:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            build: npx pkg . --target node16-win-arm64
+            artifact: "2bored2wait-win-arm64-${{github.sha}}.exe"
+          - os: macos-latest
+            build: npx pkg . --target node16-macos-arm64
+            artifact: "2bored2wait-macos-arm64-${{github.sha}}"
+          - os: ubuntu-latest
+            build: npx pkg . --target node16-linux-arm64
+            artifact: "2bored2wait-linux-arm64-${{github.sha}}"
+    runs-on: ${{ matrix.os }} 
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: |
+          mkdir pkg
+          ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact }}
+          path: "pkg/${{matrix.artifact}}"
 
 
-      - name: Use the Upload Artifact GitHub Action (Rasp Pi)
-        uses: actions/upload-artifact@v3
-        with: 
-          name: 2broke2wait-rasppi
-          path: pkg
-
-
-      - name: Reset and build package to binaries
-        run: |
-          rm -rf pkg/*
-          npx caxa -i . -o "." -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
-
-      - name: Use the Upload Artifact GitHub Action (Rasp Pi 32bit)
-        uses: actions/upload-artifact@v3
-        with: 
-          name: 2broke2wait-rasppi-x32
-          path: pkg
-
-
-  
+  backend-build-armv7:
+    runs-on: ubuntu-latest 
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: |
+          mkdir pkg
+          npx caxa -i . -o "pkg/2bored2wait-linux-armv7-${{github.sha}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "2bored2wait-linux-armv7-${{github.sha}}"
+          path: "pkg/2bored2wait-linux-armv7-${{github.sha}}"

@@ -7,9 +7,7 @@
   "license": "MIT",
   "main": "lib/index.js",
   "bin": "lib/index.js",
-  "pkg": {
-    "outputPath": "pkg"
-  },
+  
   "scripts": {
     "build": "npx tsc",
     "fix": "npx prettier . -w",
