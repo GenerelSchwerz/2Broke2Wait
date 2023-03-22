@@ -46,7 +46,7 @@ jobs:
   backend-build-arm64:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-18.04]
+        os: [macos-latest, ubuntu-latest]
         include:
           - os: macos-latest
             build: npx pkg . --target node16-macos-arm64
@@ -65,7 +65,7 @@ jobs:
         id: runcmd
         with:
           arch: aarch64
-          distro: ${{matrix.os}}
+          distro: ubuntu18.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
@@ -98,9 +98,10 @@ jobs:
   backend-build-armv7:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-18.04]
+        os: [macos-latest, ubuntu-latest]
         include:
           - os: macos-latest
+            distro: 
             build: npx pkg . --target node16-macos-armv7
             artifact: "2bored2wait-macos-arm64-${{github.sha}}"
           - os: ubuntu-latest
@@ -117,7 +118,7 @@ jobs:
         id: runcmd
         with:
           arch: armv7
-          distro: ${{matrix.os}}
+          distro: ubuntu18.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
