@@ -90,10 +90,11 @@ jobs:
             apt-get install -q -y git
             apt-get install -q -y wget
             wget https://deb.nodesource.com/setup_16.x | bash -
-            apt install -y nodejs
+            apt install -y nodejs npm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
+            echo $(node -e "const version = process.version; console.log(version)")   
             npm i
             npm dedup --production
             ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
@@ -145,10 +146,11 @@ jobs:
             apt-get install -q -y git
             apt-get install -q -y wget
             wget https://deb.nodesource.com/setup_16.x | bash -
-            apt install -y nodejs
+            apt-get install -y nodejs npm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
+            echo $(node -e "const version = process.version; console.log(version)")   
             npm i
             npm dedup --production
             ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
