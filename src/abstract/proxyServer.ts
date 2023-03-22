@@ -356,7 +356,6 @@ export abstract class ProxyServer<
   }
 
   private readonly loginHandler = (actualUser: ServerClient) => {
-    console.log("login", this.isProxyConnected())
     this.cmdHandler.updateClientCmds(actualUser)
     if (this.isProxyConnected()) this.whileConnectedLoginHandler(actualUser)
     else this.notConnectedLoginHandler(actualUser)

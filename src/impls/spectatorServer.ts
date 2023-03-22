@@ -71,7 +71,6 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
   // ======================= //
 
   public override start (): Conn {
-    console.log(this.isProxyConnected())
     if (this.isProxyConnected()) return this.proxy as Conn
     const conn = super.start()
     this.setupMiddleware()
@@ -87,7 +86,9 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
       this.message(client, 'Cannot get into the view. You are controlling the bot')
       return
     }
-    return this.fakeSpectator?.makeViewingBotPov(client)
+    if (!this.fakeSpectator) return false;
+    this.fakeSpectator.register(client);
+    return this.fakeSpectator.makeViewingBotPov(client) 
   }
 
   makeViewNormal (client: ServerClient | Client) {
@@ -299,9 +300,10 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
           return
         }
         if (args.length !== 0) {
-          this.proxy!.write('chat', { message: ['/tp', ...args].join(' ') })
+          // this.proxy!.write('chat', { message: ['/tp', ...args].join(' ') })
           // this.fakeSpectator?.revertPov(client);
-          // this.fakeSpectator?.tpToCoords(client, ...args.map(Number));
+          console.log(args.map(Number))
+          this.fakeSpectator?.tpToCoords(client, ...args.map(Number));
           return
         }
         this.fakeSpectator?.revertPov(client)

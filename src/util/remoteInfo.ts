@@ -135,7 +135,7 @@ export async function waitUntilStartingTime (
     return await queueTask.promise
   }
 
-  queueTask = Task.createTask<boolean>()
+  queueTask = Task.createTask()
 
   try {
     const res = await fetch('https://2b2t.io/api/queue')

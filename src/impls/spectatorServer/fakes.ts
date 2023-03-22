@@ -390,7 +390,6 @@ class SpectatorInfo {
       this.position = new Vec3(data.x, data.y, data.z)
       this.onGround = data.onGround
     }
-    console.log(meta.name)
     if (meta.name.includes('look')) {
       this.yaw = data.yaw
       this.pitch = data.pitch
@@ -463,6 +462,14 @@ export class FakeSpectator {
   }
 
   tpToCoords (client: Client | ServerClient, x?: number, y?: number, z?: number) {
+    console.log({
+      x: x && !isNaN(x) ? x : this.clientsInCamera[client.uuid].position.x,
+      y: y && !isNaN(y) ? y : this.clientsInCamera[client.uuid].position.y,
+      z: z && !isNaN(z) ? z : this.clientsInCamera[client.uuid].position.z
+      // yaw: this.clientsInCamera[client.uuid].yaw,
+      // pitch: this.clientsInCamera[client.uuid].pitch,
+      // onGround: this.clientsInCamera[client.uuid].onGround
+    })
     this.writeRaw(client, 'position', {
       x: x && !isNaN(x) ? x : this.clientsInCamera[client.uuid].position.x,
       y: y && !isNaN(y) ? y : this.clientsInCamera[client.uuid].position.y,
@@ -488,7 +495,10 @@ export class FakeSpectator {
         console.warn('Already in the camera', client.username)
         return false
       }
+    } else {
+      this.register(client);
     }
+    
     this.writeRaw(client, 'camera', {
       cameraId: FakePlayer.fakePlayerId
     })
@@ -522,8 +532,7 @@ export class FakeSpectator {
     this.writeRaw(client, 'camera', {
       cameraId: this.bot.entity.id
     })
-    this.clientsInCamera[client.uuid].cleanup()
-    this.clientsInCamera[client.uuid].status = false
+    this.unregister(client);
     return true
   }
 }
