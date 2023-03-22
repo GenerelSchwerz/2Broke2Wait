@@ -87,15 +87,14 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             apt-get update -q -y
-            apt-get install -q -y git
-            apt-get install -q -y wget
-            wget https://deb.nodesource.com/setup_16.x | bash -
+            apt-get install -q -y curl
+            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt install -y nodejs npm
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             echo $(node -e "const version = process.version; console.log(version)")   
-            npm i
+            npm install
             npm dedup --production
             ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
 
@@ -143,9 +142,8 @@ jobs:
       
           install: |
             apt-get update -q -y
-            apt-get install -q -y git
-            apt-get install -q -y wget
-            wget https://deb.nodesource.com/setup_16.x | bash -
+            apt-get install -q -y curl
+            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -y nodejs npm
 
           # Set an output parameter `uname` for use in subsequent steps
