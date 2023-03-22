@@ -80,8 +80,7 @@ jobs:
             --volume "${PWD}/artifacts:/artifacts"
       
           install: |
-            apt install -y curl
-            curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+            wget https://deb.nodesource.com/setup_16.x | sudo -E bash -
             sudo apt install -y nodejs
 
           # Set an output parameter `uname` for use in subsequent steps
@@ -133,8 +132,7 @@ jobs:
             --volume "${PWD}/artifacts:/artifacts"
       
           install: |
-            apt install -y curl
-            curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+            wget https://deb.nodesource.com/setup_16.x | sudo -E bash -
             sudo apt install -y nodejs
 
           # Set an output parameter `uname` for use in subsequent steps
