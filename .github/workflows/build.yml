@@ -55,10 +55,26 @@ jobs:
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
     runs-on: ${{ matrix.os }} 
     steps:
+
+
+
       - uses: actions/checkout@v3
+
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: arm64
+          distro: ${{matrix.os}}
+
+          # Not required, but speeds up builds by storing container images in
+          # a GitHub package registry.
+          githubToken: ${{ github.token }}
+
+
       - name: Install Dependencies
         run: npm i
 
@@ -69,6 +85,7 @@ jobs:
         run: |
           mkdir pkg
           ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
@@ -82,7 +99,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: armv7
+          distro: ubuntu-latest
 
+          # Not required, but speeds up builds by storing container images in
+          # a GitHub package registry.
+          githubToken: ${{ github.token }}
+  
       - name: Install Dependencies
         run: npm i
 
