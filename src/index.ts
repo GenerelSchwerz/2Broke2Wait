@@ -186,7 +186,6 @@ inp.on('line', (inp) => {
       } else {
         console.log('Proxy is not connected.')
       }
-
       if (afkServer.isPlayerConnected()) {
         console.log('Player connected.')
       } else {
