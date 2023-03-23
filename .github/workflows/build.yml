@@ -91,8 +91,7 @@ jobs:
             apt-get autoremove
             apt-get remove nodejs
             apt-get remove npm
-            apt-get install -q -y curl
-            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+            wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt install -y nodejs npm
 
           # Set an output parameter `uname` for use in subsequent steps
@@ -145,13 +144,8 @@ jobs:
       
           install: |
             apt-get update -q -y
-            apt-get clean
-            apt-get autoremove
-            apt-get remove nodejs
-            apt-get remove npm
-            apt-get install -q -y curl
-            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
-            apt-get install -y nodejs npm
+            wget -O - https://deb.nodesource.com/setup_16.x | bash -
+            apt-get install -y nodejs
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
