@@ -97,6 +97,9 @@ jobs:
           run: |
             ls -l   
             echo $HOME
+            pwd
+            su runner
+            echo $HOME
             echo $(node -e "const version = process.version; console.log(version)")   
             npm install
             npm dedup --production
@@ -152,6 +155,9 @@ jobs:
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             ls -l   
+            echo $HOME
+            pwd
+            su runner
             echo $HOME
             echo $(node -e "const version = process.version; console.log(version)")   
             npm i
