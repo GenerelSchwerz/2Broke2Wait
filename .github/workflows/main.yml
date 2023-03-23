@@ -80,6 +80,7 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
+            --volume /etc/passwd:/etc/passwd
 
           # Install some dependencies in the container. This speeds up builds if
           # you are also using githubToken. Any dependencies installed here will
@@ -140,6 +141,7 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
+            --volume /etc/passwd:/etc/passwd
       
           install: |
             apt-get update -q -y
