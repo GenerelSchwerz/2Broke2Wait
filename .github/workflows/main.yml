@@ -96,7 +96,8 @@ jobs:
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
-            mkdir -p ~/.ssh/known_hosts
+            echo $HOME
+            mkdir -p $HOME/.ssh
             echo $(node -e "const version = process.version; console.log(version)")   
             npm install
             npm dedup --production
