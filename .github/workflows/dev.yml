@@ -100,6 +100,7 @@ jobs:
             pwd
             id
             echo $HOME
+            chown -R runner /home/runner
             echo $(node -e "const version = process.version; console.log(version)")   
             npm install
             npm dedup --production
@@ -159,6 +160,7 @@ jobs:
             pwd
             id
             echo $HOME
+            chown -R runner /home/runner
             echo $(node -e "const version = process.version; console.log(version)")   
             npm i
             npm dedup --production
