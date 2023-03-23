@@ -3,11 +3,11 @@ name: Build To Executable
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev ]
 
 jobs:
        
-  backend-build-x64:
+  build_dev_x64:
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
@@ -21,7 +21,9 @@ jobs:
           - os: ubuntu-latest
             build: npx pkg . --target node16-linux-x64
             artifact: "2bored2wait-linux-x64-${{github.sha}}"
+
     runs-on: ${{ matrix.os }} 
+    name: Build x64 development version
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -43,7 +45,7 @@ jobs:
           path: "pkg/${{matrix.artifact}}"
 
 
-  backend-build-arm64:
+  build_dev_arm64:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
@@ -57,7 +59,7 @@ jobs:
 
     # The host should always be Linux
     runs-on: ubuntu-18.04
-    name: Build on ubuntu-18.04 aarch64
+    name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
       - uses: uraimo/run-on-arch-action@v2
@@ -103,7 +105,7 @@ jobs:
           name: ${{ matrix.artifact }}
           path: "${PWD}/artifacts/${{matrix.artifact}}"
 
-  backend-build-armv7:
+  build_dev_armv7:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
@@ -117,7 +119,7 @@ jobs:
 
     # The host should always be Linux
     runs-on: ubuntu-18.04
-    name: Build on ubuntu-18.04 armv7
+    name: Build armv7 development version
     steps:
       - uses: actions/checkout@v3
       - uses: uraimo/run-on-arch-action@v2
