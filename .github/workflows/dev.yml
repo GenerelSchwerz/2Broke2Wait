@@ -98,7 +98,8 @@ jobs:
             ls -l   
             echo $HOME
             pwd
-            su runner
+            id
+            id 1001
             echo $HOME
             echo $(node -e "const version = process.version; console.log(version)")   
             npm install
@@ -157,7 +158,8 @@ jobs:
             ls -l   
             echo $HOME
             pwd
-            su runner
+            id
+            id 1001
             echo $HOME
             echo $(node -e "const version = process.version; console.log(version)")   
             npm i
