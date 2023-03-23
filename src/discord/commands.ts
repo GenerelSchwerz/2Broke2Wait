@@ -23,8 +23,7 @@ export class QueueCommands {
     const mcServer = client.mcServer;
 
     if (!mcServer.isProxyConnected()) {
-      interaction.reply("We are not connected to the server!");
-      return;
+      return await interaction.reply("We are not connected to the server!");
     }
 
     if (username !== '/0all') {
@@ -36,9 +35,9 @@ export class QueueCommands {
 
     const spot = mcServer.queue.lastPos;
 
-    if (Number.isNaN(spot)) interaction.reply("fuck, couldn't get thingy.");
+    if (Number.isNaN(spot)) return await interaction.reply(`Queue position for ${mcServer.bOpts.username} unknown!.`);
 
-    interaction.reply(`Queue pos: ${spot}`);
+    interaction.reply(`Queue pos for ${mcServer.remoteBot?.username}: ${spot}`);
   }
 
   @Slash({ description: "Check queue position and other additional info." })

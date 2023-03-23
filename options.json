@@ -1,8 +1,8 @@
 {
   "discord": {
     "bot": {
-      "enabled": false,
-      "botToken": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GsLhvx.YmxcQuqgblEdmOnkTw7YcztHLh8FAOGFi0-yc",
+      "enabled": true,
+      "botToken": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GsLhvx.YmxcQuqgblEdmOnkTw7YcztHLh8FAOGFi09-yc",
       "prefix": "!"
     },
     "webhooks": {
