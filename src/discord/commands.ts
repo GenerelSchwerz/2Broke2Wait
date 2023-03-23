@@ -22,14 +22,15 @@ export class QueueCommands {
     // lazy, don't care anymore.
     const mcServer = client.mcServer;
 
+    if (username !== '/0all') {
+      // do not reply w/ this bot instance if a username is specified AND it does not match.
+      if (mcServer.bOpts.username !== username) return;
+    }
+
     if (!mcServer.isProxyConnected()) {
       return await interaction.reply("We are not connected to the server!");
     }
 
-    if (username !== '/0all') {
-      // do not reply w/ this bot instance if a username is specified AND it does not match.
-      if (!mcServer.remoteBot?.username.includes(username)) return;
-    }
 
     if (mcServer.queue == null) return await interaction.reply("No queue loaded!");
 
@@ -37,13 +38,29 @@ export class QueueCommands {
 
     if (Number.isNaN(spot)) return await interaction.reply(`Queue position for ${mcServer.bOpts.username} unknown!.`);
 
-    interaction.reply(`Queue pos for ${mcServer.remoteBot?.username}: ${spot}`);
+    interaction.reply(`Queue pos for ${mcServer.bOpts.username}: ${spot}`);
   }
 
   @Slash({ description: "Check queue position and other additional info." })
-  async info(interaction: CommandInteraction, client: Client) {
+  async info(
+    @SlashOption({
+      description: "specific username for info",
+      name: "username",
+      required: false,
+      type: ApplicationCommandOptionType.String,
+    })
+    username: string = '/0all',
+    
+    interaction: CommandInteraction, client: Client) {
     // lazy, don't care anymore.
     const mcServer = client.mcServer;
+
+
+    if (username !== '/0all') {
+      // do not reply w/ this bot instance if a username is specified AND it does not match.
+      if (mcServer.bOpts.username !== username) return;
+    }
+
 
     if (!mcServer.isProxyConnected()) {
       interaction.reply("We are not connected to the server!");
@@ -62,7 +79,11 @@ export class QueueCommands {
       eta = "Unknown (ETA is NaN)";
     }
 
-    interaction.reply(`Queue pos: ${mcServer.queue.lastPos}\n` + `Queue ETA: ${eta}\n` + "Joining at: ");
+    let str = `Queue pos: ${mcServer.queue.lastPos}\nQueue ETA: ${eta}`;
+    if (joiningAt) {
+      str += `\nJoining at: ${joiningAt}`
+    }
+    await interaction.reply(str);
   }
 }
 
@@ -71,9 +92,23 @@ export class QueueCommands {
 @SlashGroup("local")
 export class LocalServerCommands {
   @Slash({ description: "Start local server." })
-  async start(interaction: CommandInteraction, client: Client) {
+  async start(
+    
+    @SlashOption({
+      description: "specific username to start. This matches to CONFIG'S username.",
+      name: "username",
+      required: false,
+      type: ApplicationCommandOptionType.String,
+    })
+    username: string = '/0all',
+    interaction: CommandInteraction, client: Client) {
     // lazy, don't care anymore.
     const mcServer = client.mcServer;
+
+    if (username !== '/0all') {
+      // skip if specified username AND specified does not match local instance
+      if (mcServer.bOpts.username !== username) return;
+    }
 
     if (mcServer.isProxyConnected()) {
       interaction.reply("We are already connected to the server!");
@@ -82,13 +117,27 @@ export class LocalServerCommands {
 
     mcServer.start();
 
-    interaction.reply("Server started!");
+    await interaction.reply("Server started!");
   }
 
   @Slash({ description: "Stop local server." })
-  async stop(interaction: CommandInteraction, client: Client) {
+  async stop(
+    @SlashOption({
+      description: "specific username to start. This matches to REMOTE'S username.",
+      name: "username",
+      required: false,
+      type: ApplicationCommandOptionType.String,
+    })
+    username: string = '/0all',
+    
+    interaction: CommandInteraction, client: Client) {
     // lazy, don't care anymore.
     const mcServer = client.mcServer;
+
+    if (username !== '/0all') {
+      // skip if specified username AND specified does not match local instance
+      if (mcServer.bOpts.username !== username) return;
+    }
 
     if (!mcServer.isProxyConnected()) {
       interaction.reply("We are already disconnected from the server!");
@@ -118,18 +167,29 @@ export class LocalServerCommands {
       type: ApplicationCommandOptionType.Number,
     })
     minute: number,
+
+    @SlashOption({
+      description: "specific username to start at time. Matches CONFIG'S username.",
+      name: "username",
+      required: false,
+      type: ApplicationCommandOptionType.String,
+    })
+    username: string = '/0all',
     interaction: CommandInteraction,
     client: Client
   ) {
     // lazy, don't care anymore.
     const mcServer = client.mcServer;
 
+    if (username !== '/0all') {
+      // skip if specified username AND specified does not match local instance
+      if (mcServer.bOpts.username !== username) return;
+    }
+
     if (mcServer.isProxyConnected()) {
       interaction.reply("We are already connected to the server!");
       return;
     }
-
-    // mcServer.playat(hour, minute);
 
     const secondsTilStart = await tentativeStartTime(hour, minute);
     const hoursTilStart = Math.floor(secondsTilStart / 3600);
@@ -141,56 +201,6 @@ export class LocalServerCommands {
       interaction.reply(
         `To play at ${data.toFormat("MM/dd hh:mm a").toLowerCase()}, ` +
           `the server will start in ${hoursTilStart} hours and ${minutesTilStart} minutes!\n` +
-          `Start time: ${dateStart.toFormat("hh:mm a, MM/dd/yyyy")}`
-      );
-    } else {
-      interaction.reply(
-        `To play at ${data.toFormat("MM/dd hh:mm a").toLowerCase()}, ` +
-          "the server should right now!\n" +
-          `Start time: ${DateTime.local().toFormat("hh:mm a, MM/dd/yyyy")}`
-      );
-    }
-  }
-
-  @Slash({
-    description: "Attempt to start server so that the bot is ready to play at a certain time.",
-  })
-  async startwhen(
-    @SlashOption({
-      description: "hour value",
-      name: "hour",
-      required: true,
-      type: ApplicationCommandOptionType.Number,
-    })
-    hour: number,
-    @SlashOption({
-      description: "minute value",
-      name: "minute",
-      required: true,
-      type: ApplicationCommandOptionType.Number,
-    })
-    minute: number,
-    interaction: CommandInteraction,
-    client: Client
-  ) {
-    // lazy, don't care anymore.
-    const mcServer = client.mcServer;
-
-    if (mcServer.isProxyConnected()) {
-      interaction.reply("We are already connected to the server!");
-      return;
-    }
-
-    const data = hourAndMinToDateTime(hour, minute);
-    const secondsTilStart = await tentativeStartTime(hour, minute);
-    const hoursTilStart = Math.floor(secondsTilStart / 3600);
-    const minutesTilStart = Math.ceil((secondsTilStart - hoursTilStart * 3600) / 60);
-
-    const dateStart = DateTime.local().plus({ seconds: secondsTilStart });
-    if (secondsTilStart > 0) {
-      interaction.reply(
-        `To play at ${data.toFormat("MM/dd hh:mm a").toLowerCase()}, ` +
-          `the server should start in ${hoursTilStart} hours and ${minutesTilStart} minutes.\n` +
           `Start time: ${dateStart.toFormat("hh:mm a, MM/dd/yyyy")}`
       );
     } else {
