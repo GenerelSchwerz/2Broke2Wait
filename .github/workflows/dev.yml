@@ -99,7 +99,6 @@ jobs:
             echo $HOME
             pwd
             id
-            id 1001
             echo $HOME
             echo $(node -e "const version = process.version; console.log(version)")   
             npm install
@@ -159,7 +158,6 @@ jobs:
             echo $HOME
             pwd
             id
-            id 1001
             echo $HOME
             echo $(node -e "const version = process.version; console.log(version)")   
             npm i
