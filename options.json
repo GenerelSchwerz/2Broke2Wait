@@ -35,6 +35,11 @@
       "maxPlayers": 1
     },
     "localServerOptions": {
+      "motdOptions": {
+        "prefix": ""
+      }
+    },
+    "localServerProxyConfig": {
       "restartOnDisconnect": false,
       "security": {
         "allowList": null,

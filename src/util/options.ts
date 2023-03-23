@@ -37,9 +37,14 @@ export interface Options {
       port: number
       version: string
       'online-mode': boolean
-      maxPlayers: number
+      maxPlayers: number,
+    },
+    localServerOptions: {
+      motdOptions: {
+        prefix: string
+      }
     }
-    localServerOptions: ServerSpectatorOptions
+    localServerProxyConfig: ServerSpectatorOptions
   }
 }
 

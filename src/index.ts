@@ -39,7 +39,7 @@ const afkServer = SpectatorServer.wrapServer(
   rawServer,
   botOptions,
   {},
-  checkedConfig.minecraft.localServerOptions
+  checkedConfig.minecraft.localServerProxyConfig
 )
 
 afkServer.on('breath', (bot) => {
@@ -132,9 +132,14 @@ function getServerName (): string {
   )
 }
 
+function setServerMotd(message: string) {
+  rawServer.motd = checkedConfig.minecraft.localServerOptions.motdOptions.prefix + message
+}
+
+
 function queueServerMotd (oldPos: number, newPos: number, eta: number) {
   if (Number.isNaN(eta)) {
-    rawServer.motd = `Pos: ${newPos} | ETA: Unknown.`
+    setServerMotd(`Pos: ${newPos} | ETA: Unknown.`)
     return
   }
 
@@ -145,19 +150,19 @@ function queueServerMotd (oldPos: number, newPos: number, eta: number) {
 }
 
 function disconnectedServerMotd () {
-  rawServer.motd = `Disconnected from ${getServerName()}`
+  setServerMotd(`Disconnected from ${getServerName()}`)
 }
 
 function queueEnterMotd () {
-  rawServer.motd = `Entered queue on ${getServerName()}`
+  setServerMotd(`Entered queue on ${getServerName()}`)
 }
 
 function inGameServerMotd () {
-  rawServer.motd = `Playing on ${getServerName()}!`
+  setServerMotd(`Playing on ${getServerName()}!`)
 }
 
 function botUpdatesMotd (bot: Bot) {
-  rawServer.motd = `Health: ${bot.health.toFixed(2)}, Hunger: ${bot.food.toFixed(2)}`
+  setServerMotd(`Health: ${bot.health.toFixed(2)}, Hunger: ${bot.food.toFixed(2)}`)
 }
 
 /// //////////////////////////////////////////
