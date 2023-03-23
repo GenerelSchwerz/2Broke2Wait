@@ -383,6 +383,8 @@ class SpectatorInfo {
     this.cleanup = cleanup
     this.position = position
     this._status = status
+
+    this.client.on("packet", this.posListener)
   }
 
   posListener = (data: any, meta: PacketMeta) => {
@@ -455,7 +457,7 @@ export class FakeSpectator {
     })
   }
 
-  tpToOrigin (client: Client | ServerClient) {
+  tpToFakePlayer (client: Client | ServerClient) {
     this.writeRaw(client, 'position', {
       ...this.bot.entity.position
     })
@@ -473,10 +475,10 @@ export class FakeSpectator {
     this.writeRaw(client, 'position', {
       x: x && !isNaN(x) ? x : this.clientsInCamera[client.uuid].position.x,
       y: y && !isNaN(y) ? y : this.clientsInCamera[client.uuid].position.y,
-      z: z && !isNaN(z) ? z : this.clientsInCamera[client.uuid].position.z
-      // yaw: this.clientsInCamera[client.uuid].yaw,
-      // pitch: this.clientsInCamera[client.uuid].pitch,
-      // onGround: this.clientsInCamera[client.uuid].onGround
+      z: z && !isNaN(z) ? z : this.clientsInCamera[client.uuid].position.z,
+      yaw: this.clientsInCamera[client.uuid].yaw,
+      pitch: this.clientsInCamera[client.uuid].pitch,
+      onGround: this.clientsInCamera[client.uuid].onGround
     })
   }
 
@@ -503,7 +505,6 @@ export class FakeSpectator {
       cameraId: FakePlayer.fakePlayerId
     })
     const updatePos = () => {
-      this.clientsInCamera[client.uuid].position = this.bot.entity.position.clone() // link pos
       this.writeRaw(client, 'position', {
         ...this.bot.entity.position,
         yaw: 180 - (this.bot.entity.yaw * 180) / Math.PI,
@@ -514,7 +515,6 @@ export class FakeSpectator {
     updatePos()
     const onMove = () => updatePos()
     const cleanup = () => {
-      this.clientsInCamera[client.uuid].position = this.bot.entity.position.clone() // unlink pos
       this.bot.removeListener('move', onMove)
       this.bot.removeListener('end', cleanup)
       client.removeListener('end', cleanup)

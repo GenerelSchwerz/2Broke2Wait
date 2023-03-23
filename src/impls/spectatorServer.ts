@@ -294,20 +294,18 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
         if (res1) this.message(client, 'Disconnecting from view. Type /view to connect')
       },
 
-      tp: (client, ...args) => {
+      tpto: (client, ...args) => {
         if (client.uuid === this._proxy?.pclient?.uuid) {
           this.message(client, 'Cannot tp. You are controlling the bot.')
           return
         }
-        if (args.length !== 0) {
-          // this.proxy!.write('chat', { message: ['/tp', ...args].join(' ') })
-          // this.fakeSpectator?.revertPov(client);
-          console.log(args.map(Number))
-          this.fakeSpectator?.tpToCoords(client, ...args.map(Number));
-          return
+
+        if (this.fakeSpectator?.clientsInCamera[client.uuid].status) {
+          this.message(client, `You are viewing the bot's perspective.`)
         }
+
         this.fakeSpectator?.revertPov(client)
-        this.fakeSpectator?.tpToOrigin(client)
+        this.fakeSpectator?.tpToFakePlayer(client)
       }
 
       // removed due to issue with prismarine-world storage.
