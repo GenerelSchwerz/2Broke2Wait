@@ -53,3 +53,4 @@ Currently supports CLI, a discord bot for commands, and discord webhooks for inf
 ### Known Issues:
 
 1. Program's strong event structure is ugly
+
