@@ -134,11 +134,11 @@ export const configSchema = joi.object({
               .default("")
               .required()
               .description("Prefix to standard MOTD (color codes here)"),
-          }),
+          }).required().description('All options for the server\'s MOTD'),
         })
         .default()
         .description("Configuration for local server, unrelated to proxy settings."),
-      localServerProxyOptions: joi
+      localServerProxyConfig: joi
         .object({
           restartOnDisconnect: joi
             .boolean()

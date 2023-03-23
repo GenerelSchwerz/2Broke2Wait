@@ -37,7 +37,8 @@
     "localServerOptions": {
       "motdOptions": {
         "prefix": ""
-      }
+      },
+      "icon": "/home/generel/Pictures/2b2w-small.png"
     },
     "localServerProxyConfig": {
       "restartOnDisconnect": false,

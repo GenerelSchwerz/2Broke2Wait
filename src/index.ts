@@ -8,7 +8,7 @@ import type { Bot } from 'mineflayer'
 import * as fs from 'fs'
 
 import { validateOptions } from './util/config'
-import { botOptsFromConfig, Options } from './util/options'
+import { botOptsFromConfig, Options, serverOptsFromConfig } from './util/options'
 import { Duration } from 'ts-luxon'
 import { createServer } from 'minecraft-protocol'
 import { buildClient } from './discord/index'
@@ -32,8 +32,10 @@ const checkedConfig: Options = validateOptions(config)
 
 const botOptions = botOptsFromConfig(checkedConfig)
 
-const rawServer = createServer(checkedConfig.minecraft.localServer)
+const serverOptions = serverOptsFromConfig(checkedConfig);
 
+const rawServer = createServer(serverOptions)
+console.log(rawServer.favicon)
 const afkServer = SpectatorServer.wrapServer(
   true,
   rawServer,

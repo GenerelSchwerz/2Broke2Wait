@@ -1,5 +1,7 @@
 import type { BotOptions } from 'mineflayer'
+import type {ServerOptions} from 'minecraft-protocol'
 import merge from 'ts-deepmerge'
+import {readFileSync} from 'fs'
 import { ServerSpectatorOptions } from '../impls/spectatorServer/utils'
 
 // Minecraft and discord options such as discord bot prefix and minecraft login info
@@ -42,7 +44,8 @@ export interface Options {
     localServerOptions: {
       motdOptions: {
         prefix: string
-      }
+      },
+      icon: string
     }
     localServerProxyConfig: ServerSpectatorOptions
   }
@@ -57,4 +60,21 @@ export function botOptsFromConfig (opts: Options): BotOptions {
     delete fuck.password // Allows for first-time microsoft sign-in.
   }
   return fuck
+}
+
+
+export function serverOptsFromConfig(opts: Options): ServerOptions {
+  const shit: ServerOptions = opts.minecraft.localServer;
+  const iconPath = opts.minecraft.localServerOptions.icon
+  let realIcon;
+  if (!!opts.minecraft.localServerOptions.icon) {
+    if (iconPath.includes("http://") || iconPath.includes("https://")) {
+      // todo
+    }
+    else {
+      realIcon = readFileSync(iconPath).toString("base64");
+    }
+  }
+  shit.favicon = realIcon;
+  return shit;
 }
