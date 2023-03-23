@@ -25,7 +25,7 @@ export function validateOptions<T extends object> (options: any): T {
     for (let i = 0; i < validationErrors.details.length; i++) {
       // Print helpful color-coded errors to console
       const error = validationErrors.details[i]
-      console.log('\x1b[33m', 'ERROR #' + i + ': ' + error.message)
+      console.log('\x1b[33m', 'ERROR #' + (i + 1) + ': ' + error.message)
       console.log('\x1b[32m', '- Invalid Value: ' + error.context?.value)
       console.log('\x1b[32m', '- Should Be Type: ' + error.type)
       if (i !== validationErrors.details.length) {

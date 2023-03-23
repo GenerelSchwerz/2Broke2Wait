@@ -131,7 +131,7 @@ export async function waitUntilStartingTime (
   hour: number,
   minute: number
 ): Promise<boolean> {
-  if (queueTask.done) {
+  if (!queueTask.done) {
     return await queueTask.promise
   }
 

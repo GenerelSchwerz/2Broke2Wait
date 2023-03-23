@@ -2,7 +2,7 @@ import { CommandInteraction, OAuth2Scopes, ApplicationCommandOptionType } from "
 
 import { Client, Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { DateTime, Duration } from "ts-luxon";
-import { hourAndMinToDateTime, pingTime, tentativeStartTime } from "../util/remoteInfo";
+import { hourAndMinToDateTime, pingTime, tentativeStartTime, waitUntilStartingTime } from "../util/remoteInfo";
 
 @Discord()
 @SlashGroup({ description: "Queue related commands", name: "queue" })
@@ -92,7 +92,7 @@ export class LocalServerCommands {
   @Slash({ description: "Start local server." })
   async start(
     @SlashOption({
-      description: "specific username to start. This matches to CONFIG'S username.",
+      description: "specific username to start.",
       name: "username",
       required: false,
       type: ApplicationCommandOptionType.String,
@@ -121,7 +121,7 @@ export class LocalServerCommands {
   @Slash({ description: "Stop local server." })
   async stop(
     @SlashOption({
-      description: "specific username to start. This matches to REMOTE'S username.",
+      description: "specific username to start.",
       name: "username",
       required: false,
       type: ApplicationCommandOptionType.String,
@@ -208,6 +208,9 @@ export class LocalServerCommands {
           `Start time: ${DateTime.local().toFormat("hh:mm a, MM/dd/yyyy")}`
       );
     }
+
+    await waitUntilStartingTime(hoursTilStart, minutesTilStart)
+    mcServer.start();
   }
 }
 

@@ -2,7 +2,7 @@
   "discord": {
     "bot": {
       "enabled": true,
-      "botToken": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G1nR1T.yMZsRo5AgSZ8t6SkTnuGftPVItdw4SoI4mjJh",
+      "botToken": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G1nR1T.yMZsRo5AgSZ8t6SkTnuGftPVItdw4SoI4mjJhE",
       "prefix": "!"
     },
     "webhooks": {
@@ -23,7 +23,7 @@
       "auth": "microsoft"
     },
     "remoteServer": {
-      "host": "localhost",
+      "host": "2b2t.org",
       "port": 25565,
       "version": "1.12.2"
     },
