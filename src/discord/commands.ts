@@ -10,19 +10,19 @@ import { hourAndMinToDateTime, pingTime, tentativeStartTime } from "../util/remo
 export class QueueCommands {
   @Slash({ description: "Get queue position." })
   async pos(
-    
     @SlashOption({
       description: "specific username",
       name: "username",
       required: false,
       type: ApplicationCommandOptionType.String,
     })
-    username: string = '/0all',
-    interaction: CommandInteraction, client: Client) {
-    // lazy, don't care anymore.
+    username: string = "/0all",
+    interaction: CommandInteraction,
+    client: Client
+  ) {
     const mcServer = client.mcServer;
 
-    if (username !== '/0all') {
+    if (username !== "/0all") {
       // do not reply w/ this bot instance if a username is specified AND it does not match.
       if (mcServer.bOpts.username !== username) return;
     }
@@ -30,7 +30,6 @@ export class QueueCommands {
     if (!mcServer.isProxyConnected()) {
       return await interaction.reply("We are not connected to the server!");
     }
-
 
     if (mcServer.queue == null) return await interaction.reply("No queue loaded!");
 
@@ -49,18 +48,17 @@ export class QueueCommands {
       required: false,
       type: ApplicationCommandOptionType.String,
     })
-    username: string = '/0all',
-    
-    interaction: CommandInteraction, client: Client) {
-    // lazy, don't care anymore.
+    username: string = "/0all",
+
+    interaction: CommandInteraction,
+    client: Client
+  ) {
     const mcServer = client.mcServer;
 
-
-    if (username !== '/0all') {
+    if (username !== "/0all") {
       // do not reply w/ this bot instance if a username is specified AND it does not match.
       if (mcServer.bOpts.username !== username) return;
     }
-
 
     if (!mcServer.isProxyConnected()) {
       interaction.reply("We are not connected to the server!");
@@ -81,7 +79,7 @@ export class QueueCommands {
 
     let str = `Queue pos: ${mcServer.queue.lastPos}\nQueue ETA: ${eta}`;
     if (joiningAt) {
-      str += `\nJoining at: ${joiningAt}`
+      str += `\nJoining at: ${joiningAt}`;
     }
     await interaction.reply(str);
   }
@@ -93,19 +91,19 @@ export class QueueCommands {
 export class LocalServerCommands {
   @Slash({ description: "Start local server." })
   async start(
-    
     @SlashOption({
       description: "specific username to start. This matches to CONFIG'S username.",
       name: "username",
       required: false,
       type: ApplicationCommandOptionType.String,
     })
-    username: string = '/0all',
-    interaction: CommandInteraction, client: Client) {
-    // lazy, don't care anymore.
+    username: string = "/0all",
+    interaction: CommandInteraction,
+    client: Client
+  ) {
     const mcServer = client.mcServer;
 
-    if (username !== '/0all') {
+    if (username !== "/0all") {
       // skip if specified username AND specified does not match local instance
       if (mcServer.bOpts.username !== username) return;
     }
@@ -128,13 +126,14 @@ export class LocalServerCommands {
       required: false,
       type: ApplicationCommandOptionType.String,
     })
-    username: string = '/0all',
-    
-    interaction: CommandInteraction, client: Client) {
-    // lazy, don't care anymore.
+    username: string = "/0all",
+
+    interaction: CommandInteraction,
+    client: Client
+  ) {
     const mcServer = client.mcServer;
 
-    if (username !== '/0all') {
+    if (username !== "/0all") {
       // skip if specified username AND specified does not match local instance
       if (mcServer.bOpts.username !== username) return;
     }
@@ -174,14 +173,13 @@ export class LocalServerCommands {
       required: false,
       type: ApplicationCommandOptionType.String,
     })
-    username: string = '/0all',
+    username: string = "/0all",
     interaction: CommandInteraction,
     client: Client
   ) {
-    // lazy, don't care anymore.
     const mcServer = client.mcServer;
 
-    if (username !== '/0all') {
+    if (username !== "/0all") {
       // skip if specified username AND specified does not match local instance
       if (mcServer.bOpts.username !== username) return;
     }
@@ -227,14 +225,13 @@ export class GeneralCommands {
     @SlashOption({
       description: "port value",
       name: "port",
-      required: true,
+      required: false,
       type: ApplicationCommandOptionType.Number,
     })
-    port: number,
+    port: number = 25565,
     interaction: CommandInteraction,
     client: Client
   ) {
-    // lazy, don't care anymore.
     const mcServer = client.mcServer;
 
     if (!mcServer.isProxyConnected()) {

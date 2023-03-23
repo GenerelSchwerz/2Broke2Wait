@@ -164,7 +164,8 @@ function botUpdatesMotd (bot: Bot) {
 //                Util                     //
 /// //////////////////////////////////////////
 inp.on('line', (inp) => {
-  switch (inp.split(' ')[0]) {
+  const [cmd, ...args] = inp.trim().split(' ')
+  switch (cmd) {
     case 'help':
       console.log('Help message!\n' + helpMsg)
       break
