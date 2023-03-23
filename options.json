@@ -2,7 +2,7 @@
   "discord": {
     "bot": {
       "enabled": true,
-      "botToken": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G97k2z.gK4VXWrI6EzOEIAKP7xliUvf6q6FX9RDncbd9s",
+      "botToken": "MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G1nR1T.yMZsRo5AgSZ8t6SkTnuGftPVItdw4SoI4mjJh",
       "prefix": "!"
     },
     "webhooks": {
