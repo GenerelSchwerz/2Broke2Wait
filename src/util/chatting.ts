@@ -127,30 +127,26 @@ export function applyWebhookListeners (
 ) {
   if (!config.enabled) return
 
-  if (!!config.queue) {
+  if (!!config.queue && !!config.queue.url) {
     const queueUpdates = new ServerQueueUpdateMessenger(srv, config.queue)
-    srv.registerServerListeners(queueUpdates);
+    const enteredQueue = new ServerEnteredQueueMessenger(srv, config.queue.url)
+    srv.registerServerListeners(queueUpdates, enteredQueue);
   } else {
-    const queueUpdates = new ServerQueueUpdateMessenger(srv, {
-      url: config.spam,
-      reportAt: 9999
-    })
-    srv.registerServerListeners(queueUpdates);
-  }
-  
-  if (!!config.queue || !!config.spam) {
-    const enteredQueue = new ServerEnteredQueueMessenger(srv, config.queue.url || config.spam)
-    srv.registerServerListeners(enteredQueue)
+    console.log("Queue webhook url is not defined, skipping!")
   }
 
-  if (!!config.gameChat || !!config.spam) {
-    const gameChatHelper = new GameChatListener(srv, config.gameChat || config.spam)
+  if (!!config.gameChat) {
+    const gameChatHelper = new GameChatListener(srv, config.gameChat)
     srv.registerClientListeners(gameChatHelper)
+  } else {
+    console.log("Game chat webhook URL is not defined, skipping!")
   }
 
-  if (config.spam) {
-    const start = new ServerStartMessenger(srv, config.spam)
-    const stop = new ServerStopMessenger(srv, config.spam)
-    srv.registerServerListeners(start, stop)
+  if (config.serverInfo) {
+    const serverStart = new ServerStartMessenger(srv, config.serverInfo)
+    const serverStop = new ServerStopMessenger(srv, config.serverInfo)
+    srv.registerServerListeners(serverStart, serverStop)
+  } else {
+    console.log("Server info webhook URl is not defined, skipping!")
   }
 }

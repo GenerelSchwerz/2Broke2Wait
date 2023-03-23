@@ -56,7 +56,7 @@ export const configSchema = joi.object({
             .required()
             .description('Info for queue updates.'),
           gameChat: joi.string().allow('').default('').description('Webhook URL for in-game chat.'),
-          spam: joi.string().allow('').default('').description('Default webhook URL (backup).')
+          serverInfo: joi.string().allow('').default('').description('Webhook URL for server updates.')
         })
         .default()
         .description('Webhook URLs for logging, if wanted.')

@@ -17,7 +17,7 @@ export interface Options {
         reportAt: number
       },
       gameChat: string
-      spam: string
+      serverInfo: string
     }
   }
   minecraft: {
