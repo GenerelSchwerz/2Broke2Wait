@@ -2,6 +2,10 @@ export async function sleep (ms: number) {
   return await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+export async function sleepCancel (ms: number) {
+  return await new Promise((res, rej) => setTimeout(rej, ms))
+}
+
 // stolen task from mineflayer, just strongly typed now.
 export class Task<Finish = void, Cancel = void> {
   public done: boolean

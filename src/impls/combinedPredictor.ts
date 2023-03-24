@@ -76,10 +76,10 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
         if (Number.isNaN(this._lastPos)) {
           this._startingPos = position
         }
-        const eta = this.getPredictedEta()
+        this._eta = this.getPredictedEta()
+        this.emit('queueUpdate', this._lastPos, position, this._eta)
         this._lastPos = position
-        this._eta = eta
-        this.emit('queueUpdate', this._lastPos, position, eta)
+        
       }
     }
   }

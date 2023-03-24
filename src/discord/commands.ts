@@ -2,6 +2,7 @@ import { CommandInteraction, OAuth2Scopes, ApplicationCommandOptionType } from "
 
 import { Client, Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { DateTime, Duration } from "ts-luxon";
+import { sleep, sleepCancel } from "../util/index";
 import { hourAndMinToDateTime, pingTime, tentativeStartTime, waitUntilStartingTime } from "../util/remoteInfo";
 
 @Discord()
@@ -233,21 +234,16 @@ export class GeneralCommands {
     })
     port: number = 25565,
     interaction: CommandInteraction,
-    client: Client
   ) {
-    const mcServer = client.mcServer;
 
-    if (!mcServer.isProxyConnected()) {
-      interaction.reply("We are not connected to the server!");
-      return;
-    }
+    await interaction.reply(`Pinging ${host}${port === 25565 ? '' : ':' + port}!`)
 
-    const num = await pingTime(host, port);
+    const num = await pingTime(host, port)
     if (Number.isNaN(num)) {
-      interaction.reply("There was a problem pinging the server. (Value is NaN)");
+      await interaction.editReply("There was a problem pinging the server. (Value is NaN)");
       return;
     }
-    interaction.reply(`Response time was: ${num} ms.`);
+    await interaction.editReply(`Response time was: ${num} ms.`);
   }
 
   @Slash({ description: "invite" })

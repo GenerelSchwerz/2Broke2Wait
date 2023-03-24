@@ -173,9 +173,6 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
 
     this._proxy.stateData.bot.once('end', () => {
       this.fakePlayer?.destroy()
-      if (this.psOpts.disconnectAllOnEnd) {
-        this.closeConnections()
-      }
     })
   }
 

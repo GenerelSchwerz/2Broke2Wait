@@ -2,7 +2,7 @@
 //               Imports                   //
 /// //////////////////////////////////////////
 
-import { sleep, Task } from './index'
+import { sleep, sleepCancel, Task } from './index'
 
 import * as mc from 'minecraft-protocol'
 import { DateTime } from 'ts-luxon'
@@ -165,11 +165,11 @@ export async function waitUntilStartingTime (
   }
 }
 
-export async function pingTime (host: string, port: number): Promise<number> {
+export async function pingTime (host: string, port: number, timeout = 3000): Promise<number> {
   const start = Date.now()
 
   try {
-    await mc.ping({ host, port })
+    await Promise.race([mc.ping({ host, port }), sleepCancel(timeout)]);
     return Date.now() - start
   } catch (e) {
     return NaN

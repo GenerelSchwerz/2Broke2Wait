@@ -44,6 +44,39 @@ const afkServer = SpectatorServer.wrapServer(
   checkedConfig.minecraft.localServerProxyConfig
 )
 
+
+if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
+  buildClient(checkedConfig.discord.bot, afkServer)
+  console.log('We are using a discord bot.')
+} else {
+  console.log('No discord token included. Going without it (No command functionality currently).')
+}
+
+if (checkedConfig.discord.webhooks.enabled) {
+  console.log('Using discord webhooks to relay information!')
+} else {
+  console.log('Discord webhooks are disabled. Will not be using them.')
+}
+
+
+
+afkServer.on('setup', () => {
+  if (checkedConfig.discord.webhooks.enabled) {
+    applyWebhookListeners(afkServer, checkedConfig.discord.webhooks)
+  }
+})
+
+
+afkServer.on('started', () => {
+  console.log('Server started!\n' + helpMsg)
+  inGameServerMotd()
+})
+
+afkServer.on('stopped', () => {
+  console.log('Server stopped!\nYou can start it with \"start\"')
+})
+
+
 afkServer.on('breath', (bot) => {
   botUpdatesMotd(bot)
 })
@@ -63,6 +96,8 @@ afkServer.on('leftQueue', () => {
 })
 
 afkServer.on('remoteKick', async (reason) => {
+  console.log('remoteKick:', reason)
+  disconnectedServerMotd()
   afkServer.removeListener('queueUpdate', queueServerMotd)
   if (afkServer.psOpts.restartOnDisconnect) {
     afkServer.restart(1000)
@@ -71,42 +106,18 @@ afkServer.on('remoteKick', async (reason) => {
 
 afkServer.on('remoteError', async (error) => {
   console.log('remoteError:', error)
+  disconnectedServerMotd()
   afkServer.removeListener('queueUpdate', queueServerMotd)
   if (afkServer.psOpts.restartOnDisconnect) {
     afkServer.restart(1000)
   }
 })
 
-afkServer.on('closedConnections', (reason) => {
-  disconnectedServerMotd()
-  afkServer.removeAllClientListeners()
-  afkServer.removeAllServerListeners()
-})
 
-afkServer.on('started', () => {
-  console.log('Server started!\n' + helpMsg)
-  inGameServerMotd()
-  if (checkedConfig.discord.webhooks.enabled) {
-    applyWebhookListeners(afkServer, checkedConfig.discord.webhooks)
-  }
-})
 
-afkServer.on('stopped', () => {
-  console.log('Server stopped!\nYou can start it with \"start\"')
-})
 
-if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
-  buildClient(checkedConfig.discord.bot, afkServer)
-  console.log('We are using a discord bot.')
-} else {
-  console.log('No discord token included. Going without it (No command functionality currently).')
-}
 
-if (checkedConfig.discord.webhooks.enabled) {
-  console.log('Using discord webhooks to relay information!')
-} else {
-  console.log('Discord webhooks are disabled. Will not be using them.')
-}
+
 const inp = rl.createInterface({
   input: process.stdin,
   output: process.stdout

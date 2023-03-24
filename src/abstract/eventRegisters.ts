@@ -4,27 +4,28 @@ import { ClientListener, ClientEvent, ClientEmitters } from '../util/utilTypes'
 import type { Bot, BotEvents } from 'mineflayer'
 import { IProxyServerEvents, ProxyServer } from './proxyServer'
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from './packetQueuePredictor'
+import { Conn } from '@rob9315/mcproxy'
+import {EventEmitter} from 'events'
+import EventEmitter2 from 'eventemitter2'
 
-export interface EventRegister {
-  begin: () => void
-  end: () => void
-}
+export abstract class EventRegister<Src extends EventEmitter | EventEmitter2, Event> {
 
-export abstract class ClientEventRegister<
-  Src extends ClientEmitters,
-  T extends ClientEvent<Src>
-> implements EventRegister {
-  constructor (
-    public readonly emitter: Src,
-    public readonly wantedEvent: T
-  ) { }
 
-  protected abstract listener: T extends ClientEvent<Bot>
-    ? BotEvents[T]
-    : T extends ClientEvent<Client>
-      ? ClientListener<T>[1]
-      : never
+  constructor(protected _emitter: Src, public readonly wantedEvent: Event) {}
 
+  protected abstract listener: any;
+
+  public get emitter(): Src {
+    return this._emitter;
+  }
+
+  public setEmitter(emitter: Src) {
+    this.end();
+    this._emitter = emitter;
+    this.begin();
+  }
+
+ 
   public begin (): void {
     this.emitter.on(this.wantedEvent as any, this.listener)
   }
@@ -32,45 +33,66 @@ export abstract class ClientEventRegister<
   public end (): void {
     this.emitter.removeListener(this.wantedEvent as any, this.listener)
   }
+
+}
+
+export abstract class ClientEventRegister<
+  Src extends ClientEmitters,
+  Event extends ClientEvent<Src>
+> extends EventRegister<Src, Event> {
+
+  public readonly isSrcBot: Src extends Bot ? true : false;
+
+  constructor (
+     _emitter: Src,
+    wantedEvent: Event
+  ) {
+    super(_emitter, wantedEvent)
+    this.isSrcBot = !!(_emitter as any)._client as any
+   }
+
+  protected abstract listener: Event extends ClientEvent<Bot>
+    ? BotEvents[Event]
+    : Event extends ClientEvent<Client>
+      ? ClientListener<Event>[1]
+      : never
 }
 
 export abstract class ServerEventRegister<
-  T extends IProxyServerEvents,
-  Key extends keyof T,
+  Event extends IProxyServerEvents,
+  Key extends keyof Event,
   Srv extends ProxyServer = ProxyServer,
-> implements EventRegister {
+> extends EventRegister<Srv, Key> {
   constructor (
-    protected readonly srv: Srv,
-    public readonly wantedEvent: Key
-  ) { }
-
-  protected abstract listener: T[Key]
-
-  public begin (): void {
-    this.srv.on(this.wantedEvent as any, this.listener as any)
+    srv: Srv,
+    wantedEvent: Key
+  ) { 
+    super(srv, wantedEvent)
   }
 
-  public end (): void {
-    this.srv.removeListener(this.wantedEvent as any, this.listener as any)
+  public get srv(): Srv {
+    return this._emitter;
   }
+
+  protected abstract listener: Event[Key]
+
 }
 
 export abstract class QueueEventRegister<
-  Src extends ClientEmitters,
-  T extends keyof PacketQueuePredictorEvents,
-> implements EventRegister {
+  BaseSrc extends ClientEmitters,
+  Event extends keyof PacketQueuePredictorEvents,
+> extends EventRegister<PacketQueuePredictor<BaseSrc, any>, Event> {
   constructor (
-    protected readonly queue: PacketQueuePredictor<Src, any>,
-    public readonly wantedEvent: T
-  ) { }
+    _queue: PacketQueuePredictor<BaseSrc, any>,
+    wantedEvent: Event
+  ) {
+    super(_queue, wantedEvent )
+   }
 
-  protected abstract listener: PacketQueuePredictorEvents[T]
+   public get queue(): PacketQueuePredictor<BaseSrc, any> {
+    return this._emitter;
+   }
 
-  public begin (): void {
-    this.queue.on(this.wantedEvent as any, this.listener)
-  }
+  protected abstract listener: PacketQueuePredictorEvents[Event]
 
-  public end (): void {
-    this.queue.removeListener(this.wantedEvent as any, this.listener)
-  }
 }
