@@ -113,7 +113,6 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
       this.fakePlayer?.unregister(client as unknown as ServerClient)
       this.fakeSpectator?.revertToNormal(client as unknown as ServerClient)
       this._proxy.link(client as unknown as Client)
-      this._controllingPlayer = client as unknown as ServerClient
       this.endBotLogic()
     } else {
       const mes = `Cannot link. User §3${this._proxy.pclient.username}:§r is linked.`
@@ -128,7 +127,6 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
         this.message(client, 'Cannot unlink as not in control!')
         return
       }
-      this._controllingPlayer = null
       this.fakePlayer?.register(client as unknown as ServerClient)
       this.fakeSpectator?.makeSpectator(client as unknown as ServerClient)
       this.message(client, 'Unlinking')
@@ -238,6 +236,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
     }
 
     client.once('end', () => {
+     
       if (client.uuid === this._proxy?.pclient?.uuid) {
         this.beginBotLogic()
       }

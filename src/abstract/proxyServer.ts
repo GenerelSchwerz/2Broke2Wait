@@ -87,7 +87,9 @@ export abstract class ProxyServer<
   /**
    * Potential player that controls the remoteBot.
    */
-  protected _controllingPlayer: ServerClient | null = null;
+  protected get _controllingPlayer() {
+    return this._proxy?.pclient ?? null;
+  };
 
   /**
    * Getter for {@link ProxyServer._controllingPlayer}
@@ -213,7 +215,6 @@ export abstract class ProxyServer<
       this._controllingPlayer.end("Connection reset by server.");
     }
     this.endBotLogic();
-    this._controllingPlayer = null;
     this._remoteIsConnected = false;
 
     if (info instanceof Error) {
@@ -289,6 +290,7 @@ export abstract class ProxyServer<
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
   protected whileConnectedLoginHandler = (actualUser: ServerClient) => {
+    console.log("hi?")
     if (!this.isUserWhitelisted(actualUser)) {
       actualUser.end("Not whitelisted!\n" + "You need to turn the whitelist off.");
       return; // early end.
@@ -299,11 +301,9 @@ export abstract class ProxyServer<
       return; // early end.
     }
 
-    this._controllingPlayer = actualUser;
 
     // set event for when they end.
     actualUser.on("end", (reason) => {
-      this._controllingPlayer = null;
       this.beginBotLogic();
     });
 

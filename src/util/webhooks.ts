@@ -3,7 +3,7 @@ import type { Bot } from 'mineflayer'
 import {
   ClientWebhookReporter,
   AntiAFKWebhookReporter,
-  ClientWebhookReporterOptions
+  WebhookReporterEmbedOpts
 } from '../abstract/webhookReporters'
 import { DateTime, Duration } from 'ts-luxon'
 import { ProxyServer } from '../abstract/proxyServer'
@@ -21,8 +21,12 @@ function escapeMarkdown (...texts: string[]): string[] {
 // since chat is only triggered by players, no need to wait for in queue.
 class GameChatListener extends ClientWebhookReporter<Bot, 'chat'> {
   constructor (srv: AntiAFKServer, webhookUrl: string) {
-    super(srv, srv.remoteBot!, 'chat', webhookUrl, {eventTitle: false}) // hard coded value here. removes chat title.
+    super(srv, srv.remoteBot!, 'chat', webhookUrl)
   }
+
+  // just setting opts down here to be cleaner
+  opts: WebhookReporterEmbedOpts = { eventTitle: false, footer: false }
+
 
   protected listener = async (username: string, message: string) => {
     const embed = this.buildClientEmbed()
@@ -45,8 +49,17 @@ class ServerStartMessenger extends AntiAFKWebhookReporter<'started'> {
     super(srv, 'started', webhookUrl)
   }
 
+  // just setting opts down here to be cleaner
+  opts: WebhookReporterEmbedOpts = { eventTitle: true, footer: false }
+
+
   protected listener = async () => {
     const embed = this.buildServerEmbed()
+
+    embed.description =
+      `Started at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n`
+
+
     const data = await this.webhookClient.send({
       embeds: [embed]
     })
@@ -54,17 +67,19 @@ class ServerStartMessenger extends AntiAFKWebhookReporter<'started'> {
 }
 
 // Send started message when server starts.
-class ServerStopMessenger extends AntiAFKWebhookReporter<'closedConnections'> {
+class ServerStopMessenger extends AntiAFKWebhookReporter<'stopped'> {
   constructor (srv: AntiAFKServer, webhookUrl: string) {
-    super(srv, 'closedConnections', webhookUrl)
+    super(srv, 'stopped', webhookUrl)
   }
 
-  protected listener = async (reason: string) => {
+  // just setting opts down here to be cleaner
+  opts: WebhookReporterEmbedOpts = { eventTitle: true, footer: false }
+
+  protected listener = async () => {
     const embed = this.buildServerEmbed()
 
     embed.description =
-      `Closed at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
-      `Reason: ${reason}`
+      `Closed at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n`
 
     const data = await this.webhookClient.send({
       embeds: [embed]
