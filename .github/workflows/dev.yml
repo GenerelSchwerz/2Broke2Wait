@@ -114,11 +114,8 @@ jobs:
   build_dev_armv7:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [ubuntu-latest]
         include:
-          - os: macos-latest
-            build: npx pkg . --target node16-macos-armv7
-            artifact: "2bored2wait-macos-arm64-${{github.sha}}"
           - os: ubuntu-latest
             build: npx pkg . --target node16-linux-armv7
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
@@ -164,7 +161,7 @@ jobs:
             echo $(node -e "const version = process.version; console.log(version)")   
             npm i
             npm dedup --production
-            ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
+            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
 
       - uses: actions/upload-artifact@v3
         with:
