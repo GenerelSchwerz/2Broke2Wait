@@ -161,7 +161,7 @@ jobs:
             chown -R root:root /home/runner
             ls -l
             npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
-            chmod a=r /home/runner
+            chmod -R a=r /home/runner
 
       - run: echo "${PWD}/artifacts/${{matrix.artifact}}"
 
