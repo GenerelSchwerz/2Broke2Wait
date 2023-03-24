@@ -1,9 +1,9 @@
 # Publish GitHub workflow artifacts tutorial example
-name: Development build tasks
+name: Production build tasks
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ main ]
 
 jobs:
        
