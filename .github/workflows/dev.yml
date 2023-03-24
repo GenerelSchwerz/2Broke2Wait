@@ -175,4 +175,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "${PWD}/artifacts/${{matrix.artifact}}"
+          path: "/home/runner/2Bored2Wait/2Bored2Wait/artifacts/${{matrix.artifact}}"
