@@ -43,6 +43,7 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: "pkg/${{matrix.artifact}}"
+          if-no-files-found: error
 
 
   build_dev_arm64:
@@ -115,6 +116,7 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: "${PWD}/artifacts/${{matrix.artifact}}"
+          if-no-files-found: error
 
   build_dev_armv7:
     strategy:
@@ -179,3 +181,4 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: "${PWD}/artifacts/${{matrix.artifact}}"
+          if-no-files-found: error
