@@ -35,7 +35,7 @@ const botOptions = botOptsFromConfig(checkedConfig)
 const serverOptions = serverOptsFromConfig(checkedConfig);
 
 const rawServer = createServer(serverOptions)
-console.log(rawServer.favicon)
+
 const afkServer = SpectatorServer.wrapServer(
   true,
   rawServer,

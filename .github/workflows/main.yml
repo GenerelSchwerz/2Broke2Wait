@@ -67,6 +67,7 @@ jobs:
       - name: Install NPM dependencies
         run: |
             npm i
+            npm install --dev caxa
             npm dedup --production
 
       - uses: uraimo/run-on-arch-action@v2
