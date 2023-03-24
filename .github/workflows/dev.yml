@@ -180,5 +180,5 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "${PWD}/artifacts/${{matrix.artifact}}"
+          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/${{matrix.artifact}}"
           if-no-files-found: error
