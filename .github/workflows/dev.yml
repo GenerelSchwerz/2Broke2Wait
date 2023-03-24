@@ -168,12 +168,13 @@ jobs:
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
             chown -R 1001:1001 /home/runner
 
-      - name: show outer build directory
+      - name: Outer check
         run: |
-            echo "${PWD}/artifacts/"
-            ls -al "${PWD}/artifacts/"
+            echo "${PWD}/artifacts"
+            ls -l echo "${PWD}/artifacts"
+
 
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "/home/runner/work/2Bored2Wait/2Bored2Wait/artifacts/${{matrix.artifact}}"
+          path: "${PWD}/artifacts"
