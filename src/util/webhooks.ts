@@ -2,7 +2,8 @@ import { Options } from './options'
 import type { Bot } from 'mineflayer'
 import {
   ClientWebhookReporter,
-  AntiAFKWebhookReporter
+  AntiAFKWebhookReporter,
+  ClientWebhookReporterOptions
 } from '../abstract/webhookReporters'
 import { DateTime, Duration } from 'ts-luxon'
 import { ProxyServer } from '../abstract/proxyServer'
@@ -20,13 +21,13 @@ function escapeMarkdown (...texts: string[]): string[] {
 // since chat is only triggered by players, no need to wait for in queue.
 class GameChatListener extends ClientWebhookReporter<Bot, 'chat'> {
   constructor (srv: AntiAFKServer, webhookUrl: string) {
-    super(srv, srv.remoteBot!, 'chat', webhookUrl)
+    super(srv, srv.remoteBot!, 'chat', webhookUrl, {eventTitle: false}) // hard coded value here. removes chat title.
   }
 
   protected listener = async (username: string, message: string) => {
     const embed = this.buildClientEmbed()
     embed.author = {
-      name: `Account: ${username}`,
+      name: username,
       icon_url: `https://minotar.net/helm/${username}/69.png`
     }
 

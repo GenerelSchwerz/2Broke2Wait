@@ -12,7 +12,7 @@ import { botOptsFromConfig, Options, serverOptsFromConfig } from './util/options
 import { Duration } from 'ts-luxon'
 import { createServer } from 'minecraft-protocol'
 import { buildClient } from './discord/index'
-import { applyWebhookListeners } from './util/chatting'
+import { applyWebhookListeners } from './util/webhooks'
 import { SpectatorServer } from './impls/spectatorServer'
 
 import * as rl from 'readline'

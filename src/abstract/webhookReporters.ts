@@ -1,4 +1,5 @@
 import { APIEmbed, WebhookClient } from 'discord.js'
+import merge from 'ts-deepmerge'
 import { DateTime, Duration } from 'ts-luxon'
 import {
   ClientEventRegister,
@@ -11,9 +12,14 @@ import { ClientEmitters, ClientEvent } from '../util/utilTypes'
 import { PacketQueuePredictorEvents } from './packetQueuePredictor'
 import { IProxyServerEvents, ProxyServer } from './proxyServer'
 
-// const NiceClientNames: {[key in ClientEvent<ClientEmitters>]: string} = {
 
-// }
+export interface ClientWebhookReporterOptions {
+  eventTitle: boolean;
+}
+
+const DefaultOptions: ClientWebhookReporterOptions = {
+  eventTitle: true
+}
 
 export abstract class ClientWebhookReporter<
   Src extends ClientEmitters,
@@ -21,19 +27,22 @@ export abstract class ClientWebhookReporter<
 > extends ClientEventRegister<Src, L> {
   protected readonly webhookClient: WebhookClient
 
+
   constructor (
     protected readonly srv: ProxyServer,
     emitter: Src,
     eventWanted: L,
-    protected readonly url: string
+    protected readonly url: string,
+    protected readonly opts: Partial<ClientWebhookReporterOptions> = DefaultOptions
   ) {
     super(emitter, eventWanted)
     this.webhookClient = new WebhookClient({ url })
+    this.opts = merge(DefaultOptions, opts);
   }
 
   protected buildClientEmbed (): APIEmbed {
     const embed: APIEmbed = {
-      title: `Client: ${this.wantedEvent}`
+      title: this.opts.eventTitle ? this.wantedEvent : undefined
     }
 
     if (this.srv.controllingPlayer != null) {
@@ -65,16 +74,17 @@ export abstract class AntiAFKWebhookReporter<
 > extends ServerEventRegister<StrictAntiAFKEvents, T, AntiAFKServer> {
   protected readonly webhookClient: WebhookClient
 
-  constructor (srv: AntiAFKServer, event: T, public url: string) {
+  constructor (srv: AntiAFKServer, event: T, public url: string, protected readonly opts: Partial<ClientWebhookReporterOptions> = DefaultOptions) {
     super(srv, event)
     this.webhookClient = new WebhookClient({ url })
+    this.opts = merge(DefaultOptions, opts);
   }
 
   protected buildServerEmbed () {
     const eta = !Number.isNaN(this.srv.queue?.eta) ? Duration.fromMillis(this.srv.queue!.eta * 1000 - Date.now()) : null
 
     const embed: APIEmbed = {
-      title: NiceServerNames[this.wantedEvent],
+      title: this.opts.eventTitle ? NiceServerNames[this.wantedEvent] : undefined,
       footer: {
         text: (this.srv.isProxyConnected() ? `Connected to: ${this.srv.bOpts.host}${this.srv.bOpts.port !== 25565 ? ':' + this.srv.bOpts.port : ''}\n` : 'Not connected.\n') +
               ((this.srv.controllingPlayer != null) ? `Connected player: ${this.srv.controllingPlayer.username}\n` : '') +
