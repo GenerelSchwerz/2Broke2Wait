@@ -125,7 +125,7 @@ jobs:
         include:
           - os: ubuntu-latest
             build: npx pkg . --target node16-linux-armv7
-            artifact: "2bored2wait-linux-arm64-${{github.sha}}"
+            artifact: "2bored2wait-linux-armv7-${{github.sha}}"
 
     # The host should always be Linux
     runs-on: ubuntu-18.04
