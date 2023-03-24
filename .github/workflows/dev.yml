@@ -89,7 +89,7 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget git
+            apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
 
@@ -149,7 +149,7 @@ jobs:
       
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget git
+            apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
 
