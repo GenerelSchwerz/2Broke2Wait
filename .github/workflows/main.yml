@@ -1,9 +1,9 @@
 # Publish GitHub workflow artifacts tutorial example
-name: Production build tasks
+name: Development build tasks
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev ]
 
 jobs:
        
@@ -23,7 +23,7 @@ jobs:
             artifact: "2bored2wait-linux-x64-${{github.sha}}"
 
     runs-on: ${{ matrix.os }} 
-    name: Build x64 production release
+    name: Build x64 development version
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -43,6 +43,7 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: "pkg/${{matrix.artifact}}"
+          if-no-files-found: error
 
 
   build_dev_arm64:
@@ -59,9 +60,15 @@ jobs:
 
     # The host should always be Linux
     runs-on: ubuntu-18.04
-    name: Build arm64 production release
+    name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install NPM dependencies
+        run: |
+            npm i
+            npm dedup --production
+
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -80,7 +87,6 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
-            --volume /etc/passwd:/etc/passwd
 
           # Install some dependencies in the container. This speeds up builds if
           # you are also using githubToken. Any dependencies installed here will
@@ -90,41 +96,48 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget git
+            apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
-            echo $HOME
-            mkdir -p $HOME/.ssh
-            echo $(node -e "const version = process.version; console.log(version)")   
-            npm install
-            npm dedup --production
-            ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
+            chown -R root:root /home/runner
+            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            echo "Produced artifact at /artifacts/${{matrix.artifact}}"
+            chmod -R ugo+rwx /home/runner
 
+
+      - name: show outer build directory
+        run: |
+            ls -al "${PWD}/artifacts/"
+    
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "${PWD}/artifacts/${{matrix.artifact}}"
+          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/${{matrix.artifact}}"
+          if-no-files-found: error
 
   build_dev_armv7:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [ubuntu-latest]
         include:
-          - os: macos-latest
-            build: npx pkg . --target node16-macos-armv7
-            artifact: "2bored2wait-macos-arm64-${{github.sha}}"
           - os: ubuntu-latest
             build: npx pkg . --target node16-linux-armv7
-            artifact: "2bored2wait-linux-arm64-${{github.sha}}"
+            artifact: "2bored2wait-linux-armv7-${{github.sha}}"
 
     # The host should always be Linux
     runs-on: ubuntu-18.04
-    name: Build armv7 production release
+    name: Build armv7 development version
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install NPM dependencies
+        run: |
+            npm i
+            npm dedup --production
+        
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -143,24 +156,29 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
-            --volume /etc/passwd:/etc/passwd
       
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget git
+            apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
-            echo $HOME
-            mkdir -p $HOME/.ssh
-            echo $(node -e "const version = process.version; console.log(version)")   
-            npm i
-            npm dedup --production
-            ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
+            chown -R root:root /home/runner
+            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            echo "Produced artifact at /artifacts/${{matrix.artifact}}"
+            chown -R 1001:1001 /home/runner
+
+      - name: Outer check
+        run: |
+            echo "${PWD}/artifacts"
+            ls -l "${PWD}/artifacts"
+            stat "${PWD}/artifacts/${{matrix.artifact}}"
+
 
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "${PWD}/artifacts/${{matrix.artifact}}"
+          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/${{matrix.artifact}}"
+          if-no-files-found: error
