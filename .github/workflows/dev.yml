@@ -172,9 +172,10 @@ jobs:
         run: |
             echo "${PWD}/artifacts"
             ls -l "${PWD}/artifacts"
+            stat "${PWD}/artifacts/${{matrix.artifact}}"
 
 
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "${PWD}/artifacts"
+          path: "${PWD}/artifacts/${{matrix.artifact}}"
