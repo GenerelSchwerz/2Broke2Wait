@@ -171,7 +171,7 @@ jobs:
       - name: Outer check
         run: |
             echo "${PWD}/artifacts"
-            ls -l echo "${PWD}/artifacts"
+            ls -l "${PWD}/artifacts"
 
 
       - uses: actions/upload-artifact@v3
