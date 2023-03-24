@@ -62,6 +62,12 @@ jobs:
     name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install NPM dependencies
+        run: |
+            npm i
+            npm dedup --production
+
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -96,14 +102,7 @@ jobs:
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             ls -l   
-            echo $HOME
-            pwd
-            id
-            echo $HOME
             chown -R root:root /home/runner
-            echo $(node -e "const version = process.version; console.log(version)")   
-            npm install
-            npm dedup --production
             ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
 
       - uses: actions/upload-artifact@v3
@@ -126,7 +125,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - run: |
+      - name: Install NPM dependencies
+        run: |
             npm i
             npm dedup --production
         
@@ -158,9 +158,10 @@ jobs:
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             ls -l
-            chown -R root:root /home/runner
+            chown -R root:root /home/runner/.ssh
             ls -l
             npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            chmod a=r /home/runner
 
       - run: echo "${PWD}/artifacts/${{matrix.artifact}}"
 
