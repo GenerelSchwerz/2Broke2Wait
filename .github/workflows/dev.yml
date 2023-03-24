@@ -101,9 +101,9 @@ jobs:
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
-            ls -l   
             chown -R root:root /home/runner
-            ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
+            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            chmod -R ugo+rwx /home/runner
 
       - uses: actions/upload-artifact@v3
         with:
@@ -157,9 +157,7 @@ jobs:
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
-            ls -l
             chown -R root:root /home/runner
-            ls -l
             npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
             chmod -R ugo+rwx /home/runner
 
