@@ -178,7 +178,7 @@ jobs:
 
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget git build-essentials
+            apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
             apt-get install -q -y npm
