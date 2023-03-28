@@ -155,11 +155,6 @@ export type OverloadedReturnType<T extends (...args: any[]) => any> =
 
 export type ClientEmitters = Bot | Client
 
-// type ValidClientFuncs = Extract<
-//   OverloadedParameters<Client["on"]>,
-//   [event: any, handler: any]
-// >; // event: "packet" | "raw" | "session" | "state" | "end" | "connect"
-
 type ValidClientFuncs = CustomOverloadedParameters<Client['on']>
 
 type ValidClientEvents = ValidClientFuncs[0]
@@ -179,17 +174,15 @@ export type PromiseLike = void | Promise<void>
 
 // Optional derived class if we need it (if we have nothing to add we can just us EventEmitter directly
 // (EventEmitter2 as { new(): StrictEventEmitter<EventEmitter2, any, any> }) {
-class TypedEventEmitterImpl extends (EventEmitter2 as new() => StrictEventEmitter<EventEmitter2, any, any>) {
+class TypedEventEmitterImpl extends (EventEmitter2 as new() => StrictEventEmitter<EventEmitter2, any, any>) {}
 
-}
 // Define the actual constructor, we need to use a type assertion to make the `EventEmitter` fit  in here
-
 export const TypedEventEmitter: new <T, K = T>(options?: ConstructorOptions) => StrictEventEmitter<EventEmitter2, T, K> = TypedEventEmitterImpl as any
 
 // Define the type for our emitter
 export type TypedEventEmitter<T, K = T> = StrictEventEmitter<EventEmitter2, T, K> // Order matters here, we want our overloads to be considered first
 
-// ITypedEventEmitter<T, K> &
+
 export type Arguments<T> = [T] extends [(...args: infer U) => any]
   ? U
   : [T] extends [void] ? [] : [T]

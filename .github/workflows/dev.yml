@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 16
       - name: Install Dependencies
-        run: npm i
+        run: yarn install
 
       - name: Dedup
         run: npm dedup --production
@@ -59,7 +59,7 @@ jobs:
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
 
     # The host should always be Linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
@@ -74,7 +74,7 @@ jobs:
         id: runcmd
         with:
           arch: aarch64
-          distro: ubuntu18.04
+          distro: ubuntu20.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
@@ -128,7 +128,7 @@ jobs:
             artifact: "2bored2wait-linux-armv7-${{github.sha}}"
 
     # The host should always be Linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Build armv7 development version
     steps:
       - uses: actions/checkout@v3
@@ -143,7 +143,7 @@ jobs:
         id: runcmd
         with:
           arch: armv7
-          distro: ubuntu18.04
+          distro: ubuntu20.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
