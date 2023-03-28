@@ -73,6 +73,9 @@ jobs:
       - name: Dedup
         run: npx -y yarn-deduplicate
 
+      - name: Build
+        run: yarn run build
+
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -103,14 +106,10 @@ jobs:
             apt-get install -q -y wget build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
-            curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/yarnkey.gpg >/dev/null
-            echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-            sudo apt-get update && sudo apt-get install yarn
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             chown -R root:root /home/runner
-            yarn run build
             npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
             chmod -R ugo+rwx /home/runner
@@ -149,6 +148,9 @@ jobs:
       - name: Dedup
         run: npx -y yarn-deduplicate
 
+      - name: Build
+        run: yarn run build
+
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -174,9 +176,6 @@ jobs:
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
             apt-get install -q -y npm
-            wget -O - https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-            echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-            apt update -q -y && sudo apt install -q -y yarn
             npm i -g npx
 
           # Set an output parameter `uname` for use in subsequent steps
