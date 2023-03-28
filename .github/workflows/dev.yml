@@ -95,6 +95,9 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
 
+          env: |
+            NODE_TLS_REJECT_UNAUTHORIZED: 0
+
           # Install some dependencies in the container. This speeds up builds if
           # you are also using githubToken. Any dependencies installed here will
           # be part of the container image that gets cached, so subsequent
@@ -103,7 +106,7 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget build-essential
+            apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
 
@@ -169,10 +172,13 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
-      
+          
+          env: |
+            NODE_TLS_REJECT_UNAUTHORIZED: 0
+
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget
+            apt-get install -q -y wget git build-essentials
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
             apt-get install -q -y npm
