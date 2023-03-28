@@ -79,7 +79,6 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
         this._eta = this.getPredictedEta()
         this.emit('queueUpdate', this._lastPos, position, this._eta)
         this._lastPos = position
-        
       }
     }
   }

@@ -17,7 +17,6 @@ import { SpectatorServer } from './impls/spectatorServer'
 
 import * as rl from 'readline'
 
-// useful for us.
 const optionDir: string = './options.json'
 
 /// //////////////////////////////////////////
@@ -25,14 +24,13 @@ const optionDir: string = './options.json'
 /// //////////////////////////////////////////
 
 // ... If no errors were found, return the validated config
-
 const config = JSON.parse(fs.readFileSync(optionDir).toString())
 
 const checkedConfig: Options = validateOptions(config)
 
 const botOptions = botOptsFromConfig(checkedConfig)
 
-const serverOptions = serverOptsFromConfig(checkedConfig);
+const serverOptions = serverOptsFromConfig(checkedConfig)
 
 const rawServer = createServer(serverOptions)
 
@@ -44,7 +42,7 @@ const afkServer = SpectatorServer.wrapServer(
   checkedConfig.minecraft.localServerProxyConfig
 )
 
-
+// optional features
 if (checkedConfig.discord.bot.enabled && !!checkedConfig.discord.bot.botToken) {
   buildClient(checkedConfig.discord.bot, afkServer)
   console.log('We are using a discord bot.')
@@ -58,14 +56,12 @@ if (checkedConfig.discord.webhooks.enabled) {
   console.log('Discord webhooks are disabled. Will not be using them.')
 }
 
-
-
+// server-specific events
 afkServer.on('setup', () => {
   if (checkedConfig.discord.webhooks.enabled) {
     applyWebhookListeners(afkServer, checkedConfig.discord.webhooks)
   }
 })
-
 
 afkServer.on('started', () => {
   console.log('Server started!\n' + helpMsg)
@@ -75,16 +71,6 @@ afkServer.on('started', () => {
 afkServer.on('stopped', () => {
   console.log('Server stopped!\nYou can start it with \"start\"')
 })
-
-
-afkServer.on('botevent:breath', (bot) => {
-  botUpdatesMotd(bot)
-})
-
-afkServer.on('botevent:health', (bot) => {
-  botUpdatesMotd(bot)
-})
-
 
 afkServer.on('enteredQueue', () => {
   queueEnterMotd()
@@ -114,10 +100,14 @@ afkServer.on('remoteError', async (error) => {
   }
 })
 
+// bot events
+afkServer.on('botevent:breath', (bot) => {
+  botUpdatesMotd(bot)
+})
 
-
-
-
+afkServer.on('botevent:health', (bot) => {
+  botUpdatesMotd(bot)
+})
 
 const inp = rl.createInterface({
   input: process.stdin,
@@ -146,10 +136,14 @@ function getServerName (): string {
   )
 }
 
-function setServerMotd(message: string) {
-  rawServer.motd = checkedConfig.minecraft.localServerOptions.motdOptions.prefix + message
+function setServerMotd (message: string) {
+  if (checkedConfig.minecraft.localServerOptions.motdOptions?.prefix) {
+    rawServer.motd = checkedConfig.minecraft.localServerOptions.motdOptions.prefix + message
+  } else {
+    rawServer.motd = message;
+  }
+  
 }
-
 
 function queueServerMotd (oldPos: number, newPos: number, eta: number) {
   if (Number.isNaN(eta)) {

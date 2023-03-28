@@ -384,7 +384,7 @@ class SpectatorInfo {
     this.position = position
     this._status = status
 
-    this.client.on("packet", this.posListener)
+    this.client.on('packet', this.posListener)
   }
 
   posListener = (data: any, meta: PacketMeta) => {
@@ -498,9 +498,9 @@ export class FakeSpectator {
         return false
       }
     } else {
-      this.register(client);
+      this.register(client)
     }
-    
+
     this.writeRaw(client, 'camera', {
       cameraId: FakePlayer.fakePlayerId
     })
@@ -532,7 +532,7 @@ export class FakeSpectator {
     this.writeRaw(client, 'camera', {
       cameraId: this.bot.entity.id
     })
-    this.unregister(client);
+    this.unregister(client)
     return true
   }
 }

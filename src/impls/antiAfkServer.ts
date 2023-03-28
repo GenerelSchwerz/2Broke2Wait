@@ -120,28 +120,20 @@ export class AntiAFKServer<
       if (DEFAULT_MODULES.WalkAroundModule != null) {
         bot.antiafk.addModules(DEFAULT_MODULES.WalkAroundModule)
 
-        if (this.bOpts.host?.includes('2b2t'))
-          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, WalkAroundModuleOptions.TwoBTwoT(bot)) 
+        if (this.bOpts.host?.includes('2b2t')) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, WalkAroundModuleOptions.TwoBTwoT(bot)) }
 
-        if (this.psOpts.antiAFK.modules.WalkAroundModule != null)
-          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, this.psOpts.antiAFK.modules.WalkAroundModule) 
+        if (this.psOpts.antiAFK.modules.WalkAroundModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.WalkAroundModule, this.psOpts.antiAFK.modules.WalkAroundModule) }
       }
 
-      if (DEFAULT_MODULES.BlockBreakModule != null && (this.psOpts.antiAFK.modules.BlockBreakModule != null))
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, this.psOpts.antiAFK.modules.BlockBreakModule) 
+      if (DEFAULT_MODULES.BlockBreakModule != null && (this.psOpts.antiAFK.modules.BlockBreakModule != null)) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreakModule, this.psOpts.antiAFK.modules.BlockBreakModule) }
 
-      if (this.psOpts.antiAFK.modules.RandomMovementModule != null)
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, this.psOpts.antiAFK.modules.RandomMovementModule) 
+      if (this.psOpts.antiAFK.modules.RandomMovementModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovementModule, this.psOpts.antiAFK.modules.RandomMovementModule) }
 
-      if (this.psOpts.antiAFK.modules.LookAroundModule != null)
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, this.psOpts.antiAFK.modules.LookAroundModule) 
+      if (this.psOpts.antiAFK.modules.LookAroundModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAroundModule, this.psOpts.antiAFK.modules.LookAroundModule) }
 
-      if (this.psOpts.antiAFK.modules.ChatBotModule != null)
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBotModule, this.psOpts.antiAFK.modules.ChatBotModule) 
+      if (this.psOpts.antiAFK.modules.ChatBotModule != null) { bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBotModule, this.psOpts.antiAFK.modules.ChatBotModule) }
 
-      if (this.psOpts.antiAFK.passives.KillAuraPassive != null)
-        bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, this.psOpts.antiAFK.passives.KillAuraPassive) 
-        
+      if (this.psOpts.antiAFK.passives.KillAuraPassive != null) { bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAuraPassive, this.psOpts.antiAFK.passives.KillAuraPassive) }
     }
 
     if (this.psOpts.autoEat) {

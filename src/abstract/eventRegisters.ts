@@ -1,31 +1,28 @@
-import { Client } from 'minecraft-protocol'
-import { ClientListener, ClientEvent, ClientEmitters } from '../util/utilTypes'
-
-import type { Bot, BotEvents } from 'mineflayer'
-import { IProxyServerEvents, ProxyServer } from './proxyServer'
-import { PacketQueuePredictor, PacketQueuePredictorEvents } from './packetQueuePredictor'
-import { Conn } from '@rob9315/mcproxy'
-import {EventEmitter} from 'events'
 import EventEmitter2 from 'eventemitter2'
+import { EventEmitter } from 'events'
+import { Client } from 'minecraft-protocol'
+import type { Bot, BotEvents } from 'mineflayer'
+import { ClientEmitters, ClientEvent, ClientListener } from '../util/utilTypes'
+import { PacketQueuePredictor, PacketQueuePredictorEvents } from './packetQueuePredictor'
+import { IProxyServerEvents, ProxyServer } from './proxyServer'
 
 export abstract class EventRegister<Src extends EventEmitter | EventEmitter2, Event> {
-
-
-  constructor(protected _emitter: Src, public readonly wantedEvent: Event) {}
-
-  protected abstract listener: any;
-
-  public get emitter(): Src {
-    return this._emitter;
+  constructor (protected _emitter: Src, public readonly wantedEvent: Event) {
+    if (_emitter == null) throw Error('Emitter is not defined!')
   }
 
-  public setEmitter(emitter: Src) {
-    this.end();
-    this._emitter = emitter;
-    this.begin();
+  protected abstract listener: any
+
+  public get emitter (): Src {
+    return this._emitter
   }
 
- 
+  public setEmitter (emitter: Src) {
+    this.end()
+    this._emitter = emitter
+    this.begin()
+  }
+
   public begin (): void {
     this.emitter.on(this.wantedEvent as any, this.listener)
   }
@@ -33,23 +30,21 @@ export abstract class EventRegister<Src extends EventEmitter | EventEmitter2, Ev
   public end (): void {
     this.emitter.removeListener(this.wantedEvent as any, this.listener)
   }
-
 }
 
 export abstract class ClientEventRegister<
   Src extends ClientEmitters,
   Event extends ClientEvent<Src>
 > extends EventRegister<Src, Event> {
-
-  public readonly isSrcBot: Src extends Bot ? true : false;
+  public readonly isSrcBot: Src extends Bot ? true : false
 
   constructor (
-     _emitter: Src,
+    _emitter: Src,
     wantedEvent: Event
   ) {
     super(_emitter, wantedEvent)
     this.isSrcBot = !!(_emitter as any)._client as any
-   }
+  }
 
   protected abstract listener: Event extends ClientEvent<Bot>
     ? BotEvents[Event]
@@ -66,16 +61,15 @@ export abstract class ServerEventRegister<
   constructor (
     srv: Srv,
     wantedEvent: Key
-  ) { 
+  ) {
     super(srv, wantedEvent)
   }
 
-  public get srv(): Srv {
-    return this._emitter;
+  public get srv (): Srv {
+    return this._emitter
   }
 
   protected abstract listener: Event[Key]
-
 }
 
 export abstract class QueueEventRegister<
@@ -86,13 +80,12 @@ export abstract class QueueEventRegister<
     _queue: PacketQueuePredictor<BaseSrc, any>,
     wantedEvent: Event
   ) {
-    super(_queue, wantedEvent )
-   }
+    super(_queue, wantedEvent)
+  }
 
-   public get queue(): PacketQueuePredictor<BaseSrc, any> {
-    return this._emitter;
-   }
+  public get queue (): PacketQueuePredictor<BaseSrc, any> {
+    return this._emitter
+  }
 
   protected abstract listener: PacketQueuePredictorEvents[Event]
-
 }

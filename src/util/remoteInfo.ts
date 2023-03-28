@@ -169,7 +169,7 @@ export async function pingTime (host: string, port: number, timeout = 3000): Pro
   const start = Date.now()
 
   try {
-    await Promise.race([mc.ping({ host, port }), sleepCancel(timeout)]);
+    await Promise.race([mc.ping({ host, port }), sleepCancel(timeout)])
     return Date.now() - start
   } catch (e) {
     return NaN

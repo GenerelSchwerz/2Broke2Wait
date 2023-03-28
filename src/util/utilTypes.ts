@@ -2,8 +2,6 @@ import EventEmitter2, { ConstructorOptions, event, Listener, ListenerFn, OnOptio
 import type { Client } from 'minecraft-protocol'
 import type { Bot, BotEvents } from 'mineflayer'
 import StrictEventEmitter from 'strict-event-emitter-types/types/src/index'
-import { IProxyServerEvents } from '../abstract/proxyServer'
-import { AntiAFKServer } from '../impls/antiAfkServer'
 
 export type DeepPartial<T, Num extends number = 9999, Temp extends any[] = []> = Temp['length'] extends Num ? T : T extends object ? {
   [P in keyof T]?: DeepPartial<T[P], Temp['length'], [...Temp, 0]>;

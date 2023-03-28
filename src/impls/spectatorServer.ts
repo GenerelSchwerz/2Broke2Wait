@@ -86,9 +86,9 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
       this.message(client, 'Cannot get into the view. You are controlling the bot')
       return
     }
-    if (!this.fakeSpectator) return false;
-    this.fakeSpectator.register(client);
-    return this.fakeSpectator.makeViewingBotPov(client) 
+    if (this.fakeSpectator == null) return false
+    this.fakeSpectator.register(client)
+    return this.fakeSpectator.makeViewingBotPov(client)
   }
 
   makeViewNormal (client: ServerClient | Client) {
@@ -236,7 +236,6 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
     }
 
     client.once('end', () => {
-     
       if (client.uuid === this._proxy?.pclient?.uuid) {
         this.beginBotLogic()
       }
@@ -297,7 +296,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
         }
 
         if (this.fakeSpectator?.clientsInCamera[client.uuid].status) {
-          this.message(client, `You are viewing the bot's perspective.`)
+          this.message(client, 'You are viewing the bot\'s perspective.')
         }
 
         this.fakeSpectator?.revertPov(client)

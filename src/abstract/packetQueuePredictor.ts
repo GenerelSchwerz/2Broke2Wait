@@ -1,11 +1,11 @@
-import { ConstructorOptions, EventEmitter2 } from 'eventemitter2'
-import { StrictEventEmitter } from 'strict-event-emitter-types'
-import { Client } from 'minecraft-protocol'
 import { Conn } from '@rob9315/mcproxy'
+import { ConstructorOptions, EventEmitter2 } from 'eventemitter2'
+import { Client } from 'minecraft-protocol'
+import { StrictEventEmitter } from 'strict-event-emitter-types'
 
 import type { Bot, BotEvents } from 'mineflayer'
 
-import type { ClientListener, ClientEvent, PromiseLike, ClientEmitters } from '../util/utilTypes'
+import type { ClientEmitters, ClientEvent, ClientListener, PromiseLike } from '../util/utilTypes'
 
 export interface PacketQueuePredictorEvents {
   invalidData: (...any: any[]) => PromiseLike

@@ -22,6 +22,18 @@ const tokenSchema = joi
   .length(72)
   .pattern(/^[a-zA-Z0-9_].*$/);
 
+const socksSchema = joi.object({
+  // host: joi.string().when('host', {
+  //   is: joi.string().pattern(/^((\d){1,3}\.?\b){4}$/),
+  //   then: joi.string().pattern(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/),
+  //   otherwise: joi.string()
+  // }),
+  host: joi.string(),
+  port: joi.number().min(1).max(65535),
+  username: joi.string().optional(),
+  password: joi.string().optional(),
+});
+
 // =============
 // Config Schema
 // =============
@@ -54,32 +66,22 @@ export const configSchema = joi.object({
             })
             .required()
             .description("Info for queue updates."),
-            gameChat: joi
+          gameChat: joi
             .object({
               url: joi.string().allow("").default("").description("Webhook URL for queue updates."),
               icon: joi.string().allow("").default("").description("Icon when sending messages."),
               username: joi.string().default("Queue webhook").description("Username when sending messages."),
-              reportAt: joi
-                .number()
-                .min(0)
-                .default(9999)
-                .description("Begin sending updates from this number and under"),
             })
             .required()
             .description("Info for queue updates."),
-            serverInfo: joi
+          serverInfo: joi
             .object({
               url: joi.string().allow("").default("").description("Webhook URL for queue updates."),
               icon: joi.string().allow("").default("").description("Icon when sending messages."),
               username: joi.string().default("Queue webhook").description("Username when sending messages."),
-              reportAt: joi
-                .number()
-                .min(0)
-                .default(9999)
-                .description("Begin sending updates from this number and under"),
             })
             .required()
-            .description("Info for queue updates.")
+            .description("Info for queue updates."),
         })
         .default()
         .description("Webhook URLs for logging, if wanted."),
@@ -111,9 +113,33 @@ export const configSchema = joi.object({
             .valid("microsoft", "mojang", "offline")
             .default("microsoft")
             .description("Authentication type (options: 'microsoft', 'mojang', 'offline')"),
+          fakeHost: joi.string().optional().description("Advanced: fake the host of the client to bypass TCPShield."),
         })
         .default()
-        .description("Minecraft account details."),
+        .description("Minecraft account details. Any mineflayer options can be used here."),
+      proxy: joi
+        .object({
+          proxy: joi
+            .object({
+              enabled: joi.boolean().default(true).required().description("Whether or not to use the specified proxy."),
+              protocol: joi
+                .string()
+                .valid("socks5h", "socks5", "socks4")
+                .required()
+                .description("The type of proxy to use."),
+              info: joi.alternatives(socksSchema).conditional(joi.ref("type"), {
+                switch: [
+                  { is: "socks5h", then: socksSchema },
+                  { is: "socks5", then: socksSchema },
+                  { is: "socks4", then: socksSchema },
+                  { is: joi.invalid(), then: joi.string().valid("Bad!") },
+                ],
+              }),
+            })
+            .optional()
+            .description("Advanced: Connect the remote bot via a proxy."),
+        })
+        .description("Advanced: options for proxies"),
       remoteServer: joi
         .object({
           host: joi.string().hostname().default("2b2t.org").description("Address of the server to connect the bot to"),
@@ -153,14 +179,16 @@ export const configSchema = joi.object({
         .description("Settings for how you connect to the proxy"),
       localServerOptions: joi
         .object({
-          motdOptions: joi.object({
-            prefix: joi
-              .string()
-              .allow("")
-              .default("")
-              .required()
-              .description("Prefix to standard MOTD (color codes here)"),
-          }).required().description('All options for the server\'s MOTD'),
+          motdOptions: joi
+            .object({
+              prefix: joi
+                .string()
+                .allow("")
+                .default("")
+                .description("Prefix to standard MOTD (color codes here)"),
+            })
+            .description("All options for the server's MOTD"),
+          favicon: joi.string().allow("").default("").description("Local server's icon"),
         })
         .default()
         .description("Configuration for local server, unrelated to proxy settings."),

@@ -31,6 +31,14 @@
       "email": "",
       "password": "",
       "auth": "microsoft"
+      },
+      "proxy": {
+        "enabled": false,
+        "type": "sockh",
+        "info": {
+          "host": "test",
+          "port": 25565
+        }
     },
     "remoteServer": {
       "host": "localhost",
@@ -48,7 +56,7 @@
       "motdOptions": {
         "prefix": "§6"
       },
-      "icon": "/home/generel/Pictures/2b2w-small.png"
+      "favicon": "/home/generel/Pictures/2b2w-small.png"
     },
     "localServerProxyConfig": {
       "restartOnDisconnect": false,
