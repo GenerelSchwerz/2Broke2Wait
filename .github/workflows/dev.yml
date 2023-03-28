@@ -38,6 +38,7 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
+          yarn run build
           ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
         with:
@@ -102,10 +103,13 @@ jobs:
             apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
+            npm i -g npx
+            npm i -g yarn
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             chown -R root:root /home/runner
+            yarn run build
             npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
             chmod -R ugo+rwx /home/runner
@@ -169,6 +173,7 @@ jobs:
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
             npm i -g npx
+            npm i -g yarn
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
