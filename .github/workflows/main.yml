@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 16
       - name: Install Dependencies
-        run: npm i
+        run: yarn install
 
       - name: Dedup
         run: npm dedup --production
@@ -43,7 +43,7 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: "pkg/${{matrix.artifact}}"
-          if-no-files-found: error/experiments/kmap/
+          if-no-files-found: error
 
 
   build_dev_arm64:
@@ -59,7 +59,7 @@ jobs:
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
 
     # The host should always be Linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
@@ -67,7 +67,6 @@ jobs:
       - name: Install NPM dependencies
         run: |
             npm i
-            npm install --dev caxa
             npm dedup --production
 
       - uses: uraimo/run-on-arch-action@v2
@@ -75,7 +74,7 @@ jobs:
         id: runcmd
         with:
           arch: aarch64
-          distro: ubuntu18.04
+          distro: ubuntu20.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
@@ -100,6 +99,7 @@ jobs:
             apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
+            npm install --global yarn
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
@@ -129,7 +129,7 @@ jobs:
             artifact: "2bored2wait-linux-armv7-${{github.sha}}"
 
     # The host should always be Linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Build armv7 development version
     steps:
       - uses: actions/checkout@v3
@@ -144,7 +144,7 @@ jobs:
         id: runcmd
         with:
           arch: armv7
-          distro: ubuntu18.04
+          distro: ubuntu20.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.

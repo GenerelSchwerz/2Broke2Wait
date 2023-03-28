@@ -33,7 +33,7 @@ jobs:
         run: yarn install
 
       - name: Dedup
-        run: npm dedup --production
+        run: npx -y yarn-deduplicate
 
       - name: Build
         run: |
@@ -63,11 +63,14 @@ jobs:
     name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install Dependencies
+        run: yarn install
 
-      - name: Install NPM dependencies
-        run: |
-            npm i
-            npm dedup --production
+      - name: Dedup
+        run: npx -y yarn-deduplicate
 
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
@@ -132,12 +135,15 @@ jobs:
     name: Build armv7 development version
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install Dependencies
+        run: yarn install
 
-      - name: Install NPM dependencies
-        run: |
-            npm i
-            npm dedup --production
-        
+      - name: Dedup
+        run: npx -y yarn-deduplicate
+
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -162,6 +168,7 @@ jobs:
             apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
+            npm i -g npx
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
