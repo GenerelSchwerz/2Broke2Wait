@@ -192,3 +192,6 @@ export const TypedEventEmitter: new <T, K = T>(options?: ConstructorOptions) => 
 export type TypedEventEmitter<T, K = T> = StrictEventEmitter<EventEmitter2, T, K> // Order matters here, we want our overloads to be considered first
 
 // ITypedEventEmitter<T, K> &
+export type Arguments<T> = [T] extends [(...args: infer U) => any]
+  ? U
+  : [T] extends [void] ? [] : [T]

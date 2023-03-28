@@ -16,10 +16,20 @@ export interface Options {
       enabled: boolean
       queue: {
         url: string,
+        icon?: string,
+        username?: string,
         reportAt: number
       },
-      gameChat: string
-      serverInfo: string
+      gameChat:{
+        url: string,
+        icon?: string,
+        username?: string,
+      },
+      serverInfo: {
+        url: string,
+        icon?: string,
+        username?: string,
+      },
     }
   }
   minecraft: {

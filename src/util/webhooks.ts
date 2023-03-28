@@ -113,6 +113,7 @@ class ServerQueueUpdateMessenger extends AntiAFKWebhookReporter<'queueUpdate'> {
       `Estimated ETA: ${strETA}`
 
     const data = await this.webhookClient.send({
+      
       embeds: [embed]
     })
   }
@@ -151,16 +152,16 @@ export function applyWebhookListeners (
     console.log("Queue webhook url is not defined, skipping!")
   }
 
-  if (!!config.gameChat) {
-    const gameChatHelper = new GameChatListener(srv, config.gameChat)
+  if (!!config.gameChat && config.gameChat.url) {
+    const gameChatHelper = new GameChatListener(srv, config.gameChat.url)
     srv.registerClientListeners(gameChatHelper)
   } else {
     console.log("Game chat webhook URL is not defined, skipping!")
   }
 
-  if (config.serverInfo) {
-    const serverStart = new ServerStartMessenger(srv, config.serverInfo)
-    const serverStop = new ServerStopMessenger(srv, config.serverInfo)
+  if (config.serverInfo && config.serverInfo.url) {
+    const serverStart = new ServerStartMessenger(srv, config.serverInfo.url)
+    const serverStop = new ServerStopMessenger(srv, config.serverInfo.url)
     srv.registerServerListeners(serverStart, serverStop)
   } else {
     console.log("Server info webhook URl is not defined, skipping!")

@@ -77,13 +77,14 @@ afkServer.on('stopped', () => {
 })
 
 
-afkServer.on('breath', (bot) => {
+afkServer.on('botevent:breath', (bot) => {
   botUpdatesMotd(bot)
 })
 
-afkServer.on('health', (bot) => {
+afkServer.on('botevent:health', (bot) => {
   botUpdatesMotd(bot)
 })
+
 
 afkServer.on('enteredQueue', () => {
   queueEnterMotd()

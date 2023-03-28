@@ -44,6 +44,8 @@ export const configSchema = joi.object({
           queue: joi
             .object({
               url: joi.string().allow("").default("").description("Webhook URL for queue updates."),
+              icon: joi.string().allow("").default("").description("Icon when sending messages."),
+              username: joi.string().default("Queue webhook").description("Username when sending messages."),
               reportAt: joi
                 .number()
                 .min(0)
@@ -52,8 +54,32 @@ export const configSchema = joi.object({
             })
             .required()
             .description("Info for queue updates."),
-          gameChat: joi.string().allow("").default("").description("Webhook URL for in-game chat."),
-          serverInfo: joi.string().allow("").default("").description("Webhook URL for server updates."),
+            gameChat: joi
+            .object({
+              url: joi.string().allow("").default("").description("Webhook URL for queue updates."),
+              icon: joi.string().allow("").default("").description("Icon when sending messages."),
+              username: joi.string().default("Queue webhook").description("Username when sending messages."),
+              reportAt: joi
+                .number()
+                .min(0)
+                .default(9999)
+                .description("Begin sending updates from this number and under"),
+            })
+            .required()
+            .description("Info for queue updates."),
+            serverInfo: joi
+            .object({
+              url: joi.string().allow("").default("").description("Webhook URL for queue updates."),
+              icon: joi.string().allow("").default("").description("Icon when sending messages."),
+              username: joi.string().default("Queue webhook").description("Username when sending messages."),
+              reportAt: joi
+                .number()
+                .min(0)
+                .default(9999)
+                .description("Begin sending updates from this number and under"),
+            })
+            .required()
+            .description("Info for queue updates.")
         })
         .default()
         .description("Webhook URLs for logging, if wanted."),

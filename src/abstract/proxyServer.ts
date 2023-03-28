@@ -1,11 +1,11 @@
 import merge from "ts-deepmerge";
 
-import type { Bot, BotOptions } from "mineflayer";
+import type { Bot, BotOptions, BotEvents } from "mineflayer";
 import { ServerClient, Client, Server, PacketMeta } from "minecraft-protocol";
 import { sleep } from "../util/index";
 import { ClientEventRegister, ServerEventRegister } from "./eventRegisters";
 import { Conn, ConnOptions } from "@rob9315/mcproxy";
-import { TypedEventEmitter } from "../util/utilTypes";
+import { Arguments, TypedEventEmitter } from "../util/utilTypes";
 import { CommandHandler } from "../util/commandHandler";
 
 /**
@@ -16,14 +16,18 @@ export interface IProxyServerOpts {
   restartOnDisconnect: boolean;
 }
 
-export interface IProxyServerEvents {
+type PrefixedBotEvents<Prefix extends string = 'botevent'> = {
+  [K in keyof BotEvents as K extends string ? `${Prefix}:${K}` : never]: (bot: Bot, ...args: Arguments<BotEvents[K]>) => void
+}
+
+export type IProxyServerEvents = {
   remoteKick: (reason: string) => void;
   remoteError: (error: Error) => void;
   closedConnections: (reason: string) => void;
   setup: (conn: Conn) => void;
   started: (conn: Conn) => void;
   stopped: () => void;
-}
+} & PrefixedBotEvents
 
 /**
  * This proxy server provides a wrapper around the connection to the remote server and
@@ -194,6 +198,15 @@ export abstract class ProxyServer<
     if (this.remoteBot == null || this.remoteClient == null) return;
     this.initialBotSetup(this.remoteBot);
     this.optionValidation();
+
+
+    const oldEmit = this.remoteBot.emit.bind(this.remoteBot)
+
+    this.remoteBot.emit = <E extends keyof BotEvents>(event: E, ...args: Arguments<BotEvents[E]>) => {
+      this.emit(`botevent:${event}` as any, this.remoteBot!, ...args);
+      return oldEmit(event, ...args)
+    }
+
 
     this.remoteBot.on('kicked', this.remoteClientDisconnect);
     // this.remoteClient.on("error", this.remoteClientDisconnect);

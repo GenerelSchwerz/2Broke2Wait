@@ -29,9 +29,6 @@ export interface AntiAFKOpts extends IProxyServerOpts {
 }
 
 export interface AntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {
-  botSpawn: (bot: Bot) => void
-  health: (bot: Bot) => void
-  breath: (bot: Bot) => void
   '*': AntiAFKEvents[Exclude<keyof AntiAFKEvents, '*'>]
 }
 export type StrictAntiAFKEvents = Omit<AntiAFKEvents, '*'>
@@ -90,9 +87,6 @@ export class AntiAFKServer<
 
   public setupAntiAfk = (): void => {
     if (this.remoteBot == null) return
-    this.remoteBot.on('health', () => { this.emit('health' as any, this.remoteBot) })
-    this.remoteBot.on('breath', () => { this.emit('breath' as any, this.remoteBot) })
-    this.remoteBot.on('spawn', () => { this.emit('botSpawn' as any, this.remoteBot) })
     this.remoteBot.once('spawn', () => this.beginBotLogic())
   }
 
