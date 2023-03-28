@@ -172,8 +172,10 @@ jobs:
             apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
+            wget -O - https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+            echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+            sudo apt update -q -y && sudo apt install -q -y yarn
             npm i -g npx
-            npm i -g yarn
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
