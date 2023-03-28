@@ -100,7 +100,7 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget git build-essential
+            apt-get install -q -y wget build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
             npm i -g npx
@@ -169,12 +169,13 @@ jobs:
       
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget git build-essential
+            apt-get install -q -y wget
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
+            apt-get install -q -y npm
             wget -O - https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
             echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-            sudo apt update -q -y && sudo apt install -q -y yarn
+            apt update -q -y && sudo apt install -q -y yarn
             npm i -g npx
 
           # Set an output parameter `uname` for use in subsequent steps
