@@ -6,7 +6,6 @@ ncc/
 worlds/
 src/unused/
 yarn-error.log
-*.lock
 .env
 options.json
 package-lock.json
