@@ -29,15 +29,15 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: yarn
 
       - name: Install NPM dependencies
         run: |
-          npm i
-          npm dedup --production
+          yarn install
+          npx -y yarn-deduplicate
         
       - name: Transpile
         run: |
-          npm install typescript
           npx tsc
 
       - name: Build
@@ -75,14 +75,12 @@ jobs:
 
       - name: Install NPM dependencies
         run: |
-            npm i
-            npm dedup --production
-
-
+          yarn install
+          npx -y yarn-deduplicate
+        
       - name: Transpile
         run: |
-          npm install typescript
-          npx tsc
+            npx tsc
 
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
@@ -154,12 +152,11 @@ jobs:
 
       - name: Install NPM dependencies
         run: |
-          npm i
-          npm dedup --production
-
+          yarn install
+          npx -y yarn-deduplicate
+        
       - name: Transpile
         run: |
-          npm install typescript
           npx tsc
       
       - uses: uraimo/run-on-arch-action@v2
