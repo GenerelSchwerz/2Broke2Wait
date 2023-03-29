@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir pkg
           yarn run tsc
-          yarn run caxa -i . -o "pkg/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+          yarn run caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
 
       # ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
@@ -119,7 +119,7 @@ jobs:
           run: |
             chown -R root:root /home/runner
             npx caxa -h
-            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
             chmod -R ugo+rwx /home/runner
 
@@ -201,7 +201,7 @@ jobs:
             chown -R root:root /home/runner
             echo "set perms"
             npx caxa -h
-            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
             chmod -R ugo+rwx /home/runner
             echo "set other perms"
