@@ -39,7 +39,7 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
-          yarn run tsc
+          npx tsc
           npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
 
       # ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
@@ -161,7 +161,7 @@ jobs:
         run: npx -y yarn-deduplicate
 
       - name: Build
-        run: yarn run tsc
+        run: npx tsc
 
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
