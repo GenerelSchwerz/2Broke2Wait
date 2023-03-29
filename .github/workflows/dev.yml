@@ -181,10 +181,7 @@ jobs:
             apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
-            apt-get install -q -y npm
-            npm config set strict-ssl=false
-            npm i -g npx
-
+            
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             chown -R root:root /home/runner
