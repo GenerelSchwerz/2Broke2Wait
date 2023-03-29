@@ -193,6 +193,12 @@ jobs:
             apt-get install -q -y npm
             npm config set strict-ssl=false
             npm i -g npx
+            echo "what node ver?"
+            node -v 
+            echo "what npm ver?"
+            npm -v 
+            echo "what npx ver?"
+            npx -v
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
