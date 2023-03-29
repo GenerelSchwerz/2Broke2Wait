@@ -176,8 +176,8 @@ jobs:
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             chown -R root:root /home/runner
-            ${{matrix.build}} -o "/artifacts/${{matrix.artifact}}"
-            echo "Produced artifact at /artifacts/${{matrix.artifact}}"
+            npx caxa -i . -o "/artifacts/ALT-${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            echo "Produced artifact at /artifacts/ALT-${{matrix.artifact}}"
             chmod -R ugo+rwx /home/runner
 
 
@@ -188,5 +188,5 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/${{matrix.artifact}}"
+          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/ALT-${{matrix.artifact}}"
           if-no-files-found: error
