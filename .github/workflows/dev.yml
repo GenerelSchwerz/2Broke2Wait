@@ -29,6 +29,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: 'yarn'
       - name: Install Dependencies
         run: yarn install
 
@@ -39,7 +40,7 @@ jobs:
         run: |
           mkdir pkg
           yarn run tsc
-          yarn run caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
+          npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
 
       # ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
@@ -69,6 +70,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: 'yarn'
       - name: Install Dependencies
         run: yarn install
 
@@ -151,6 +153,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: 'yarn'
       - name: Install Dependencies
         run: yarn install
 
