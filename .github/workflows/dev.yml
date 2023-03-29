@@ -34,6 +34,9 @@ jobs:
         run: |
           npm i
           npm dedup --production
+        
+      - name: Transpile
+        run: npx tsc
 
       - name: Build
         run: |
