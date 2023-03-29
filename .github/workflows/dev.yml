@@ -29,20 +29,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'npm'
       - name: Install Dependencies
-        run: npm install
+        run: yarn install
 
       - name: Dedup
-        run: npx -y yarn-deduplicate
-
-      - name: Transpile
-        run: npx tsc
+        run: npm dedup --production
 
       - name: Build
         run: |
           mkdir pkg
-          npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
+          ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
@@ -67,18 +63,11 @@ jobs:
     name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'yarn'
-      - name: Install Dependencies
-        run: yarn install
 
-      - name: Dedup
-        run: npx -y yarn-deduplicate
-
-      - name: Build
-        run: yarn run build
+      - name: Install NPM dependencies
+        run: |
+            npm i
+            npm dedup --production
 
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
@@ -99,9 +88,6 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
 
-          env: |
-            NODE_TLS_REJECT_UNAUTHORIZED: 0
-
           # Install some dependencies in the container. This speeds up builds if
           # you are also using githubToken. Any dependencies installed here will
           # be part of the container image that gets cached, so subsequent
@@ -111,17 +97,14 @@ jobs:
           install: |
             apt-get update -q -y
             apt-get install -q -y wget git build-essential
-            wget -qO- https://deb.nodesource.com/setup_16.x | bash -
+            wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
-            apt-get install -q -y npm
-            npm config set strict-ssl=false
-            npm i -g npx
+            npm install --global yarn
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
             chown -R root:root /home/runner
-            npx caxa -h
-            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
+            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "/artifacts/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
             chmod -R ugo+rwx /home/runner
 
@@ -150,19 +133,12 @@ jobs:
     name: Build armv7 development version
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'yarn'
-      - name: Install Dependencies
-        run: yarn install
 
-      - name: Dedup
-        run: npx -y yarn-deduplicate
-
-      - name: Build
-        run: npx tsc
-
+      - name: Install NPM dependencies
+        run: |
+            npm i
+            npm dedup --production
+        
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
@@ -181,39 +157,19 @@ jobs:
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
             --volume "${PWD}/artifacts:/artifacts"
-          
-          env: |
-            NODE_TLS_REJECT_UNAUTHORIZED: 0
-
+      
           install: |
             apt-get update -q -y
             apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
-            apt-get install -q -y npm
-            npm config set strict-ssl=false
-            npm i -g npx
-            echo "what node ver?"
-            node -v 
-            echo "what npm ver?"
-            npm -v 
-            echo "what npx ver?"
-            npx -v
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
-            echo "working"
-            node -v
-            npm -v
-            npx -v
-            echo "npx caxa -i . -o \"/artifacts/${{matrix.artifact}}\" -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/lib/index.js\""
             chown -R root:root /home/runner
-            echo "set perms"
-            npx caxa -h
-            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
+            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "/artifacts/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
-            chmod -R ugo+rwx /home/runner
-            echo "set other perms"
+            chown -R 1001:1001 /home/runner
 
       - name: Outer check
         run: |
