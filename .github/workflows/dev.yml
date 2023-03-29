@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 16
       - name: Install Dependencies
-        run: yarn add typescript
+        run: yarn install
 
       - name: Dedup
         run: npx -y yarn-deduplicate
@@ -38,7 +38,7 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
-          yarn run build
+          yarn run tsc
           npx caxa -i . -o "pkg/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
 
       # ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
@@ -158,7 +158,7 @@ jobs:
         run: npx -y yarn-deduplicate
 
       - name: Build
-        run: yarn run build
+        run: yarn run tsc
 
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
