@@ -1,0 +1,21 @@
+{
+  "modules": {
+
+    "RandomMovementModule": {
+      "enabled": false
+    },
+    "ChatBotModule": {
+      "enabled": false
+    }
+  },
+
+  "passives": {
+    
+    "KillAuraPassive": {
+      "playerWhitelist": [],
+      "reach": 4,
+      "multi": false,
+      "enabled": true
+    }
+  }
+}

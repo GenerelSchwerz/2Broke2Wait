@@ -1,0 +1,55 @@
+# Customization for the remote bot instance.
+remote:
+
+  # Options derived from mineflayer's BotOptions
+  mineflayer:botOptions:
+    username: Generel_Schwerz
+    auth: microsoft
+    host: 2b2t.org
+    port: 25565
+
+  # custom settings for SOCKS4/5 proxy.
+  custom:proxyOptions:
+    enabled: false
+    type: sock5h
+    info:
+      host: 1.1.1.1
+      port: 25565
+
+# Customization for the local server instance (the server to connect to)
+local:
+
+  # Options derived from minecraft-protocol's ServerOptions
+  minecraft-protocol:serverOptions:
+    host: localhost
+    port: 25566
+    version: "1.12.2"
+    online-mode: false
+    maxPlayers: 1
+
+  # Custom settings for display of server/security for the server
+  custom:serverCustomization:
+    favicon: "./static/configs/2b2w-small.png"
+    motdOptions:
+      prefix: "§6"
+    securityOptions:
+      allowList: null
+      kickMessage: "Default kick message"
+
+  # Custom features.
+  custom:serverFeatures:
+    disableCommands: false
+    disconnectAllOnEnd: true
+    linkOnConnect: true
+    logPlayerJoinLeave: false
+    restartOnDisconnect: false
+    worldCaching: false
+
+    # extendable option here
+    pluginOptions:
+      antiAFK:
+        enabled: true
+        configPath: "./static/assets/antiafk.json"
+      autoEat:
+        enabled: true
+        configPath: "./static/assets/antiafk.json"

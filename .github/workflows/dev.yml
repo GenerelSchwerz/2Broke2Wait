@@ -39,7 +39,9 @@ jobs:
         run: |
           mkdir pkg
           yarn run build
-          ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+          npx caxa -i . -o "pkg/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+
+      # ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
@@ -189,6 +191,7 @@ jobs:
           run: |
             echo "working"
             npx -v
+            echo "npx caxa -i . -o \"/artifacts/${{matrix.artifact}}\" -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/lib/index.js\""
             chown -R root:root /home/runner
             npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"

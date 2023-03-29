@@ -16,15 +16,19 @@ import { applyWebhookListeners } from './util/webhooks'
 import { SpectatorServer } from './impls/spectatorServer'
 
 import * as rl from 'readline'
+const yaml = require('js-yaml')
 
-const optionDir: string = './options.json'
+const optionDir: string = './static/configs/options.json'
+
+console.log(yaml.load(fs.readFileSync('./static/configs/options.yml', 'utf-8')))
 
 /// //////////////////////////////////////////
 //              Initialization             //
 /// //////////////////////////////////////////
 
 // ... If no errors were found, return the validated config
-const config = JSON.parse(fs.readFileSync(optionDir).toString())
+const config = yaml.load(fs.readFileSync('./static/configs/options.yml', 'utf-8'))
+
 
 const checkedConfig: Options = validateOptions(config)
 
