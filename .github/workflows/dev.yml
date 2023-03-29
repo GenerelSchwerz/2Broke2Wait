@@ -10,19 +10,16 @@ jobs:
   build_dev_x64:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        target: [win, macos, linux]
         include:
-          - os: windows-latest
-            build: npx pkg . --target node16-win-x64
+          - target: win
             artifact: "2bored2wait-win-x64-${{github.sha}}.exe"
-          - os: macos-latest
-            build: npx pkg . --target node16-macos-x64
+          - target: macos
             artifact: "2bored2wait-macos-x64-${{github.sha}}"
-          - os: ubuntu-latest
-            build: npx pkg . --target node16-linux-x64
+          - target: linux
             artifact: "2bored2wait-linux-x64-${{github.sha}}"
 
-    runs-on: ${{ matrix.os }} 
+    runs-on: ubuntu-latest
     name: Build x64 development version
     steps:
       - uses: actions/checkout@v3
@@ -43,13 +40,14 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
-          ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+          npx pkg . --target node16-${{matrix.target}}-x64 -o "pkg/${{matrix.artifact}}"
 
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
           path: "pkg/${{matrix.artifact}}"
           if-no-files-found: error
+
 
 
 
@@ -92,4 +90,36 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: "pkg/${{matrix.artifact}}"
+          if-no-files-found: error
+
+
+
+  build_dev_armv7:
+    runs-on: ubuntu-latest
+    name: Build armv7 development version
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: yarn
+
+      - name: Install NPM dependencies
+        run: |
+          yarn install
+          npx -y yarn-deduplicate
+        
+      - name: Transpile
+        run: |
+          npx tsc
+
+      - name: Build
+        run: |
+          mkdir pkg
+          npx pkg . --target node16-linuxstatic-armv7 -o "pkg/2bored2wait-linux-arm64-${{github.sha}}"
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 2bored2wait-linux-arm64-${{github.sha}}
+          path: "pkg/2bored2wait-linux-arm64-${{github.sha}}"
           if-no-files-found: error
