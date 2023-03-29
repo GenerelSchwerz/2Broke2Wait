@@ -86,7 +86,7 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
-          npx pkg . --target ${{matrix.target}} -o "pkg/${{matrix.artifact}}"
+          npx pkg . --target node16-${{matrix.target}}-arm64 -o "pkg/${{matrix.artifact}}"
 
       - uses: actions/upload-artifact@v3
         with:
