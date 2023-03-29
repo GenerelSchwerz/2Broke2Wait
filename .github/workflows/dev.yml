@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 16
       - name: Install Dependencies
-        run: yarn install
+        run: yarn add typescript
 
       - name: Dedup
         run: npx -y yarn-deduplicate
