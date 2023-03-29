@@ -1,6 +1,3 @@
-import EventEmitter from 'events'
-import { StrictEventEmitter } from 'strict-event-emitter-types'
-import { IProxyServerOpts } from '../../abstract/proxyServer'
 import { AntiAFKOpts } from '../antiAfkServer'
 
 type AllowListCallback = (username: string) => boolean

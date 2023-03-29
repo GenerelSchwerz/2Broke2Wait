@@ -2,10 +2,11 @@ import { Vec3 } from 'vec3'
 import { Client, ServerClient, PacketMeta } from 'minecraft-protocol'
 import { Bot as VanillaBot, GameState } from 'mineflayer'
 import { performance } from 'perf_hooks'
-import Item, { Item as ItemType, NotchItem } from 'prismarine-item'
+import type { Item as ItemType, NotchItem } from 'prismarine-item'
 import { IPositionTransformer, packetAbilities } from '@rob9315/mcproxy'
+
+const itemLoader = require('prismarine-item/index.js') // ncc compat, get default.
 const fetch = require('node-fetch')
-const ChatMessage = require('prismarine-chat')('1.12.2')
 
 type Bot = VanillaBot & { recipes: number[] }
 
@@ -65,7 +66,7 @@ export class FakePlayer {
     this.skinLookup = options.skinLookup ?? true
     this.bot = bot
     this.fakePlayerEntity = new FakeEntity(bot.entity.position.clone(), bot.entity.yaw, bot.entity.pitch)
-    this.pItem = Item(bot.version)
+    this.pItem = itemLoader(bot.version)
     this.initListener()
     this.connectedClients = []
     this.positionTransformer = options.positionTransformer

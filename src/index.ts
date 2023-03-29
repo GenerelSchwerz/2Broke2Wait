@@ -20,8 +20,6 @@ const yaml = require('js-yaml')
 
 const optionDir: string = './static/configs/options.json'
 
-console.log(yaml.load(fs.readFileSync('./static/configs/options.yml', 'utf-8')))
-
 /// //////////////////////////////////////////
 //              Initialization             //
 /// //////////////////////////////////////////

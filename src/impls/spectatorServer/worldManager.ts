@@ -1,7 +1,7 @@
 import { chunkColumnToPacketsWithOffset, IPositionTransformer, PacketMiddleware } from '@rob9315/mcproxy'
-import fs from 'fs'
+import * as fs from 'fs'
 import { Client } from 'minecraft-protocol'
-import path from 'path'
+import * as path from 'path'
 import { setTimeout } from 'timers/promises'
 import { default as VectorBuilder, Vec3 } from 'vec3'
 const { SpiralIterator2d } = require('prismarine-world').iterators

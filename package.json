@@ -6,7 +6,7 @@
   "author": "GenerelSchwerz <xXSG.KingXx@gmail.com>",
   "license": "MIT",
   "main": "lib/index.js",
-  "bin": "lib/index.js",
+  "bin": "dist/index.js",
   "scripts": {
     "build": "npx tsc",
     "fix": "npx prettier . -w",

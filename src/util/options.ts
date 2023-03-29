@@ -4,7 +4,7 @@ import merge from "ts-deepmerge";
 import { readFileSync } from "fs";
 import { ServerSpectatorOptions } from "../impls/spectatorServer/utils";
 import { BaseWebhookOpts } from "../abstract/webhookReporters";
-import socks from "socks";
+import {SocksClient} from "socks";
 import { Agent } from "http";
 const ProxyAgent = require("proxy-agent");
 
@@ -71,7 +71,7 @@ function socksConstruct(
   const numType = opts.protocol.includes("socks5") ? 5 : 4;
   return {
     connect: (client: Client) => {
-      socks.SocksClient.createConnection(
+      SocksClient.createConnection(
         {
           proxy: {
             ...opts,
