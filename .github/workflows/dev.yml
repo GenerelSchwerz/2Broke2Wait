@@ -20,7 +20,7 @@ jobs:
             artifact: "2bored2wait-linux-x64-${{github.sha}}"
 
     runs-on: ubuntu-latest
-    name: Build x64 development version
+    name: X64
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -40,7 +40,8 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
-          npx pkg . --target node16-${{matrix.target}}-x64 -o "pkg/${{matrix.artifact}}"
+          npx caxa -i . -o "pkg/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+        # npx pkg . --target node16-${{matrix.target}}-x64 -o "pkg/${{matrix.artifact}}"
 
       - uses: actions/upload-artifact@v3
         with:
@@ -64,7 +65,7 @@ jobs:
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
 
     runs-on: ubuntu-latest
-    name: Build arm64 development version
+    name: Arm64
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -96,7 +97,7 @@ jobs:
 
   build_dev_armv7:
     runs-on: ubuntu-latest
-    name: Build armv7 development version
+    name: Armv7
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -138,14 +139,14 @@ jobs:
             artifact: "ALT-2bored2wait-linux-arm64-${{github.sha}}"
 
     runs-on: ubuntu-20.04
-    name: Build arm64 development version
+    name: Arm64 Alt
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
           cache: yarn
-          
+
       - name: Install NPM dependencies
         run: |
             npm i
