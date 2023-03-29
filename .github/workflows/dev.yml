@@ -36,7 +36,9 @@ jobs:
           npm dedup --production
         
       - name: Transpile
-        run: npx tsc
+        run: |
+          npm install typescript
+          npx tsc
 
       - name: Build
         run: |
@@ -75,6 +77,12 @@ jobs:
         run: |
             npm i
             npm dedup --production
+
+
+      - name: Transpile
+        run: |
+          npm install typescript
+          npx tsc
 
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
@@ -149,6 +157,11 @@ jobs:
           npm i
           npm dedup --production
 
+      - name: Transpile
+        run: |
+          npm install typescript
+          npx tsc
+      
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
