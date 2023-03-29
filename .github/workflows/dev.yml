@@ -52,102 +52,27 @@ jobs:
           if-no-files-found: error
 
 
+
   build_dev_arm64:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        target: [win, macos, linux]
         include:
-          - os: macos-latest
-            build: npx pkg . --target node16-macos-arm64
+          - target: win
+            artifact: "2bored2wait-win-arm64-${{github.sha}}.exe"
+          - target: macos
             artifact: "2bored2wait-macos-arm64-${{github.sha}}"
-          - os: ubuntu-latest
-            build: npx pkg . --target node16-linux-arm64
+          - target: linux
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
 
-    # The host should always be Linux
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-
-      - name: Install NPM dependencies
-        run: |
-          yarn install
-          npx -y yarn-deduplicate
-        
-      - name: Transpile
-        run: |
-            npx tsc
-
-      - uses: uraimo/run-on-arch-action@v2
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu20.04
-
-          # Not required, but speeds up builds by storing container images in
-          # a GitHub package registry.
-          githubToken: ${{ github.token }}
-
-          # Create an artifacts directory
-          setup: |
-            mkdir -p "${PWD}/artifacts"
-
-          # Mount the artifacts directory as /artifacts in the container
-          dockerRunArgs: |
-            --volume "${PWD}/artifacts:/artifacts"
-
-          # Install some dependencies in the container. This speeds up builds if
-          # you are also using githubToken. Any dependencies installed here will
-          # be part of the container image that gets cached, so subsequent
-          # builds don't have to re-install them. The image layer is cached
-          # publicly in your project's package repository, so it is vital that
-          # no secrets are present in the container state or logs.
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y wget git build-essential
-            wget -O - https://deb.nodesource.com/setup_16.x | bash -
-            apt-get install -q -y nodejs
-
-          # Set an output parameter `uname` for use in subsequent steps
-          run: |
-            chown -R root:root /home/runner
-            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "/artifacts/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
-            echo "Produced artifact at /artifacts/${{matrix.artifact}}"
-            chmod -R ugo+rwx /home/runner
-
-
-      - name: show outer build directory
-        run: |
-            ls -al "${PWD}/artifacts/"
-    
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact }}
-          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/${{matrix.artifact}}"
-          if-no-files-found: error
-
-  build_dev_armv7:
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        include:
-          - os: ubuntu-latest
-            build: npx pkg . --target node16-linux-armv7
-            artifact: "2bored2wait-linux-armv7-${{github.sha}}"
-
-    # The host should always be Linux
-    runs-on: ubuntu-20.04
-    name: Build armv7 development version
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
+          cache: yarn
 
       - name: Install NPM dependencies
         run: |
@@ -157,51 +82,14 @@ jobs:
       - name: Transpile
         run: |
           npx tsc
-      
-      - uses: uraimo/run-on-arch-action@v2
-        name: Run commands
-        id: runcmd
-        with:
-          arch: armv7
-          distro: ubuntu20.04
 
-          # Not required, but speeds up builds by storing container images in
-          # a GitHub package registry.
-          githubToken: ${{ github.token }}
-
-          # Create an artifacts directory
-          setup: |
-            mkdir -p "${PWD}/artifacts"
-
-          # Mount the artifacts directory as /artifacts in the container
-          dockerRunArgs: |
-            --volume "${PWD}/artifacts:/artifacts"
-      
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y wget git build-essential
-            wget -O - https://deb.nodesource.com/setup_16.x | bash -
-            apt-get install -q -y nodejs
-
-          # Set an output parameter `uname` for use in subsequent steps
-          run: |
-            node -v
-            npm -v 
-            npx -v
-            chown -R root:root /home/runner
-            npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "/artifacts/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
-            echo "Produced artifact at /artifacts/${{matrix.artifact}}"
-            chown -R 1001:1001 /home/runner
-
-      - name: Outer check
+      - name: Build
         run: |
-            echo "${PWD}/artifacts"
-            ls -l "${PWD}/artifacts"
-            stat "${PWD}/artifacts/${{matrix.artifact}}"
-
+          mkdir pkg
+          npx pkg . --target ${{matrix.target}} -o "pkg/${{matrix.artifact}}"
 
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/${{matrix.artifact}}"
+          path: "pkg/${{matrix.artifact}}"
           if-no-files-found: error
