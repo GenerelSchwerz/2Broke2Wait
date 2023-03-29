@@ -4,6 +4,7 @@
     "moduleResolution": "NodeNext",
     "target": "ES2022",
     "sourceMap": true,
+    "rootDir": "src",
     "outDir": "lib",
     "noImplicitAny": true,
     "strict": true,

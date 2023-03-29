@@ -29,20 +29,20 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'yarn'
+          cache: 'npm'
       - name: Install Dependencies
-        run: yarn install
+        run: npm install
 
       - name: Dedup
         run: npx -y yarn-deduplicate
 
+      - name: Transpile
+        run: npx tsc
+
       - name: Build
         run: |
           mkdir pkg
-          npx tsc
           npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "pkg/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
-
-      # ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
@@ -111,7 +111,7 @@ jobs:
           install: |
             apt-get update -q -y
             apt-get install -q -y wget git build-essential
-            wget -O - https://deb.nodesource.com/setup_16.x | bash -
+            wget -qO- https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
             apt-get install -q -y npm
             npm config set strict-ssl=false
