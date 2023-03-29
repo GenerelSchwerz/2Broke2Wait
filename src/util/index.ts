@@ -49,28 +49,3 @@ export class Task<Finish = void, Cancel = void> {
     }
   }
 }
-
-// let runningFunc: Task<boolean, Error> = {done: true, promise: Promise.resolve()} as any;
-
-// async function shit(iters: number) {
-//   if (!runningFunc.done) {
-//     return await runningFunc.promise
-//   }
-//   runningFunc = new Task();
-
-//   for (let i = 0; i < iters; i++) {
-//     await sleep(1000);
-
-//     return runningFunc.cancel(new Error("Bad"));
-//   }
-
-//   return runningFunc.finish(true);
-// }
-
-// (async () => {
-//   shit(2).then((res) => console.log("shit 1 done", res)).catch(e => console.log("shit 1 canceled", e));
-
-//   shit(2).then((res) => console.log("shit 2 done", res)).catch(e => console.log("shit 2 canceled", e));
-
-//   shit(3).then((res) => console.log("shit 3 done", res)).catch(e => console.log("shit 3 canceled", e));
-// })();
