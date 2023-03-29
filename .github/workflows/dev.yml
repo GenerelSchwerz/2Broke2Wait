@@ -29,16 +29,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: Install Dependencies
-        run: yarn install
 
-      - name: Dedup
-        run: npm dedup --production
+      - name: Install NPM dependencies
+        run: |
+          npm i
+          npm dedup --production
 
       - name: Build
         run: |
           mkdir pkg
           ${{ matrix.build }} -o "pkg/${{matrix.artifact}}"
+
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
@@ -63,6 +64,9 @@ jobs:
     name: Build arm64 development version
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
       - name: Install NPM dependencies
         run: |
@@ -133,12 +137,15 @@ jobs:
     name: Build armv7 development version
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
       - name: Install NPM dependencies
         run: |
-            npm i
-            npm dedup --production
-        
+          npm i
+          npm dedup --production
+
       - uses: uraimo/run-on-arch-action@v2
         name: Run commands
         id: runcmd
