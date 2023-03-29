@@ -33,6 +33,7 @@
     "joi": "^17.7.0",
     "js-yaml": "^4.1.0",
     "mineflayer-pathfinder": "^2.4.2",
+    "npx": "^10.2.2",
     "prismarine-provider-anvil": "^2.7.0",
     "proxy-agent": "^5.0.0",
     "strict-event-emitter": "^0.4.3",
