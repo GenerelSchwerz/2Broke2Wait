@@ -186,6 +186,9 @@ jobs:
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
+            node -v
+            npm -v 
+            npx -v
             chown -R root:root /home/runner
             npx caxa "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" -i . -o "/artifacts/${{matrix.artifact}}" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
