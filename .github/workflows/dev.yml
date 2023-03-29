@@ -182,14 +182,14 @@ jobs:
           env: |
             NODE_TLS_REJECT_UNAUTHORIZED: 0
 
-          install: |
+            install: |
             apt-get update -q -y
             apt-get install -q -y wget git build-essential
             wget -O - https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -q -y nodejs
             apt-get install -q -y npm
-            yarn config set strict-ssl false --global
-            yarn global add caxa
+            npm config set strict-ssl=false
+            npm i -g npx
 
           # Set an output parameter `uname` for use in subsequent steps
           run: |
@@ -197,11 +197,11 @@ jobs:
             node -v
             npm -v
             npx -v
-            echo "yarn run caxa -i . -o \"/artifacts/${{matrix.artifact}}\" -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/lib/index.js\""
+            echo "npx caxa -i . -o \"/artifacts/${{matrix.artifact}}\" -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/lib/index.js\""
             chown -R root:root /home/runner
             echo "set perms"
-            yarn run caxa -h
-            yarn run caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            npx caxa -h
+            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
             echo "Produced artifact at /artifacts/${{matrix.artifact}}"
             chmod -R ugo+rwx /home/runner
             echo "set other perms"
