@@ -9,3 +9,4 @@ yarn-error.log
 *.lock
 .env
 options.json
+package-lock.json
