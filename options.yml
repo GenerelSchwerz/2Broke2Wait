@@ -93,7 +93,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: false
-    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G6qVVV.Rl478Cq3k-iIyf-Y3LAbU_6WT6GN607Md3PDl0
+    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G6qVVV.Rl478Cq3k-iIyf-Y3LAbU_6WT6GN607Md3PDl
     prefix: "!"
 
   # Discord webhook configuration.
