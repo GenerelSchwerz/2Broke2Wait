@@ -1,6 +1,5 @@
 {
   "modules": {
-
     "RandomMovementModule": {
       "enabled": false
     },
@@ -8,9 +7,7 @@
       "enabled": false
     }
   },
-
   "passives": {
-    
     "KillAuraPassive": {
       "playerWhitelist": [],
       "reach": 4,

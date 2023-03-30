@@ -144,8 +144,7 @@ Srv
         text = `Connected to: ${this.srv.bOpts.host}`
         if (this.srv.bOpts.port !== 25565) text += `:${this.srv.bOpts.port}`
         text += '\n'
-      }
-      else text = 'Not connected.\n'
+      } else text = 'Not connected.\n'
 
       if (this.srv.controllingPlayer != null) text += `Connected player: ${this.srv.controllingPlayer.username}\n`
       if (this.srv.queue?.inQueue && eta != null) text += `Join time: ${DateTime.local().plus(eta).toFormat('hh:mm a MM/dd/yyyy')}\n`

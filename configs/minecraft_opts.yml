@@ -1,7 +1,7 @@
 # Customization for the remote bot instance.
 remote:
 
-  # Options derived from mineflayer's BotOptions
+  # Options derived from mineflayer's BotOptions.
   mineflayer:botOptions:
     username: Generel_Schwerz
     auth: microsoft
@@ -29,7 +29,7 @@ local:
 
   # Custom settings for display of server/security for the server
   custom:serverCustomization:
-    favicon: "./static/configs/2b2w-small.png"
+    favicon: "https://cdn.discordapp.com/avatars/241801234091212802/19f3d5a1fd7fba82b763894b9852de8b.webp?size=80"
     motdOptions:
       prefix: "§6"
     securityOptions:
@@ -45,7 +45,7 @@ local:
     restartOnDisconnect: false
     worldCaching: false
 
-    # extendable option here
+    # extendable options here
     pluginOptions:
       antiAFK:
         enabled: true

@@ -14,7 +14,7 @@ export interface ServerSpectatorOptions extends AntiAFKOpts {
   logPlayerJoinLeave: boolean
   /** Disconnect all connected players once the proxy bot stops. Defaults to true. If not on players will still be connected but won't receive updates from the server. */
   disconnectAllOnEnd: boolean
-  disabledCommands: boolean
+  disableCommands: boolean
   worldCaching: boolean
 }
 
@@ -24,7 +24,7 @@ export const DefaultProxyOpts: ServerSpectatorOptions = {
     kickMessage: 'Default kick message'
   },
   linkOnConnect: false,
-  disabledCommands: false,
+  disableCommands: false,
   disconnectAllOnEnd: true,
   worldCaching: false,
   logPlayerJoinLeave: false,

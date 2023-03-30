@@ -49,23 +49,18 @@ jobs:
           path: "pkg/${{matrix.artifact}}"
           if-no-files-found: error
 
-
-
-
   build_dev_arm64:
     strategy:
       matrix:
-        target: [win, macos, linux]
+        os: [macos-latest, ubuntu-latest]
         include:
-          - target: win
-            artifact: "2bored2wait-win-arm64-${{github.sha}}.exe"
-          - target: macos
+          - os: macos-latest
             artifact: "2bored2wait-macos-arm64-${{github.sha}}"
-          - target: linux
+          - os: ubuntu-latest
             artifact: "2bored2wait-linux-arm64-${{github.sha}}"
 
-    runs-on: ubuntu-latest
-    name: Arm64
+    runs-on: ubuntu-20.04
+    name: Arm64 Alt
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -75,24 +70,47 @@ jobs:
 
       - name: Install NPM dependencies
         run: |
-          yarn install
-          npx -y yarn-deduplicate
-        
-      - name: Transpile
-        run: |
-          npx tsc
+            yarn install
+            npx -y yarn-deduplicate
 
-      - name: Build
-        run: |
-          mkdir pkg
-          npx pkg . --target node16-${{matrix.target}}-arm64 -o "pkg/${{matrix.artifact}}"
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
 
+          githubToken: ${{ github.token }}
+
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y wget git build-essential
+            wget -O - https://deb.nodesource.com/setup_16.x | bash -
+            apt-get install -q -y nodejs
+
+          # Set an output parameter `uname` for use in subsequent steps
+          run: |
+            chown -R root:root /home/runner
+            npx caxa -i . -o "/artifacts/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+            echo "Produced artifact at /artifacts/${{matrix.artifact}}"
+            chmod -R ugo+rwx /home/runner
+
+
+      - name: show outer build directory
+        run: |
+            ls -al "${PWD}/artifacts/"
+    
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
-          path: "pkg/${{matrix.artifact}}"
+          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/${{matrix.artifact}}"
           if-no-files-found: error
-
 
 
   build_dev_armv7:
@@ -126,67 +144,44 @@ jobs:
           if-no-files-found: error
 
 
-  build_dev_arm64_alt:
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
-        include:
-          - os: macos-latest
-            build: npx pkg . --target node16-macos-arm64
-            artifact: "ALT-2bored2wait-macos-arm64-${{github.sha}}"
-          - os: ubuntu-latest
-            build: npx pkg . --target node16-linux-arm64
-            artifact: "ALT-2bored2wait-linux-arm64-${{github.sha}}"
+  # build_dev_arm64_old:
+  #   strategy:
+  #     matrix:
+  #       target: [win, macos, linux]
+  #       include:
+  #         - target: win
+  #           artifact: "2bored2wait-win-arm64-${{github.sha}}.exe"
+  #         - target: macos
+  #           artifact: "2bored2wait-macos-arm64-${{github.sha}}"
+  #         - target: linux
+  #           artifact: "2bored2wait-linux-arm64-${{github.sha}}"
 
-    runs-on: ubuntu-20.04
-    name: Arm64 Alt
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: yarn
+  #   runs-on: ubuntu-latest
+  #   name: Arm64
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 16
+  #         cache: yarn
 
-      - name: Install NPM dependencies
-        run: |
-            npm i
-            npm dedup --production
+  #     - name: Install NPM dependencies
+  #       run: |
+  #         yarn install
+  #         npx -y yarn-deduplicate
+        
+  #     - name: Transpile
+  #       run: |
+  #         npx tsc
 
-      - uses: uraimo/run-on-arch-action@v2
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu20.04
+  #     - name: Build
+  #       run: |
+  #         mkdir pkg
+  #         npx pkg . --target node16-${{matrix.target}}-arm64 -o "pkg/${{matrix.artifact}}"
 
-          githubToken: ${{ github.token }}
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ matrix.artifact }}
+  #         path: "pkg/${{matrix.artifact}}"
+  #         if-no-files-found: error
 
-          setup: |
-            mkdir -p "${PWD}/artifacts"
-
-          dockerRunArgs: |
-            --volume "${PWD}/artifacts:/artifacts"
-
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y wget git build-essential
-            wget -O - https://deb.nodesource.com/setup_16.x | bash -
-            apt-get install -q -y nodejs
-
-          # Set an output parameter `uname` for use in subsequent steps
-          run: |
-            chown -R root:root /home/runner
-            npx caxa -i . -o "/artifacts/ALT-${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
-            echo "Produced artifact at /artifacts/ALT-${{matrix.artifact}}"
-            chmod -R ugo+rwx /home/runner
-
-
-      - name: show outer build directory
-        run: |
-            ls -al "${PWD}/artifacts/"
-    
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact }}
-          path: "/home/runner/work/2Broke2Wait/2Broke2Wait/artifacts/ALT-${{matrix.artifact}}"
-          if-no-files-found: error

@@ -13,7 +13,7 @@ import { CommandHandler } from '../util/commandHandler'
  */
 export interface IProxyServerOpts {
   whitelist?: string[] | ((username: string) => boolean)
-  restartOnDisconnect: boolean
+  restartOnDisconnect?: boolean
 }
 
 type PrefixedBotEvents<Prefix extends string = 'botevent'> = {
@@ -27,6 +27,7 @@ export type IProxyServerEvents = {
   setup: (conn: Conn) => void
   started: (conn: Conn) => void
   stopped: () => void
+  wantsRestart: () => void
 } & PrefixedBotEvents
 
 /**
@@ -146,7 +147,7 @@ export abstract class ProxyServer<
     // TODO: somehow make this type-safe.
     this.psOpts = merge.withOptions(
       { mergeArrays: false },
-      <IProxyServerOpts>{ restartOnDisconnect: false },
+      <IProxyServerOpts>{ restartOnDisconnect: true },
       opts
     ) as any
 
@@ -154,6 +155,8 @@ export abstract class ProxyServer<
     this._cOpts = cOpts
     this.cmdHandler = new CommandHandler(this)
     this.server.on('login', this.loginHandler)
+    this.on('wantsRestart', this.onWantedRestart)
+
     this.cmdHandler.loadDisconnectedCommands({
       start: this.start
     })
@@ -194,6 +197,15 @@ export abstract class ProxyServer<
    */
   protected endBotLogic (): void {}
 
+  /**
+   * Method is called if remote disconnects and we want to restart on disconnect.
+   *
+   * This should be overridden by other subclasses to call their own restart methods.
+   */
+  protected onWantedRestart = () => {
+    this.restart(1000)
+  }
+
   private readonly setupProxy = (): void => {
     if (this.remoteBot == null || this.remoteClient == null) return
     this.initialBotSetup(this.remoteBot)
@@ -226,7 +238,6 @@ export abstract class ProxyServer<
       this._controllingPlayer.end('Connection reset by server.')
     }
     this.endBotLogic()
-    this._remoteIsConnected = false
 
     if (info instanceof Error) {
       this.emit('remoteError' as any, info)
@@ -235,6 +246,8 @@ export abstract class ProxyServer<
       this.emit('remoteKick' as any, info)
       this.closeConnections('Connection reset by server.', true, info)
     }
+
+    this.emit('wantsRestart' as any)
   }
 
   /**
@@ -299,7 +312,6 @@ export abstract class ProxyServer<
    * @param {ServerClient} actualUser user that just connected to the local server.
    */
   protected whileConnectedLoginHandler = (actualUser: ServerClient) => {
-    console.log('hi?')
     if (!this.isUserWhitelisted(actualUser)) {
       actualUser.end('Not whitelisted!\n' + 'You need to turn the whitelist off.')
       return // early end.

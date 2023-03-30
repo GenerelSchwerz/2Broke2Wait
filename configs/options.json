@@ -65,7 +65,7 @@
         "kickMessage": "Default kick message"
       },
       "linkOnConnect": true,
-      "disabledCommands": false,
+      "disableCommands": false,
       "disconnectAllOnEnd": true,
       "worldCaching": false,
       "logPlayerJoinLeave": false,

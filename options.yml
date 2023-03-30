@@ -1,0 +1,120 @@
+# Configuration for minecraft
+minecraft:
+
+  # Account that will be proxied (the bot connects via this)
+  # Documentation: https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md#mineflayercreatebotoptions
+  # All options from that are valid.
+  account:
+    username: Generel_Schwerz
+    auth: microsoft
+
+  # Custom implementation of a SOCKS4/5 proxy.
+  proxy:
+    enabled: true
+    protocol: socks5
+    info:
+      host: 199.58.185.9
+      port: 4145
+      # username
+      # password
+
+  # The server we wish to connect to.
+  # This will override options in "account".
+  remoteServer:
+    host: connect.2b2t.org
+    port: 25565
+    version: 1.12.2
+
+  # Minecraft-protocol configuration for our local server.
+  # Documentation: https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md#mineflayercreatebotoptions
+  # All options from there are valid.
+  localServer:
+    host: localhost
+    port: 25566
+    version: 1.12.2
+    online-mode: false
+    maxPlayers: 1
+
+  # Customization options provided.
+  # Simplified favicon option (currently only filepath).
+  localServerOptions:
+    motdOptions:
+      prefix: §6
+
+    # Has to be 64x64 and a png.
+    # Can be a file path or a URL.
+    favicon: https://cdn.discordapp.com/avatars/984923209944141895/0b548fdc026c37a8bae7ff8b21b12f09.png?size=64
+
+  # Custom settings for the local server.
+  localServerProxyConfig:
+    disableCommands: false
+    disconnectAllOnEnd: true
+    logPlayerJoinLeave: false
+    linkOnConnect: true
+    restartOnDisconnect: false
+
+    # Leave this off, this is broken for now.
+    worldCaching: false
+
+    # Security: who is allowed to join. Null for anyone.
+    security:
+      allowList: null
+      kickMessage: Default kick message
+
+    # AntiAFK options.
+    antiAFK:
+
+      enabled: true
+
+      # AntiAFK module settings. Leave this be for now.
+      # I will include documentation at a later date.
+      modules:
+        RandomMovementModule:
+          enabled: false
+        ChatBotModule:
+          enabled: false
+
+      # AntiAFK passive settings. Leave this be for now.
+      # I will include documentation at a later date.
+      passives:
+        KillAuraPassive:
+          playerWhitelist: []
+          reach: 4
+          multi: false
+          enabled: true
+
+    # Auto eat toggle     
+    autoEat: true
+
+
+# Discord logging settings.
+discord:
+
+  # Discord bot configuration.
+  bot:
+    enabled: false
+    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G6qVVV.Rl478Cq3k-iIyf-Y3LAbU_6WT6GN607Md3PDl0
+    prefix: "!"
+
+  # Discord webhook configuration.
+  # Usage: https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
+  webhooks:
+    enabled: true
+
+    gameChat:
+      url: https://discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B
+      icon: https://cdn.discordapp.com/avatars/984923209944141895/0b548fdc026c37a8bae7ff8b21b12f09.png?size=64
+      username: Game chat
+
+    serverInfo:
+      url: https://canary.discord.com/api/webhooks/1088895214233583616/EYCY1yYwSgplczE7Fvu09_hcF1OReVIoEYH53oOwghB_5KRqmGyan9wMGlo9PpjlcfZm
+      icon: https://cdn.discordapp.com/avatars/984923209944141895/0b548fdc026c37a8bae7ff8b21b12f09.png?size=64
+      username: Server info
+
+    queue:
+      reportAt: 500
+      url: https://canary.discord.com/api/webhooks/1088895149628719277/EWaUJwcART1Nj2n6YF2aDo2CZuKiuNx2dFi09KCVf6OItSEB4z3xvQYevCQ2wPifluNb
+      icon: https://cdn.discordapp.com/avatars/984923209944141895/0b548fdc026c37a8bae7ff8b21b12f09.png?size=64
+      username: Queue
+
+
