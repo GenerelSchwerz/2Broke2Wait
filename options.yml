@@ -21,7 +21,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: connect.2b2t.org
+    host: 2b2t.org
     port: 25565
     version: 1.12.2
 
@@ -43,7 +43,7 @@ minecraft:
 
     # Has to be 64x64 and a png.
     # Can be a file path or a URL.
-    favicon: https://cdn.discordapp.com/avatars/984923209944141895/0b548fdc026c37a8bae7ff8b21b12f09.png?size=64
+    favicon: https://cdn.discordapp.com/avatars/302885247924568084/346750b5f71641989abcc954d1eda061.png?size=64
 
   # Custom settings for the local server.
   localServerProxyConfig:

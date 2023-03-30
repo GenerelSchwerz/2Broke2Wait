@@ -145,11 +145,11 @@ async function setup () {
 
   function queueServerMotd (oldPos: number, newPos: number, eta: number) {
     if (Number.isNaN(eta)) {
-      setServerMotd(`Pos: ${newPos} | ETA: Unknown.`)
+      setServerMotd(`${getServerName()} | Pos: ${newPos} | ETA: Unknown.`)
       return
     }
 
-    const res = `Pos: ${newPos} | ETA: ${Duration.fromMillis(eta * 1000 - Date.now()).toFormat("d'd', h'hr', m'min'")}`
+    const res = `${getServerName()} | Pos: ${newPos} | ETA: ${Duration.fromMillis(eta * 1000 - Date.now()).toFormat("d'd', h'hr', m'min'")}`
 
     console.log('Queue update!\n' + res)
     setServerMotd(res)
