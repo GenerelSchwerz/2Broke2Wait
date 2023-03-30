@@ -97,7 +97,8 @@ const NiceEventNames: { [key in Exclude<keyof StrictAntiAFKEvents, `botevent:${s
   remoteKick: 'Remote disconnect (Kicked)',
   setup: 'Server is setting up!',
   started: 'Server started!',
-  stopped: 'Server stopped!'
+  stopped: 'Server stopped!',
+  wantsRestart: 'Server wants to restart!'
 } as const
 
 type GetEvents<Srv extends ProxyServer> = Srv extends ProxyServer<any, infer Events> ? Events : never

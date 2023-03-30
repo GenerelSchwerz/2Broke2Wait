@@ -12,7 +12,7 @@ declare module 'discordx' {
 }
 
 export async function buildClient (
-  { botToken, prefix }: Options['discord']['bot'],
+  { botToken, prefix }: Exclude<Options['discord']['bot'], undefined>,
   server: AntiAFKServer
 ): Promise<Client> {
   const client = new Client({
