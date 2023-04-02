@@ -57,7 +57,7 @@ export interface Options {
       }
       favicon?: string
     }
-    localServerProxyConfig?: SpectatorServerOpts
+    localServerProxyConfig: SpectatorServerOpts
   }
 }
 

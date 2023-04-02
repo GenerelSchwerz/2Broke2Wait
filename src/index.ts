@@ -109,7 +109,7 @@ async function setup () {
   })
 
   afkServer.on('wantsRestart', () => {
-    afkServer.restart(1000);
+    afkServer.restart(1000)
   })
 
   // bot events
@@ -120,7 +120,6 @@ async function setup () {
   afkServer.on('botevent:health', (bot) => {
     botUpdatesMotd(bot)
   })
-
 
   afkServer.start()
 

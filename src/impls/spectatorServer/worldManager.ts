@@ -4,7 +4,7 @@ import { Client } from 'minecraft-protocol'
 import * as path from 'path'
 import { setTimeout } from 'timers/promises'
 import { default as VectorBuilder, Vec3 } from 'vec3'
-import {Bot} from 'mineflayer'
+import { Bot } from 'mineflayer'
 const { SpiralIterator2d } = require('prismarine-world').iterators
 
 export class WorldManager {
@@ -123,18 +123,17 @@ class ManagedPlayer {
     this.positionTransformer = positionTransformer
   }
 
-
-  public loadChunks(world: any) {
+  public loadChunks (world: any) {
     this.loadedChunks = world
-    .getColumns()
-    .map(({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) => new Vec3(chunkX * 16, 0, chunkZ * 16));
+      .getColumns()
+      .map(({ chunkX, chunkZ }: { chunkX: number, chunkZ: number }) => new Vec3(chunkX * 16, 0, chunkZ * 16))
   }
 
-  public awaitPosReference(bot: Bot) {
+  public awaitPosReference (bot: Bot) {
     if (bot?.entity.position) {
       this.positionReference = bot.entity.position
     } else {
-      bot.on("spawn", () => {
+      bot.on('spawn', () => {
         this.positionReference = bot.entity.position
       })
     }

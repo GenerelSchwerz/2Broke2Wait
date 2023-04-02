@@ -1,5 +1,5 @@
 import { TypedEventEmitter } from './utilTypes'
-import { ProxyServer } from '../abstract/proxyServer'
+import { ProxyServer } from '../new/newProxyServer'
 import { PacketMeta, ServerClient } from 'minecraft-protocol'
 import type { Block } from 'prismarine-block'
 import { Client, PacketMiddleware } from '@rob9315/mcproxy'
@@ -14,7 +14,7 @@ export interface CommandMap {
   [key: string]: CommandFunc
 }
 
-export class CommandHandler<Server extends ProxyServer> extends TypedEventEmitter<CommandHandlerEvents> {
+export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedEventEmitter<CommandHandlerEvents> {
   private _prefix: string = '/'
 
   public get prefix () {
@@ -107,6 +107,10 @@ export class CommandHandler<Server extends ProxyServer> extends TypedEventEmitte
     if (cmds.length === 1) {
       const [cmd, ...args] = cmds[0].split(' ')
       if (!cmd.startsWith(this.prefix)) return true
+      if (cmd === this.prefix + 'helpme') {
+        this.printHelp(pclient);
+        return true
+      }
       const cmdRunner = this.proxyCmds
       const cmdFunc = cmdRunner[cmd]
       if (cmdFunc) cmdFunc.call(this.srv, pclient, ...args)
@@ -175,5 +179,14 @@ export class CommandHandler<Server extends ProxyServer> extends TypedEventEmitte
     if (!cmd.startsWith(this.prefix)) cmd = this.prefix + cmd
     const cmdRunner = this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds
     cmdRunner[cmd]?.call(this.srv, client, ...args)
+  }
+
+
+
+  printHelp(client: ServerClient | Client) {
+    const cmdRunner = this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds
+    for (const cmd in cmdRunner) {
+      this.srv.message(client, cmd);
+    }
   }
 }

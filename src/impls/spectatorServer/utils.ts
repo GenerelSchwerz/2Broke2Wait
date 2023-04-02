@@ -20,7 +20,7 @@ export const DefaultProxyOpts: SpectatorServerOpts = {
   display: {
     proxyChatPrefix: '§6P>> §r'
   },
-  
+
   linkOnConnect: false,
   disableCommands: false,
   disconnectAllOnEnd: true,
