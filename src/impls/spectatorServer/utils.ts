@@ -2,13 +2,7 @@ import { AntiAFKOpts } from '../antiAfkServer'
 
 type AllowListCallback = (username: string) => boolean
 
-export interface ServerSpectatorOptions extends AntiAFKOpts {
-  security: {
-    /** Optional. If not set all players are allowed to join. Either a list off players allowed to connect to the proxy or a function that returns a boolean value. */
-    allowList?: string[] | AllowListCallback
-    kickMessage: string
-  }
-
+export interface SpectatorServerOpts extends AntiAFKOpts {
   linkOnConnect: boolean
   /** Log players joining and leaving the proxy. Default: false */
   logPlayerJoinLeave: boolean
@@ -18,11 +12,15 @@ export interface ServerSpectatorOptions extends AntiAFKOpts {
   worldCaching: boolean
 }
 
-export const DefaultProxyOpts: ServerSpectatorOptions = {
+export const DefaultProxyOpts: SpectatorServerOpts = {
   security: {
-    allowList: undefined,
+    whitelist: undefined,
     kickMessage: 'Default kick message'
   },
+  display: {
+    proxyChatPrefix: '§6P>> §r'
+  },
+  
   linkOnConnect: false,
   disableCommands: false,
   disconnectAllOnEnd: true,

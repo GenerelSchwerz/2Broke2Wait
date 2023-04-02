@@ -7,7 +7,7 @@ import { Vec3 } from 'vec3'
 import { AntiAFKServer, StrictAntiAFKEvents } from './antiAfkServer'
 import { sleep } from '../util/index'
 import { FakePlayer, FakeSpectator } from './spectatorServer/fakes'
-import { DefaultProxyOpts, ServerSpectatorOptions } from './spectatorServer/utils'
+import { DefaultProxyOpts, SpectatorServerOpts } from './spectatorServer/utils'
 import { WorldManager } from './spectatorServer/worldManager'
 
 export interface SpectatorServerEvents extends StrictAntiAFKEvents {
@@ -17,12 +17,10 @@ export interface SpectatorServerEvents extends StrictAntiAFKEvents {
   clientDisconnect: (client: ServerClient) => void
 }
 
-export type StrictProxyInspectorEvents = Omit<SpectatorServerEvents, '*'>
+export type StrictSpectatorServerEvents = Omit<SpectatorServerEvents, '*'>
 
-export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, StrictProxyInspectorEvents> {
+export class SpectatorServer extends AntiAFKServer<SpectatorServerOpts, StrictSpectatorServerEvents> {
   public static readonly blockedPacketsWhenNotInControl: string[] = ['entity_metadata', 'abilities', 'position']
-
-  public proxyChatPrefix: string = '§6P>> §r'
 
   public worldManager: WorldManager | null = null
   public fakeSpectator: FakeSpectator | null = null
@@ -35,7 +33,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
     rawServer: Server,
     bOpts: BotOptions,
     cOpts: Partial<ConnOptions> = {},
-    pOpts: Partial<ServerSpectatorOptions> = {}
+    pOpts: Partial<SpectatorServerOpts> = {}
   ) {
     super(onlineMode, rawServer, bOpts, cOpts, pOpts)
     this.psOpts = merge(DefaultProxyOpts, this.psOpts) as any
@@ -61,7 +59,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
     server: Server,
     bOpts: BotOptions,
     cOpts: Partial<ConnOptions> = {},
-    psOptions: Partial<ServerSpectatorOptions> = {}
+    psOptions: Partial<SpectatorServerOpts> = {}
   ): SpectatorServer {
     return new SpectatorServer(online, server, bOpts, cOpts, psOptions)
   }
@@ -243,7 +241,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
       this.fakeSpectator?.unregister(client)
       this.unlink(client)
       this.emit('clientDisconnect', client)
-      this.broadcastMessage(`${this.proxyChatPrefix} User §3${client.username}:§r disconnected`)
+      this.broadcastMessage(`${this.psOpts.display.proxyChatPrefix} User §3${client.username}:§r disconnected`)
       if (this.psOpts.logPlayerJoinLeave) {
         console.info(`Player ${client.username} disconnected from the proxy`)
       }
@@ -414,7 +412,7 @@ export class SpectatorServer extends AntiAFKServer<ServerSpectatorOptions, Stric
     position: number = 1
   ) {
     if (!allowFormatting) message = message.replaceAll(/§./, '')
-    if (prefix) message = this.proxyChatPrefix + message
+    if (prefix) message = this.psOpts.display.proxyChatPrefix + message
     this.sendMessage(client, message, position)
   }
 

@@ -10,7 +10,7 @@ interface CommandHandlerEvents {
 }
 
 type CommandFunc = (client: Client | ServerClient, ...args: string[]) => void
-interface CommandMap {
+export interface CommandMap {
   [key: string]: CommandFunc
 }
 

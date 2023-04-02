@@ -2,7 +2,7 @@ import type { BotOptions } from 'mineflayer'
 import type { ServerOptions, Client } from 'minecraft-protocol'
 import merge from 'ts-deepmerge'
 import { readFileSync } from 'fs'
-import { ServerSpectatorOptions } from '../impls/spectatorServer/utils'
+import { SpectatorServerOpts } from '../impls/spectatorServer/utils'
 import { BaseWebhookOpts } from '../abstract/webhookReporters'
 import { SocksClient } from 'socks'
 import * as dns from 'dns'
@@ -57,7 +57,7 @@ export interface Options {
       }
       favicon?: string
     }
-    localServerProxyConfig?: ServerSpectatorOptions
+    localServerProxyConfig?: SpectatorServerOpts
   }
 }
 
