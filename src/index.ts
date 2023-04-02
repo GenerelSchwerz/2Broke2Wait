@@ -100,18 +100,16 @@ async function setup () {
     console.log('remoteKick:', reason)
     disconnectedServerMotd()
     afkServer.removeListener('queueUpdate', queueServerMotd)
-    if (afkServer.psOpts.restartOnDisconnect) {
-      afkServer.restart(1000)
-    }
   })
 
   afkServer.on('remoteError', async (error) => {
     console.log('remoteError:', error)
     disconnectedServerMotd()
     afkServer.removeListener('queueUpdate', queueServerMotd)
-    if (afkServer.psOpts.restartOnDisconnect) {
-      afkServer.restart(1000)
-    }
+  })
+
+  afkServer.on('wantsRestart', () => {
+    afkServer.restart(1000);
   })
 
   // bot events
@@ -122,6 +120,8 @@ async function setup () {
   afkServer.on('botevent:health', (bot) => {
     botUpdatesMotd(bot)
   })
+
+
   afkServer.start()
 
   /// //////////////////////////////////////////

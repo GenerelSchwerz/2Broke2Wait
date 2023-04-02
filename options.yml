@@ -10,7 +10,7 @@ minecraft:
 
   # Custom implementation of a SOCKS4/5 proxy.
   proxy:
-    enabled: true
+    enabled: false
     protocol: socks5
     info:
       host: 199.58.185.9
@@ -21,7 +21,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: 2b2t.org
+    host: localhost
     port: 25565
     version: 1.12.2
 
@@ -93,7 +93,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: false
-    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G6qVVV.Rl478Cq3k-iIyf-Y3LAbU_6WT6GN607Md3PDl
+    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G6qVVV.Rl478Cq3k-iIyf-Y3LAbU_6WT6GN607Md3PDl0
     prefix: "!"
 
   # Discord webhook configuration.

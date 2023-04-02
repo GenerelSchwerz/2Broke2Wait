@@ -247,7 +247,9 @@ export abstract class ProxyServer<
       this.closeConnections('Connection reset by server.', true, info)
     }
 
-    this.emit('wantsRestart' as any)
+    if (this.psOpts.restartOnDisconnect) {
+      this.emit('wantsRestart' as any)
+    } 
   }
 
   /**
