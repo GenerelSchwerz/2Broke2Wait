@@ -68,7 +68,7 @@ export abstract class ProxyServerPlugin<Opts extends IProxyServerOpts, Events ex
   declare onInitialBotSetup?: (bot: Bot, psOpts: Opts) => void
   declare onClosingConnections?: (reason: string) => void
 
-  onPlayerConnect?: (player: ServerClient, remoteConnected: boolean) => void
+  declare onPlayerConnected?: (player: ServerClient, remoteConnected: boolean) => void
 
   declare whileConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>
   declare notConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>
@@ -81,6 +81,10 @@ export abstract class ProxyServerPlugin<Opts extends IProxyServerOpts, Events ex
     if (this.onBotStartup != null) this._server.on('botStartup' as any, this.onBotStartup)
     if (this.onBotShutdown != null) this._server.on('botShutdown' as any, this.onBotShutdown)
     if (this.onClosingConnections != null) this._server.on('closingConnections' as any, this.onClosingConnections)
+
+    if (this.onPlayerConnected != null) this._server.on('playerConnected' as any, this.onPlayerConnected)
+    if (this.onOptionValidation != null) this._server.on('optionValidation' as any, this.onOptionValidation)
+    if (this.onInitialBotSetup != null) this._server.on('initialBotSetup' as any, this.onInitialBotSetup)
   }
 
   public onUnload (server: ProxyServer<Opts, Events>) {
@@ -91,6 +95,10 @@ export abstract class ProxyServerPlugin<Opts extends IProxyServerOpts, Events ex
     if (this.onBotStartup != null) this._server.off('botStartup' as any, this.onBotStartup)
     if (this.onBotShutdown != null) this._server.off('botShutdown' as any, this.onBotShutdown)
     if (this.onClosingConnections != null) this._server.off('closingConnections' as any, this.onClosingConnections)
+
+    if (this.onPlayerConnected != null) this._server.off('playerConnected' as any, this.onPlayerConnected)
+    if (this.onOptionValidation != null) this._server.off('optionValidation' as any, this.onOptionValidation)
+    if (this.onInitialBotSetup != null) this._server.off('initialBotSetup' as any, this.onInitialBotSetup)
   }
 
   /**
@@ -241,18 +249,17 @@ export class ProxyServer<
 
   public beginBotLogic = (): void => {
     if (this.remoteBot == null) throw Error('Bot logic called when bot does not exist!')
-    this.emit('botStartup' as any, this.psOpts, this.remoteBot)
+    this.emit('botStartup' as any, this.remoteBot, this.psOpts)
   }
 
   public endBotLogic = (): void => {
     if (this.remoteBot == null) throw Error('Bot logic called when bot does not exist!')
-    this.emit('botShutdown' as any, this.psOpts, this.remoteBot)
+    this.emit('botShutdown' as any, this.remoteBot, this.psOpts)
   }
 
   private readonly loginHandler = (actualUser: ServerClient) => {
     this.emit('playerConnected' as any, actualUser, this.isProxyConnected())
     this.cmdHandler.updateClientCmds(actualUser)
-    console.log("hi", this.isProxyConnected())
     if (this.isProxyConnected()) this.whileConnectedLoginHandler(actualUser)
     else this.notConnectedLoginHandler(actualUser)
   }
@@ -376,7 +383,7 @@ export class ProxyServer<
   message (
     client: Client | ServerClient,
     message: string,
-    prefix: string = "hi: ",
+    prefix: string = this.psOpts.display.proxyChatPrefix,
     allowFormatting: boolean = true,
     position: number = 1
   ) {

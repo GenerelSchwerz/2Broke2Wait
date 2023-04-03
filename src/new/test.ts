@@ -1,6 +1,6 @@
 import { ProxyServer } from './newProxyServer'
 
-import { AntiAFKServerPlugin } from './newAntiAfk'
+import { TwoBAntiAFKPlugin } from './twoBAntiAFK'
 
 import { SpectatorServerEvents, SpectatorServerPlugin } from './newSpectator'
 import * as fs from 'fs'
@@ -17,7 +17,9 @@ const bOpts = botOptsFromConfig(checkedConfig)
 
 const server = new ProxyServer<SpectatorServerOpts, SpectatorServerEvents>(checkedConfig.minecraft.localServerProxyConfig, bOpts, { optimizePacketWrite: true }, checkedConfig.minecraft.localServer)
 
-const test = new SpectatorServerPlugin();
-server.loadPlugin(test)
-
+const test = new TwoBAntiAFKPlugin();
+const test1 = new SpectatorServerPlugin();
+server.loadPlugin(test as any);
+server.loadPlugin(test1)
+server.on
 server.start()

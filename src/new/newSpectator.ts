@@ -1,28 +1,24 @@
-import { StrictAntiAFKEvents } from './newAntiAfk'
-import { ProxyServer, ProxyServerPlugin } from './newProxyServer'
+import { TwoBAntiAFKEvents } from './twoBAntiAFK'
+import { ProxyServerPlugin } from './newProxyServer'
 
-import { Client, Conn, ConnOptions, PacketMiddleware, SimplePositionTransformer } from '@rob9315/mcproxy'
-import { createServer, PacketMeta, Server, ServerClient } from 'minecraft-protocol'
-import { BotOptions } from 'mineflayer'
+import { Client, Conn,PacketMiddleware } from '@rob9315/mcproxy'
+import { ServerClient } from 'minecraft-protocol'
 
-import merge from 'ts-deepmerge'
-import { Vec3 } from 'vec3'
 import { sleep } from '../util/index'
 import { FakePlayer, FakeSpectator } from '../impls/spectatorServer/fakes'
-import { DefaultProxyOpts, SpectatorServerOpts } from '../impls/spectatorServer/utils'
+import { SpectatorServerOpts } from '../impls/spectatorServer/utils'
 import { WorldManager } from '../impls/spectatorServer/worldManager'
 import { CommandMap } from '../util/commandHandler'
 
-export interface SpectatorServerEvents extends StrictAntiAFKEvents<SpectatorServerOpts> {
+export interface SpectatorServerEvents extends TwoBAntiAFKEvents<SpectatorServerOpts> {
   clientChatRaw: (pclient: Client, message: string) => void
   clientChat: (pclient: Client, message: string) => void
   clientConnect: (client: ServerClient) => void
   clientDisconnect: (client: ServerClient) => void
 }
 
-export type StrictSpectatorServerEvents = Omit<SpectatorServerEvents, '*'>
 
-export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, StrictSpectatorServerEvents> {
+export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, SpectatorServerEvents> {
   public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
   name = 'Spectator Server'
 
