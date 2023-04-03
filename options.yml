@@ -49,6 +49,7 @@ minecraft:
       worldCaching: false
 
     display:
+      motdPrefix: "§6"
       proxyChatPrefix: "§6>>P§r "
 
       # Has to be 64x64 and a png.

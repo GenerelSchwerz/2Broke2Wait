@@ -1,37 +1,18 @@
-/// //////////////////////////////////////////
-//                Imports                  //
-/// //////////////////////////////////////////
-
-import type { Bot } from 'mineflayer'
-
 import * as fs from 'fs'
-
+import type { Bot } from 'mineflayer'
+import { Duration } from 'ts-luxon'
+import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin, ServerBuilder } from './localServer/baseServer'
+import { SpectatorServerEvents, SpectatorServerOpts, SpectatorServerPlugin } from './localServer/plugins/spectator'
+import { TwoBAntiAFKPlugin, TwoBAntiAFKOpts, TwoBAntiAFKEvents, TwoBWehook } from './localServer/plugins/twoBAntiAFK'
 import { validateOptions } from './util/config'
 import { botOptsFromConfig, Options, serverOptsFromConfig } from './util/options'
-import { Duration } from 'ts-luxon'
-import { createServer } from 'minecraft-protocol'
-import { buildClient } from './discord/index'
-import { applyWebhookListeners } from './util/webhooks'
-import { SpectatorServer } from './impls/spectatorServer'
-
-import * as rl from 'readline'
 const yaml = require('js-yaml')
-
-const optionDir: string = './options.json'
-
-/// //////////////////////////////////////////
-//              Initialization             //
-/// //////////////////////////////////////////
 
 // ... If no errors were found, return the validated config
 const config = yaml.load(fs.readFileSync('./options.yml', 'utf-8'))
 
 const checkedConfig: Options = validateOptions(config)
-
-const inp = rl.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
+const bOpts = botOptsFromConfig(checkedConfig)
 
 const helpMsg =
   '-------------------------------\n' +
@@ -41,89 +22,75 @@ const helpMsg =
   'status   -> displays info of service\n' +
   'help     -> shows this message\n'
 
+
+
 async function setup () {
-  const botOptions = botOptsFromConfig(checkedConfig)
 
   const serverOptions = await serverOptsFromConfig(checkedConfig)
 
-  const rawServer = createServer(serverOptions)
-
-  const afkServer = SpectatorServer.wrapServer(
-    true,
-    rawServer,
-    botOptions,
-    {},
-    checkedConfig.minecraft.localServerProxyConfig
-  )
-
-  // optional features
-  if (checkedConfig.discord.bot?.enabled && !!checkedConfig.discord.bot.botToken) {
-    buildClient(checkedConfig.discord.bot, afkServer)
-    console.log('We are using a discord bot.')
-  } else {
-    console.log('No discord token included. Going without it (No command functionality currently).')
+  const plugins = [] 
+  plugins.push(new SpectatorServerPlugin());
+  
+  if (checkedConfig.discord.webhooks) {
+    plugins.push(new TwoBWehook(checkedConfig.discord.webhooks))
   }
 
-  if (checkedConfig.discord.webhooks?.enabled) {
-    console.log('Using discord webhooks to relay information!')
-  } else {
-    console.log('Discord webhooks are disabled. Will not be using them.')
-  }
 
-  // server-specific events
-  afkServer.on('setup', () => {
-    if (checkedConfig.discord.webhooks?.enabled) {
-      applyWebhookListeners(afkServer, checkedConfig.discord.webhooks)
-    }
-  })
+  const server = new ServerBuilder(serverOptions, bOpts)
+    .addPlugins(...plugins)
+    .setSettings(checkedConfig.minecraft.localServerProxyConfig)
+    .build();
+    
+  
+ 
+  const rawServer = server.rawServer;
 
-  afkServer.on('started', () => {
+  server.start()
+
+  server.on('started', () => {
     console.log('Server started!\n' + helpMsg)
     inGameServerMotd()
   })
 
-  afkServer.on('stopped', () => {
+  server.on('stopped', () => {
     console.log('Server stopped!\nYou can start it with "start"')
   })
 
-  afkServer.on('enteredQueue', () => {
+  server.on('enteredQueue', () => {
     queueEnterMotd()
-    afkServer.on('queueUpdate', queueServerMotd)
+    server.on('queueUpdate', queueServerMotd)
   })
 
-  afkServer.on('leftQueue', () => {
+  server.on('leftQueue', () => {
     inGameServerMotd()
-    afkServer.removeListener('queueUpdate', queueServerMotd)
+    server.removeListener('queueUpdate', queueServerMotd)
   })
 
-  afkServer.on('remoteKick', async (reason) => {
+  server.on('queueUpdate', console.log)
+
+  server.on('remoteKick', async (reason) => {
     console.log('remoteKick:', reason)
     disconnectedServerMotd()
-    afkServer.removeListener('queueUpdate', queueServerMotd)
+    server.removeListener('queueUpdate', queueServerMotd)
   })
 
-  afkServer.on('remoteError', async (error) => {
+  server.on('remoteError', async (error) => {
     console.log('remoteError:', error)
     disconnectedServerMotd()
-    afkServer.removeListener('queueUpdate', queueServerMotd)
-  })
-
-  afkServer.on('wantsRestart', () => {
-    afkServer.restart(1000)
+    server.removeListener('queueUpdate', queueServerMotd)
   })
 
   // bot events
-  afkServer.on('botevent:breath', (bot) => {
+  server.on('botevent_breath', (bot) => {
     botUpdatesMotd(bot)
   })
 
-  afkServer.on('botevent:health', (bot) => {
+  server.on('botevent_health', (bot) => {
     botUpdatesMotd(bot)
   })
 
-  afkServer.start()
 
-  /// //////////////////////////////////////////
+   /// //////////////////////////////////////////
   //              functions                  //
   /// //////////////////////////////////////////
 
@@ -135,8 +102,8 @@ async function setup () {
   }
 
   function setServerMotd (message: string) {
-    if (checkedConfig.minecraft.localServerOptions?.motdOptions?.prefix) {
-      rawServer.motd = checkedConfig.minecraft.localServerOptions.motdOptions.prefix + message
+    if (checkedConfig.minecraft.localServerProxyConfig.display.motdPrefix) {
+      rawServer.motd = checkedConfig.minecraft.localServerProxyConfig.display.motdPrefix + message
     } else {
       rawServer.motd = message
     }
@@ -169,45 +136,6 @@ async function setup () {
   function botUpdatesMotd (bot: Bot) {
     setServerMotd(`Health: ${bot.health.toFixed(2)}, Hunger: ${bot.food.toFixed(2)}`)
   }
-
-  /// //////////////////////////////////////////
-  //                Util                     //
-  /// //////////////////////////////////////////
-  inp.on('line', (inp) => {
-    const [cmd, ...args] = inp.trim().split(' ')
-    switch (cmd) {
-      case 'help':
-        console.log('Help message!\n' + helpMsg)
-        break
-      case 'start':
-        afkServer.start()
-        break
-      case 'stop':
-        afkServer.stop()
-        break
-      case 'restart':
-        afkServer.restart(1000)
-        break
-      case 'status':
-        if (afkServer.isProxyConnected()) {
-          console.log(
-            `Proxy connected to ${afkServer.bOpts.host}${
-              afkServer.bOpts.port !== 25565 ? ':' + afkServer.bOpts.port : ''
-            }`
-          )
-          if (afkServer.queue != null) {
-            if (afkServer.queue.inQueue) { console.log(`Proxy queue pos: ${afkServer.queue.lastPos}, ETA: ${afkServer.queue.eta}`) }
-          }
-        } else {
-          console.log('Proxy is not connected.')
-        }
-        if (afkServer.isPlayerConnected()) {
-          console.log('Player connected.')
-        } else {
-          console.log('Player is not connected.')
-        }
-    }
-  })
 }
 
 setup()

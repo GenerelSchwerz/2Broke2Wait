@@ -1,20 +1,20 @@
 import { TwoBAntiAFKEvents, TwoBAntiAFKOpts } from './twoBAntiAFK'
-import { ProxyServerPlugin } from './newProxyServer'
+import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '../baseServer'
 
 import { Client, Conn, PacketMiddleware } from '@rob9315/mcproxy'
 import { ServerClient } from 'minecraft-protocol'
 
-import { sleep } from '../util/index'
-import { FakePlayer, FakeSpectator } from '../impls/spectatorServer/fakes'
-import { WorldManager } from '../impls/spectatorServer/worldManager'
-import { CommandMap } from '../util/commandHandler'
+import { sleep } from '../../util/index'
+import { FakePlayer, FakeSpectator } from './spectatorServer/fakes'
+import { WorldManager } from './spectatorServer/worldManager'
+import { CommandMap } from '../../util/commandHandler'
 
-export interface SpectatorServerOpts extends TwoBAntiAFKOpts {
+export interface SpectatorServerOpts extends IProxyServerOpts {
   linkOnConnect: boolean
   worldCaching: boolean
 }
 
-export interface SpectatorServerEvents extends TwoBAntiAFKEvents<SpectatorServerOpts> {
+export interface SpectatorServerEvents extends IProxyServerEvents {
   clientChatRaw: (pclient: Client, message: string) => void
   clientChat: (pclient: Client, message: string) => void
 }
@@ -91,7 +91,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     }
   }
 
-  onProxySetup = (conn: Conn) => {
+  onProxySetup(conn: Conn): void {
     const data = conn.toClientDefaultMiddleware != null ? conn.toClientDefaultMiddleware : []
     const data1 = conn.toServerDefaultMiddleware != null ? conn.toServerDefaultMiddleware : []
     conn.toClientDefaultMiddleware = [...this.genToClientMiddleware(conn), ...data]

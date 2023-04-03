@@ -1,5 +1,5 @@
 import { TypedEventEmitter } from './utilTypes'
-import { ProxyServer } from '../new/newProxyServer'
+import { ProxyServer } from '../localServer/baseServer'
 import { PacketMeta, ServerClient } from 'minecraft-protocol'
 import type { Block } from 'prismarine-block'
 import { Client, PacketMiddleware } from '@rob9315/mcproxy'

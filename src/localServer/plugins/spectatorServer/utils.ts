@@ -1,16 +1,5 @@
-import { AntiAFKOpts } from '../antiAfkServer'
+import { SpectatorServerOpts } from '../spectator'
 
-type AllowListCallback = (username: string) => boolean
-
-export interface SpectatorServerOpts extends AntiAFKOpts {
-  linkOnConnect: boolean
-  /** Log players joining and leaving the proxy. Default: false */
-  logPlayerJoinLeave: boolean
-  /** Disconnect all connected players once the proxy bot stops. Defaults to true. If not on players will still be connected but won't receive updates from the server. */
-  disconnectAllOnEnd: boolean
-  disableCommands: boolean
-  worldCaching: boolean
-}
 
 export const DefaultProxyOpts: SpectatorServerOpts = {
   security: {
@@ -18,6 +7,7 @@ export const DefaultProxyOpts: SpectatorServerOpts = {
     kickMessage: 'Default kick message'
   },
   display: {
+    motdPrefix: "§6",
     proxyChatPrefix: '§6P>> §r'
   },
 
@@ -25,7 +15,6 @@ export const DefaultProxyOpts: SpectatorServerOpts = {
   disableCommands: false,
   disconnectAllOnEnd: true,
   worldCaching: false,
-  logPlayerJoinLeave: false,
   restartOnDisconnect: false,
   antiAFK: {
     enabled: true,

@@ -1,3 +1,9 @@
+/**
+ * This entire file is outdated, will be rewritten.
+ */
+
+
+
 import { Options } from './options'
 import type { Bot } from 'mineflayer'
 import {
@@ -7,8 +13,9 @@ import {
   BaseWebhookOpts
 } from '../abstract/webhookReporters'
 import { DateTime, Duration } from 'ts-luxon'
-import { AntiAFKServer } from '../impls/antiAfkServer'
-import { SpectatorServer, SpectatorServerEvents } from '../impls/spectatorServer'
+import { ProxyServer } from '../localServer/baseServer'
+import { SpectatorServerEvents } from '../localServer/plugins/spectator'
+import { PacketQueuePredictor } from '../abstract/packetQueuePredictor'
 
 function escapeMarkdown (...texts: string[]): string[] {
   for (const text in texts) {
@@ -19,13 +26,15 @@ function escapeMarkdown (...texts: string[]): string[] {
   return texts
 }
 
+
+
 // =================================
 //   Client-specifc listeners
 // =================================
 
 class GameChatListener extends ClientWebhookReporter<Bot, 'chat'> {
-  constructor (srv: AntiAFKServer, wbOpts: BaseWebhookOpts) {
-    super(srv, srv.remoteBot!, 'chat', wbOpts, { eventTitle: false, footer: false })
+  constructor (srv: ProxyServer<any, any>, wbOpts: BaseWebhookOpts) {
+    super(srv, srv.remoteBot!, 'chat', wbOpts, { skipTitle: false, skipFooter: false })
   }
 
   protected listener = async (username: string, message: string) => {
@@ -57,12 +66,12 @@ type WbChoice<Choice extends RelaxedWbKey> = Choice extends WbKey
 abstract class SpectatorServerReporter<
   T extends keyof SpectatorServerEvents,
   Opts extends RelaxedWbKey = 'relaxed'
-> extends AntiAFKWebhookReporter<SpectatorServer, T, WbChoice<Opts>> {}
+> extends AntiAFKWebhookReporter<ProxyServer<any, SpectatorServerEvents>, T, WbChoice<Opts>> {}
 
 // Send started message when server starts.
 class ServerStartMessenger extends SpectatorServerReporter<'started'> {
-  constructor (srv: SpectatorServer, wbOpts: BaseWebhookOpts) {
-    super(srv, 'started', wbOpts, { eventTitle: true, footer: false })
+  constructor (srv: ProxyServer<any, any>, queue: PacketQueuePredictor<any, any>, wbOpts: BaseWebhookOpts) {
+    super(srv, 'started', queue, wbOpts, { skipTitle: true, skipFooter: false })
   }
 
   protected listener = async () => {
@@ -78,8 +87,8 @@ class ServerStartMessenger extends SpectatorServerReporter<'started'> {
 
 // Send started message when server starts.
 class ServerStopMessenger extends SpectatorServerReporter<'stopped'> {
-  constructor (srv: SpectatorServer, wbOpts: BaseWebhookOpts) {
-    super(srv, 'stopped', wbOpts, { eventTitle: true, footer: false })
+  constructor (srv: ProxyServer<any, any>, queue: PacketQueuePredictor<any, any>, wbOpts: BaseWebhookOpts) {
+    super(srv, 'stopped', queue, wbOpts, { skipTitle: true, skipFooter: false })
   }
 
   protected listener = async () => {
@@ -95,8 +104,8 @@ class ServerStopMessenger extends SpectatorServerReporter<'stopped'> {
 
 // Send started message when server starts.
 class QueueUpdateMessenger extends SpectatorServerReporter<'queueUpdate', 'queue'> {
-  constructor (srv: SpectatorServer, wbOpts: WbChoice<'queue'>) {
-    super(srv, 'queueUpdate', wbOpts)
+  constructor (srv: ProxyServer<any, any>, queue: PacketQueuePredictor<any, any>, wbOpts: WbChoice<'queue'>) {
+    super(srv, 'queueUpdate', queue, wbOpts)
   }
 
   protected listener = async (oldPos: number, newPos: number, eta: number) => {
@@ -122,8 +131,8 @@ class QueueUpdateMessenger extends SpectatorServerReporter<'queueUpdate', 'queue
 
 // Send started message when server starts.
 class ServerEnteredQueueMessenger extends SpectatorServerReporter<'enteredQueue'> {
-  constructor (srv: SpectatorServer, wbOpts: BaseWebhookOpts) {
-    super(srv, 'enteredQueue', wbOpts)
+  constructor (srv: ProxyServer<any, any>,queue: PacketQueuePredictor<any, any>, wbOpts: BaseWebhookOpts) {
+    super(srv, 'enteredQueue', queue, wbOpts)
   }
 
   protected listener = async () => {
@@ -137,28 +146,28 @@ class ServerEnteredQueueMessenger extends SpectatorServerReporter<'enteredQueue'
   }
 }
 
-export function applyWebhookListeners (srv: SpectatorServer, config: Options['discord']['webhooks']) {
+export function applyWebhookListeners (srv: ProxyServer<any, any>, queue: PacketQueuePredictor<any, any>, config: Options['discord']['webhooks']) {
   if (!config?.enabled) return
 
   if (!!config.queue && !!config.queue.url) {
-    const queueUpdates = new QueueUpdateMessenger(srv, config.queue)
-    const enteredQueue = new ServerEnteredQueueMessenger(srv, config.queue)
-    srv.registerServerListeners(queueUpdates, enteredQueue)
+    const queueUpdates = new QueueUpdateMessenger(srv, queue, config.queue)
+    const enteredQueue = new ServerEnteredQueueMessenger(srv, queue, config.queue)
+    // srv.registerServerListeners(queueUpdates, enteredQueue)
   } else {
     console.log('Queue webhook url is not defined, skipping!')
   }
 
   if (!!config.gameChat && config.gameChat.url) {
     const gameChatHelper = new GameChatListener(srv, config.gameChat)
-    srv.registerClientListeners(gameChatHelper)
+    // srv.registerClientListeners(gameChatHelper)
   } else {
     console.log('Game chat webhook URL is not defined, skipping!')
   }
 
   if (config.serverInfo && config.serverInfo.url) {
-    const serverStart = new ServerStartMessenger(srv, config.serverInfo)
-    const serverStop = new ServerStopMessenger(srv, config.serverInfo)
-    srv.registerServerListeners(serverStart, serverStop)
+    const serverStart = new ServerStartMessenger(srv, queue, config.serverInfo)
+    const serverStop = new ServerStopMessenger(srv, queue, config.serverInfo)
+    // srv.registerServerListeners(serverStart, serverStop)
   } else {
     console.log('Server info webhook URl is not defined, skipping!')
   }

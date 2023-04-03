@@ -2,12 +2,13 @@ import type { BotOptions } from 'mineflayer'
 import type { ServerOptions, Client } from 'minecraft-protocol'
 import merge from 'ts-deepmerge'
 import { readFileSync } from 'fs'
-import { SpectatorServerOpts } from '../impls/spectatorServer/utils'
 import { BaseWebhookOpts } from '../abstract/webhookReporters'
 import { SocksClient } from 'socks'
 import * as dns from 'dns'
 import * as net from 'net'
 import Https from 'https'
+import { SpectatorServerOpts } from '../localServer/plugins/spectator'
+import { TwoBAntiAFKOpts } from '../localServer/plugins/twoBAntiAFK'
 
 // Minecraft and discord options such as discord bot prefix and minecraft login info
 export interface Options {
@@ -44,20 +45,8 @@ export interface Options {
       port: number
       version: string
     }
-    localServer: {
-      host: string
-      port: number
-      version: string
-      'online-mode': boolean
-      maxPlayers: number
-    }
-    localServerOptions?: {
-      motdOptions?: {
-        prefix?: string
-      }
-      favicon?: string
-    }
-    localServerProxyConfig: SpectatorServerOpts
+    localServer: ServerOptions,
+    localServerProxyConfig: SpectatorServerOpts & TwoBAntiAFKOpts
   }
 }
 
@@ -207,12 +196,14 @@ export function botOptsFromConfig (opts: Options): BotOptions {
   return ret
 }
 
-async function getIcon (iconPath?: string) {
-  if (iconPath) {
-    if (iconPath.includes('http://') || iconPath.includes('https://')) {
-      return 'data:image/png;base64,' + (await getImgBuf(iconPath)).toString('base64')
+async function getIcon (iconInfo?: string) {
+  if (iconInfo) {
+    if (iconInfo.startsWith('http://') || iconInfo.startsWith('https://')) {
+      return 'data:image/png;base64,' + (await getImgBuf(iconInfo)).toString('base64')
+    } else if (iconInfo.startsWith('data:')) {
+      return iconInfo;
     } else {
-      return 'data:image/png;base64,' + readFileSync(iconPath).toString('base64')
+      return 'data:image/png;base64,' + readFileSync(iconInfo).toString('base64')
     }
   } else {
     return 'data:image/png;base64,' + readFileSync('./static/assets/2b2w-small.png').toString('base64')
@@ -221,7 +212,7 @@ async function getIcon (iconPath?: string) {
 
 export async function serverOptsFromConfig (opts: Options): Promise<ServerOptions> {
   const serverOpts: ServerOptions = opts.minecraft.localServer
-  serverOpts.favicon = await getIcon(opts.minecraft.localServerOptions?.favicon)
+  serverOpts.favicon = await getIcon(opts.minecraft.localServer?.favicon)
   return serverOpts
 }
 
