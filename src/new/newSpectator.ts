@@ -1,22 +1,23 @@
-import { TwoBAntiAFKEvents } from './twoBAntiAFK'
+import { TwoBAntiAFKEvents, TwoBAntiAFKOpts } from './twoBAntiAFK'
 import { ProxyServerPlugin } from './newProxyServer'
 
-import { Client, Conn,PacketMiddleware } from '@rob9315/mcproxy'
+import { Client, Conn, PacketMiddleware } from '@rob9315/mcproxy'
 import { ServerClient } from 'minecraft-protocol'
 
 import { sleep } from '../util/index'
 import { FakePlayer, FakeSpectator } from '../impls/spectatorServer/fakes'
-import { SpectatorServerOpts } from '../impls/spectatorServer/utils'
 import { WorldManager } from '../impls/spectatorServer/worldManager'
 import { CommandMap } from '../util/commandHandler'
+
+export interface SpectatorServerOpts extends TwoBAntiAFKOpts {
+  linkOnConnect: boolean
+  worldCaching: boolean
+}
 
 export interface SpectatorServerEvents extends TwoBAntiAFKEvents<SpectatorServerOpts> {
   clientChatRaw: (pclient: Client, message: string) => void
   clientChat: (pclient: Client, message: string) => void
-  clientConnect: (client: ServerClient) => void
-  clientDisconnect: (client: ServerClient) => void
 }
-
 
 export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, SpectatorServerEvents> {
   public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
@@ -26,51 +27,71 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
   public fakeSpectator: FakeSpectator | null = null
   public fakePlayer: FakePlayer | null = null
 
-
-
   connectedCmds: CommandMap = {
-      link: this.link.bind(this),
-      unlink: this.unlink.bind(this),
-      c: (client, ...args) => this.server.broadcastMessage(`[${client.username}] ${args.join(' ')}`),
+    link: {
+      description: 'Link player to remote bot instance',
+      callable: this.link.bind(this)
+    },
+    unlink: {
+      description: 'Unlink player from remote bot instance',
+      callable: this.unlink.bind(this)
+    },
 
-      stopbot: (client) => {
+    c: {
+      usage: 'c [msg]',
+      description: 'Chat with other players connected to your proxy',
+      callable: (client, ...args) => this.server.broadcastMessage(`[${client.username}] ${args.join(' ')}`)
+    },
+
+    stopbot: {
+      description: 'Stops the bot\'s remote control',
+      callable: (client) => {
         if (this.server.isPlayerControlling()) return this.server.message(client, 'Bot is not running.')
         this.server.endBotLogic()
-      },
-      startbot: (client) => {
+      }
+    },
+    startbot: {
+      description: 'Starts the bot\'s remote control',
+      callable: (client) => {
         if (!this.server.isPlayerControlling()) return this.server.message(client, 'Bot is already in control.')
         this.server.beginBotLogic()
-      },
+      }
+    },
 
-      view: (client) => {
+    view: {
+      description: 'Link the spectating player\'s perspective',
+      callable: (client) => {
         const res0 = this.makeViewFakePlayer(client)
         if (res0) this.server.message(client, 'Connecting to view. Type /unview to exit')
-      },
-
-      unview: (client) => {
+      }
+    },
+    unview: {
+      description: 'Unlink the spectating player\'s perspective',
+      callable: (client) => {
         const res1 = this.makeViewNormal(client)
         if (res1) this.server.message(client, 'Disconnecting from view. Type /view to connect')
-      },
+      }
+    },
 
-      tpto: (client, ...args) => {
+    tpto: {
+      description: 'Tp to the bot\'s location',
+      callable: (client, ...args) => {
         if (client.uuid === this.server.conn?.pclient?.uuid) {
           this.server.message(client, 'Cannot tp. You are controlling the bot.')
           return
         }
 
         if (this.fakeSpectator?.clientsInCamera[client.uuid].status) {
-          this.server.message(client, 'You are viewing the bot\'s perspective.')
+          this.server.message(client, "You are viewing the bot's perspective.")
         }
 
         this.fakeSpectator?.revertPov(client)
         this.fakeSpectator?.tpToFakePlayer(client)
       }
+    }
   }
 
-
-
-
-  onProxySetup = (conn: Conn, psOpts: SpectatorServerOpts) => {
+  onProxySetup = (conn: Conn) => {
     const data = conn.toClientDefaultMiddleware != null ? conn.toClientDefaultMiddleware : []
     const data1 = conn.toServerDefaultMiddleware != null ? conn.toServerDefaultMiddleware : []
     conn.toClientDefaultMiddleware = [...this.genToClientMiddleware(conn), ...data]
@@ -157,10 +178,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.fakePlayer?.unregister(client)
       this.fakeSpectator?.unregister(client)
       this.unlink(client)
-      this.serverEmit('clientDisconnect', client)
     })
-
-    this.serverEmit('clientConnect', client)
 
     return true
   }
@@ -201,7 +219,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     this.server.beginBotLogic()
   }
 
-
   makeViewFakePlayer (client: ServerClient | Client) {
     if (client === this.server.conn?.pclient) {
       this.server.message(client, 'Cannot get into the view. You are controlling the bot')
@@ -220,7 +237,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     return this.fakeSpectator?.revertPov(client) ?? false
   }
 
-
   // ======================= //
   //        bot utils        //
   // ======================= //
@@ -228,7 +244,11 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
   private genToClientMiddleware (conn: Conn) {
     const inspector_toClientMiddleware: PacketMiddleware = ({ meta, data, isCanceled, bound }) => {
       if (conn == null || isCanceled || bound !== 'client') return
-      if (!this.server.isPlayerControlling() && SpectatorServerPlugin.notControllingBlockedPackets.includes(meta.name)) {}
+      if (
+        !this.server.isPlayerControlling() &&
+        SpectatorServerPlugin.notControllingBlockedPackets.includes(meta.name)
+      ) {
+      }
     }
 
     const inspector_toClientFakePlayerSync: PacketMiddleware = ({ isCanceled, pclient, data, meta }) => {

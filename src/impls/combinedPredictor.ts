@@ -21,7 +21,7 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
   }
 
   protected listener = (data: any, packetMeta: PacketMeta) => {
-    // console.log(packetMeta.name);
+    // console.log(packetMeta.name)
     switch (packetMeta.name) {
       case 'difficulty':
         this.difficultyPacketHandler(data)
@@ -57,15 +57,17 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
   public playerlistHeaderPacketHandler (packetData: any) {
     // If no longer in queue, stop here
     if (!this._inQueue) {
+      console.log('what')
       return
     }
 
     // Parse header packets
-    const header = JSON.parse(packetData.header).extra
-    if (header && header.length === 6) {
-      const position: number = Number(
-        header[4].extra[0].text.replace(/\n/, '')
-      )
+    const header = JSON.parse(packetData.header).extra as Array<{ text: string, [key: string]: any }>
+    let pos = 2 // hardcoded
+    pos = header.findIndex(element => element.text.toLowerCase().includes('position')) // find pisition based on text relevance
+
+    if (header) {
+      const position: number = Number(header[pos].extra[0].text.replace(/\n/, ''))
 
       if (Number.isNaN(position)) {
         this.emit('invalidData', { position, eta: this._eta })

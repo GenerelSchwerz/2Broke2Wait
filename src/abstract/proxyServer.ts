@@ -1,10 +1,10 @@
 import merge from 'ts-deepmerge'
 
 import type { Bot, BotOptions, BotEvents } from 'mineflayer'
-import { ServerClient, Client, Server, PacketMeta } from 'minecraft-protocol'
+import { Client, ServerClient, Server, PacketMeta } from 'minecraft-protocol'
 import { sleep } from '../util/index'
 import { ClientEventRegister, ServerEventRegister } from './eventRegisters'
-import { Conn, ConnOptions } from '@rob9315/mcproxy'
+import { Conn, ConnOptions, Client as ProxyClient } from '@rob9315/mcproxy'
 import { Arguments, TypedEventEmitter } from '../util/utilTypes'
 import { CommandHandler } from '../util/commandHandler'
 
@@ -398,7 +398,7 @@ export abstract class ProxyServer<
   }
 
   private readonly loginHandler = (actualUser: ServerClient) => {
-    this.cmdHandler.updateClientCmds(actualUser)
+    this.cmdHandler.updateClientCmds(actualUser as unknown as ProxyClient)
     if (this.isProxyConnected()) this.whileConnectedLoginHandler(actualUser)
     else this.notConnectedLoginHandler(actualUser)
   }

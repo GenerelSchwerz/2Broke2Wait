@@ -23,12 +23,11 @@ export interface TwoBAntiAFKOpts extends IProxyServerOpts {
   autoEat: boolean;
 }
 
-export interface TwoBAntiAFKEvents<Opts extends TwoBAntiAFKOpts = TwoBAntiAFKOpts>
+export interface TwoBAntiAFKEvents<Opts extends TwoBAntiAFKOpts>
   extends IProxyServerEvents<Opts>,
     PacketQueuePredictorEvents {}
 
-
-export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAntiAFKEvents> {
+export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAntiAFKEvents<TwoBAntiAFKOpts>> {
   private _queue?: PacketQueuePredictor<any, any>;
   public get queue() {
     return this._queue;
@@ -59,7 +58,7 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
   };
 
   onInitialBotSetup = (bot: Bot, psOpts: TwoBAntiAFKOpts) => {
-    if (psOpts.antiAFK) {
+    if (psOpts.antiAFK.enabled) {
       bot.loadPlugin(pathfinder);
       bot.loadPlugin(antiAFK);
 

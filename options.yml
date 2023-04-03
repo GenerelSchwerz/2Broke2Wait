@@ -21,7 +21,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: localhost
+    host: 2b2t.org
     port: 25565
     version: 1.12.2
 
@@ -35,26 +35,27 @@ minecraft:
     online-mode: false
     maxPlayers: 1
 
-  # Customization options provided.
-  # Simplified favicon option (currently only filepath).
-  localServerOptions:
-    motdOptions:
-      prefix: §6
-
-    # Has to be 64x64 and a png.
-    # Can be a file path or a URL.
-    favicon: https://cdn.discordapp.com/avatars/302885247924568084/346750b5f71641989abcc954d1eda061.png?size=64
-
   # Custom settings for the local server.
   localServerProxyConfig:
-    disableCommands: false
-    disconnectAllOnEnd: true
-    logPlayerJoinLeave: false
-    linkOnConnect: true
-    restartOnDisconnect: false
 
-    # Leave this off, this is broken for now.
-    worldCaching: false
+
+    spectator:
+      disableCommands: false
+      linkOnConnect: true
+      logPlayerJoinLeave: false
+      restartOnDisconnect: false
+
+      # Leave this off, this is broken for now.
+      worldCaching: false
+
+    display:
+      proxyChatPrefix: "§6>>P§r "
+
+      # Has to be 64x64 and a png.
+      # Can be a file path or a URL.
+      favicon: https://cdn.discordapp.com/avatars/302885247924568084/346750b5f71641989abcc954d1eda061.png?size=64
+
+
 
     # Security: who is allowed to join. Null for anyone.
     security:

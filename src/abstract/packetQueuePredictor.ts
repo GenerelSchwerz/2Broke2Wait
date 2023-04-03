@@ -29,6 +29,11 @@ export abstract class PacketQueuePredictor<
   protected _lastPos: number = NaN
   protected _eta: number = NaN
 
+  /**
+   *  managed by {@link EventEmitter2}
+   */
+  public readonly event!: keyof PacketQueuePredictorEvents
+
   public get lastPos () {
     return this._lastPos
   }

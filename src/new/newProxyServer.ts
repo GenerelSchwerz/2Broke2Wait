@@ -19,9 +19,23 @@ export interface IProxyServerOpts {
     whitelist?: string[] | ((username: string) => boolean)
     kickMessage: string
   }
+
   display: {
     proxyChatPrefix: string
   }
+
+  /**
+   * Disconnect all connected players once the proxy bot stops.
+   * Defaults to true.
+   * If not on players will still be connected but won't receive updates from the server.
+   *
+   */
+  disconnectAllOnEnd?: boolean
+  disableCommands?: boolean
+
+  /**
+   * Restart whenever remote bot disconnects. Defaults to false.
+   */
   restartOnDisconnect?: boolean
 }
 
@@ -36,6 +50,10 @@ export type IProxyServerEvents<Opts extends IProxyServerOpts> = {
   remoteKick: (reason: string) => void
   remoteError: (error: Error) => void
   closingConnections: (reason: string) => void
+
+  playerConnected: (client: ServerClient, remoteConnected: boolean) => void
+  playerDisconnected: (client: ServerClient) => void
+
   proxySetup: (conn: Conn) => void
   botStartup: (bot: Bot, psOpts: Opts) => void
   botShutdown: (bot: Bot, psOpts: Opts) => void
@@ -47,11 +65,10 @@ export type IProxyServerEvents<Opts extends IProxyServerOpts> = {
 } & PrefixedBotEvents
 
 export abstract class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IProxyServerEvents<Opts>> {
-
   declare public _server: ProxyServer<Opts, Events>
-  declare public name: string;
-  declare public connectedCmds?: CommandMap;
-  declare public disconnectedCmds?: CommandMap;
+  declare public name: string
+  declare public connectedCmds?: CommandMap
+  declare public disconnectedCmds?: CommandMap
 
   public get server (): ProxyServer<Opts, Events> {
     if (this._server == null) throw Error('Server was wanted before proper initialization!')
@@ -121,12 +138,17 @@ export class ProxyServer<
 
   public ChatMessage!: typeof AgnogChMsg
 
-  protected _rawServer: Server
+  protected readonly _rawServer: Server
+
+  public get rawServer(): Server {
+    return this._rawServer
+  }
+
 
   protected _conn: Conn | null
 
-  public get proxy(): Conn | null {
-    return this._conn;
+  public get proxy (): Conn | null {
+    return this._conn
   }
 
   public bOpts: BotOptions
@@ -136,6 +158,8 @@ export class ProxyServer<
   public lsOpts: ServerOptions
 
   public psOpts: Opts
+
+  public manuallyStopped: boolean = false
 
   public get conn (): Conn | null {
     return this._conn
@@ -164,31 +188,33 @@ export class ProxyServer<
   }
 
   constructor (
+    lsOpts: ServerOptions,
     psOpts: Opts,
     bOpts: BotOptions,
-    cOpts: ConnOptions = { optimizePacketWrite: true },
-    lsOpts: Partial<ServerOptions> = {}
+    cOpts: ConnOptions = { optimizePacketWrite: true }
   ) {
     super()
     this.bOpts = bOpts
     this.cOpts = cOpts
     this.lsOpts = lsOpts
     this.psOpts = psOpts
-    this._conn = new Conn(bOpts, cOpts)
-    this._rawServer = createServer(lsOpts)
     this.psOpts = psOpts
-
-    this.cmdHandler = new CommandHandler(this as any)
+    this._rawServer = createServer(lsOpts)
+    this._conn = null
     this.ChatMessage = require('prismarine-chat')(bOpts.version)
+
+    this.cmdHandler = new CommandHandler(this)
+    this.cmdHandler.loadProxyCommand('pstop', this.stop)
+    this.cmdHandler.loadDisconnectedCommand('pstart', this.start)
 
     this._rawServer.on('login', this.loginHandler)
   }
 
   public loadPlugin (inserting: ProxyServerPlugin<Opts, Events>) {
     inserting.onLoad?.(this)
-    this.plugins.set(inserting.name, inserting);
-    if (inserting.connectedCmds) this.cmdHandler.loadProxyCommands(inserting.connectedCmds)
-    if (inserting.disconnectedCmds) this.cmdHandler.loadDisconnectedCommands(inserting.disconnectedCmds)
+    this.plugins.set(inserting.name, inserting)
+    if (inserting.connectedCmds != null) this.cmdHandler.loadProxyCommands(inserting.connectedCmds)
+    if (inserting.disconnectedCmds != null) this.cmdHandler.loadDisconnectedCommands(inserting.disconnectedCmds)
   }
 
   public unloadPlugin (inserting: ProxyServerPlugin<Opts, Events> | string) {
@@ -201,7 +227,9 @@ export class ProxyServer<
 
   public start (): Conn {
     if (this.isProxyConnected()) return this._conn!
+    this.closeConnections('Proxy restarted! Rejoin to re-sync.')
     this._conn = new Conn(this.bOpts, this.cOpts)
+    this.manuallyStopped = false
     this.emit('starting' as any, this._conn)
     this.setup()
     this.emit('started' as any)
@@ -210,14 +238,16 @@ export class ProxyServer<
 
   public stop (): void {
     if (!this.isProxyConnected()) return
+    this.manuallyStopped = true
     this.emit('stopping' as any)
+    this.closeConnections('Proxy stoppped.', true)
     this.emit('stopped' as any)
   }
 
-  public async restart(ms = 0) {
-    this.stop();
-    await sleep(1000);
-    this.start();
+  public async restart (ms = 0) {
+    this.stop()
+    await sleep(ms)
+    this.start()
   }
 
   private setup (): void {
@@ -241,7 +271,9 @@ export class ProxyServer<
     this.emit('initialBotSetup' as any, this.remoteBot, this.psOpts)
 
     this.remoteBot.once('spawn', this.beginBotLogic)
-    this.remoteBot.on('kicked', this.remoteClientDisconnect)
+    this.remoteBot.on('kicked', (info) => {
+      if (this.psOpts.disconnectAllOnEnd) this.remoteClientDisconnect(info)
+    })
     this.remoteClient.on('login', () => {
       this._remoteIsConnected = true
     })
@@ -259,7 +291,9 @@ export class ProxyServer<
 
   private readonly loginHandler = (actualUser: ServerClient) => {
     this.emit('playerConnected' as any, actualUser, this.isProxyConnected())
-    this.cmdHandler.updateClientCmds(actualUser)
+    actualUser.once('end', () => this.emit('playerDisconnected' as any, actualUser))
+
+    this.cmdHandler.updateClientCmds(actualUser as unknown as ProxyClient)
     if (this.isProxyConnected()) this.whileConnectedLoginHandler(actualUser)
     else this.notConnectedLoginHandler(actualUser)
   }
@@ -273,10 +307,6 @@ export class ProxyServer<
     } else {
       this.emit('remoteKick' as any, info)
       this.closeConnections('Connection reset by server.', true, info)
-    }
-
-    if (this.psOpts.restartOnDisconnect) {
-      this.restart(1000);
     }
   }
 
@@ -293,6 +323,10 @@ export class ProxyServer<
       this._conn?.disconnect()
       this._remoteIsConnected = false
       this._conn = null
+
+      if (this.psOpts.restartOnDisconnect && !this.manuallyStopped) {
+        this.restart(1000)
+      }
     }
   }
 
@@ -383,12 +417,12 @@ export class ProxyServer<
   message (
     client: Client | ServerClient,
     message: string,
-    prefix: string = this.psOpts.display.proxyChatPrefix,
+    prefix: boolean = true,
     allowFormatting: boolean = true,
     position: number = 1
   ) {
     if (!allowFormatting) message = message.replaceAll(/§./, '')
-    if (prefix) message = prefix + message
+    if (prefix) message = this.psOpts.display.proxyChatPrefix + message
     this.sendMessage(client, message, position)
   }
 
@@ -397,7 +431,7 @@ export class ProxyServer<
     client.write('chat', { message: messageObj.json.toString(), position })
   }
 
-  broadcastMessage (message: string, prefix?: string, allowFormatting?: boolean, position?: number) {
+  broadcastMessage (message: string, prefix: boolean = true, allowFormatting?: boolean, position?: number) {
     Object.values(this._rawServer.clients).forEach((c) => {
       this.message(c, message, prefix, allowFormatting, position)
     })
