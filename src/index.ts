@@ -47,6 +47,7 @@ async function setup () {
   const serverOptions = await serverOptsFromConfig(checkedConfig)
 
   const rawServer = createServer(serverOptions)
+  rawServer.on('connection', (c) => console.log("hi", c.socket.address()))
 
   const afkServer = SpectatorServer.wrapServer(
     true,
@@ -107,16 +108,7 @@ async function setup () {
     disconnectedServerMotd()
     afkServer.removeListener('queueUpdate', queueServerMotd)
   })
-
-  afkServer.on('wantsRestart', () => {
-    afkServer.restart(1000);
-  })
-
-  // bot events
-  afkServer.on('botevent:breath', (bot) => {
-    botUpdatesMotd(bot)
-  })
-
+  
   afkServer.on('botevent:health', (bot) => {
     botUpdatesMotd(bot)
   })

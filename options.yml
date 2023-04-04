@@ -21,7 +21,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: 2b2t.org
+    host: localhost
     port: 25565
     version: 1.12.2
 
@@ -51,7 +51,7 @@ minecraft:
     disconnectAllOnEnd: true
     logPlayerJoinLeave: false
     linkOnConnect: true
-    restartOnDisconnect: false
+    restartOnDisconnect: true
 
     # Leave this off, this is broken for now.
     worldCaching: false
