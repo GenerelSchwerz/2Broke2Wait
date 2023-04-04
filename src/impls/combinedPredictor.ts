@@ -61,10 +61,14 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
     }
 
     // Parse header packets
-    const header = JSON.parse(packetData.header).extra
-    if (header && header.length === 6) {
+    // Parse header packets
+    const header = JSON.parse(packetData.header).extra as Array<{ text: string, [key: string]: any }>
+    let pos = 2 // hardcoded
+    pos = header.findIndex(element => element.text.toLowerCase().includes('position')) // find pisition based on text relevance
+
+    if (header) {
       const position: number = Number(
-        header[4].extra[0].text.replace(/\n/, '')
+        header[pos].extra[0].text.replace(/\n/, '')
       )
 
       if (Number.isNaN(position)) {
