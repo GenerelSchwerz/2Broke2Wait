@@ -139,8 +139,8 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: 2bored2wait-linux-arm64-${{github.sha}}
-          path: "pkg/2bored2wait-linux-arm64-${{github.sha}}"
+          name: 2bored2wait-linux-armv7-${{github.sha}}
+          path: "pkg/2bored2wait-linux-armv7-${{github.sha}}"
           if-no-files-found: error
 
 
