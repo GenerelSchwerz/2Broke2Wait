@@ -135,7 +135,7 @@ jobs:
       - name: Build
         run: |
           mkdir pkg
-          npx pkg . --target node16-linuxstatic-armv7 -o "pkg/2bored2wait-linux-arm64-${{github.sha}}"
+          npx pkg . --target node16-linuxstatic-armv7 -o "pkg/2bored2wait-linux-armv7-${{github.sha}}"
 
       - uses: actions/upload-artifact@v3
         with:
