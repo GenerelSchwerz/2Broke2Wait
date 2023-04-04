@@ -1,7 +1,7 @@
-import { APIEmbed } from "discord.js";
+import { APIEmbed, WebhookClient } from "discord.js";
 import { DateTime, Duration } from "ts-luxon";
 import { PacketQueuePredictor } from "../../abstract/packetQueuePredictor";
-import { WebhookEmbedConfig } from "../../abstract/webhookReporters";
+import { BaseWebhookOpts, WebhookEmbedConfig } from "../../abstract/webhookReporters";
 import { ProxyServer } from "../baseServer";
 import { TwoBAntiAFKEvents } from "../plugins/twoBAntiAFK";
 
@@ -28,11 +28,7 @@ export const AntiAFKEventNames: { [key in Exclude<keyof TwoBAntiAFKEvents, `bote
   "*": "Any event...",
 } as const;
 
-export function buildClientEmbed(
-  srv: ProxyServer<any, any>,
-  wantedEvent: string,
-  config: WebhookEmbedConfig
-) {
+export function buildClientEmbed(srv: ProxyServer<any, any>, wantedEvent: string, config: WebhookEmbedConfig) {
   const embed: APIEmbed = {
     title: config.skipTitle ? undefined : wantedEvent,
   };
@@ -75,4 +71,19 @@ export function buildServerEmbed(
     embed.footer = { text };
   }
   return embed;
+}
+
+export type WebhookWrapper = {
+  client: WebhookClient;
+} & BaseWebhookOpts;
+
+export function updateWebhook(
+  webhookInfo: { client: WebhookClient } & BaseWebhookOpts,
+  reason = "Automatic update from 2b2w"
+) {
+  return webhookInfo.client.edit({
+    avatar: webhookInfo.icon,
+    name: webhookInfo.username,
+    reason,
+  });
 }

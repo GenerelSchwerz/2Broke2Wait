@@ -69,11 +69,20 @@ export type IProxyServerEvents = {
   restart: () => void;
 } & PrefixedBotEvents;
 
-export type Test<Events extends IProxyServerEvents> = {
-  [nme in Exclude<keyof Events, `botevent_${string}`> as nme extends string
-    ? `on${Capitalize<nme>}`
-    : never]?: Events[nme] extends (...args: any[]) => infer Ret ? (...args: Arguments<Events[nme]>) => Ret : never;
+export type Test<Events> = {
+  [nme in keyof Events as nme extends string ? `on${Capitalize<nme>}`: never]?: 
+    Events[nme] extends (...args: infer Args) => infer Ret ? (...args: Args) => Ret : never;
 };
+
+
+interface TestEvents  {
+  hi: (num: number) => string
+}
+
+// Strongly typed
+const test: Test<TestEvents> = {
+  onHi: (num) => "hi"
+}
 
 export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IProxyServerEvents> {
   public declare _server: ProxyServer<Opts, Events>;
@@ -305,7 +314,7 @@ export class ProxyServer<
 
   // TODO: Broken typings.
   public loadPlugin<FoundOpts extends IProxyServerOpts, FoundEvents extends IProxyServerEvents>(
-    inserting: ProxyServerPlugin<FoundOpts, FoundEvents>
+    inserting: Opts extends FoundOpts ? Events extends FoundEvents ?  ProxyServerPlugin<FoundOpts, FoundEvents> : never : never
   ): ProxyServer<Opts & FoundOpts, Events & FoundEvents> {
     inserting.onLoad(this as any);
     this.plugins.set(inserting.name, inserting as any);

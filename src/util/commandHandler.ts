@@ -13,6 +13,7 @@ type CommandFunc = (client: Client | ServerClient, ...args: string[]) => void
 type CommandInfo = {
   usage?: string
   description?: string
+  allowed?: (client: Client | ServerClient) => boolean,
   callable: CommandFunc
 }
 | CommandFunc
@@ -64,22 +65,41 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     })
   }
 
-  private cleanupCmds (oldPrefix: string, newPrefix: string) {
-    for (let key of Object.keys(this.proxyCmds)) {
-      if (key.startsWith(oldPrefix)) {
-        const oldKey = key
-        key = key.substring(this.prefix.length)
-        this.proxyCmds[newPrefix + key] = this.proxyCmds[oldKey]
-        delete this.proxyCmds[oldKey]
-      } else if (!key.startsWith(newPrefix)) {
-        this.proxyCmds[newPrefix + key] = this.proxyCmds[key]
-        delete this.proxyCmds[key]
-      }
+  public getAllCmds() {
+    return {
+      connected: this.proxyCmds,
+      disconnected: this.disconnectedCmds
     }
   }
 
-  public getActiveCmds () {
-    return this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds
+  private cleanupCmds (oldPrefix: string, newPrefix: string) {
+    const allCmds = this.getAllCmds();
+    for (let cmdType of Object.keys(allCmds)) {
+      for (let key of Object.keys((allCmds as any)[cmdType])) {
+        if (key.startsWith(oldPrefix)) {
+          const oldKey = key
+          key = key.substring(this.prefix.length)
+          this.proxyCmds[newPrefix + key] = this.proxyCmds[oldKey]
+          delete this.proxyCmds[oldKey]
+        } else if (!key.startsWith(newPrefix)) {
+          this.proxyCmds[newPrefix + key] = this.proxyCmds[key]
+          delete this.proxyCmds[key]
+        }
+      }
+      }
+     
+  }
+
+  public getActiveCmds (client: Client | ServerClient) {
+    const cmds = this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds;
+
+    for (const [key, cmd] of Object.entries(cmds)) {
+      if (typeof cmd !== 'function') {
+        if (cmd.allowed != null && cmd.allowed(client) === false) delete cmds[key];
+      }
+    }
+
+    return cmds;
   }
 
   loadProxyCommands (obj: CommandMap) {
@@ -105,34 +125,30 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
   }
 
   commandHandler = async (client: Client | ServerClient, ...cmds: string[]) => {
+    const allowedCmds = this.getActiveCmds(client);
     if (cmds.length === 1) {
       const [cmd, ...args] = cmds[0].split(' ')
       if (!cmd.startsWith(this.prefix)) return true
-      const cmdFunc = this.getActiveCmds()[cmd]
-      if (cmdFunc) {
-        if (cmdFunc instanceof Function) {
-          cmdFunc.call(this.srv, client, ...args)
-        } else {
-          cmdFunc.callable.call(this.srv, client, ...args)
-        }
-      }
+      const cmdFunc = allowedCmds[cmd]
+      if (cmdFunc) this.executeCmd(cmdFunc, client, ...args)
       return !cmdFunc
     } else {
       for (const cmdLine of cmds) {
         let [cmd, ...args] = cmdLine.trimStart().split(' ')
         if (!cmd.startsWith(this.prefix)) cmd = this.prefix + cmd
-        const cmdFunc = this.getActiveCmds()[cmd]
-        if (cmdFunc) {
-          if (cmdFunc instanceof Function) {
-            cmdFunc.call(this.srv, client, ...args)
-          } else {
-            cmdFunc.callable.call(this.srv, client, ...args)
-          }
-          await sleep(300)
-        } else {
-          return
-        }
+        const cmdFunc = allowedCmds[cmd]
+        if (!cmdFunc) return true;
+        this.executeCmd(cmdFunc, client, ...args)
+        await sleep(300)
       }
+    }
+  }
+
+  private executeCmd(cmd: CommandInfo, client: Client | ServerClient, ...args: any[]) {
+    if (cmd instanceof Function) {
+      cmd.call(this.srv, client, ...args)
+    } else {
+      cmd.callable.call(this.srv, client, ...args)
     }
   }
 
@@ -148,10 +164,18 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     data: any,
     meta: PacketMeta
   ) => {
-    console.log('hi', this.srv.isProxyConnected(), data)
     if (this.srv.isProxyConnected()) return
     const { message }: { message: string } = data
     return await this.commandHandler(client, ...message.split('|'))
+  }
+
+
+
+  manualRun (cmd: string, client: Client | ServerClient, ...args: any[]) {
+    if (!cmd.startsWith(this.prefix)) cmd = this.prefix + cmd
+    const cmdRunner = this.getActiveCmds(client);
+    const cmdFunc = cmdRunner[cmd]
+    if (cmdFunc) this.executeCmd(cmdFunc, client, ...args)
   }
 
   proxyTabCompleteListener: PacketMiddleware = async ({ meta, data, pclient }) => {
@@ -162,7 +186,7 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
 
     if (pclient !== this.srv.proxy.pclient) {
       const matches = []
-      const cmds = Object.keys(this.proxyCmds)
+      const cmds = Object.keys(this.getActiveCmds(pclient))
       for (const cmd of cmds) {
         if (cmd.startsWith(data.text)) {
           matches.push(cmd)
@@ -197,7 +221,7 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     }
 
     const matches = []
-    for (const cmd of Object.keys(this.proxyCmds)) {
+    for (const cmd of Object.keys(this.getActiveCmds(pclient))) {
       if (cmd.startsWith(text)) {
         matches.push(cmd)
       }
@@ -216,24 +240,15 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     client.on('chat', async (...args) => await this.unlinkedChatHandler(client, ...args) as any)
   }
 
-  isCmd (cmd: string) {
-    const cmdRunner = this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds
-    return cmdRunner[cmd]
+  isCmd (cmd: string): boolean {
+    if (!cmd.startsWith(this.prefix)) cmd = this.prefix + cmd
+    const cmdRunner = this.getAllCmds();
+    return !!cmdRunner.connected[cmd] || !!cmdRunner.disconnected[cmd]
   }
 
-  manualRun (cmd: string, client: Client | ServerClient = {} as any, ...args: any[]) {
-    if (!cmd.startsWith(this.prefix)) cmd = this.prefix + cmd
-    const cmdRunner = this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds
-    const cmdFunc = cmdRunner[cmd]
-    if (cmdFunc instanceof Function) {
-      cmdFunc.call(this.srv, client, ...args)
-    } else {
-      cmdFunc.callable.call(this.srv, client, ...args)
-    }
-  }
 
   printHelp = (client: ServerClient | Client) => {
-    const cmdRunner = this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds
+    const cmdRunner = this.getActiveCmds(client)
     this.srv.message(client, '§6---------- Proxy Commands: ------------- ', false)
     for (const cmdKey in cmdRunner) {
       const cmd = cmdRunner[cmdKey]
@@ -252,7 +267,7 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
   }
 
   public printUsage = (client: ServerClient | Client, wantedCmd: string) => {
-    const cmdRunner = this.srv.isProxyConnected() ? this.proxyCmds : this.disconnectedCmds
+    const cmdRunner = this.getActiveCmds(client);
     if (!wantedCmd) return this.srv.message(client, '[pusage] Unknown command!')
     if (wantedCmd.startsWith(this.prefix)) wantedCmd.replace(this.prefix, '')
     const cmd = cmdRunner[this.prefix + wantedCmd]

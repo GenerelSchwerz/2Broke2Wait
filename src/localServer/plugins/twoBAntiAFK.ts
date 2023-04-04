@@ -13,11 +13,11 @@ import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../../abstract
 import { CombinedPredictor } from "../predictors/combinedPredictor";
 import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin, ProxyServer, Test } from "../baseServer";
 import merge from "ts-deepmerge";
-import { Options } from "../../util/options";
+import { DiscordWebhookOptions, Options, QueueSetup } from "../../util/options";
 import { DateTime, Duration } from "ts-luxon";
 import { APIEmbed, WebhookClient } from "discord.js";
 import { BaseWebhookOpts, WebhookEmbedConfig } from "../../abstract/webhookReporters";
-import { AntiAFKEventNames, buildClientEmbed, buildServerEmbed } from "../reporters/webhookUtil";
+import { AntiAFKEventNames, buildClientEmbed, buildServerEmbed, updateWebhook, WebhookWrapper } from "../reporters/webhookUtil";
 
 export interface TwoBAntiAFKOpts extends IProxyServerOpts {
   antiAFK: {
@@ -129,31 +129,51 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
   }
 }
 
-export class TwoBWehook extends TwoBAntiAFKPlugin implements Test<TwoBAntiAFKEvents> {
-  public queueInfo: {
-    client: WebhookClient;
-    reportAt?: number;
-  } & BaseWebhookOpts;
 
-  constructor(webhookUrls: Exclude<Options["discord"]["webhooks"], undefined>) {
+
+export class TwoBWehook extends TwoBAntiAFKPlugin {
+  public queueInfo: WebhookWrapper & QueueSetup
+
+  constructor(webhookUrls: DiscordWebhookOptions) {
     super();
 
     this.queueInfo = {
       client: new WebhookClient({ url: webhookUrls.queue.url }),
       ...webhookUrls.queue,
     };
+
+    updateWebhook(this.queueInfo);
   }
+
 
   public onLoad(server: ProxyServer<TwoBAntiAFKOpts, TwoBAntiAFKEvents>): void {
-    super.onLoad(server);
-    console.log("hi");
+      super.onLoad(server);
+      server.on('queueUpdate', this.onQueueUpdate)
   }
 
-  onPreStart(conn: Conn) {
-    super.onPreStart(conn);
+  public onUnload(): void {
+      
   }
 
-  buildServerEmbed(wantedEvent: keyof TwoBAntiAFKEvents, config: WebhookEmbedConfig) {
+  onQueueUpdate = async (oldPos: number, newPos: number, eta: number) => {
+    const embed = this.buildServerEmbed('queueUpdate');
+    
+    const strETA = !Number.isNaN(eta)
+      ? Duration.fromMillis(eta * 1000 - Date.now()).toFormat("h 'hours and ' m 'minutes'")
+      : 'Unknown (NaN)'
+
+    embed.description =
+      `Current time: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
+      `Old position: ${oldPos}\n` +
+      `New position: ${newPos}\n` +
+      `Estimated ETA: ${strETA}`
+
+    await this.queueInfo.client.send({
+      embeds: [embed]
+    })
+  }
+
+  buildServerEmbed(wantedEvent: keyof TwoBAntiAFKEvents, config: WebhookEmbedConfig = {}) {
     if (this.queue == null) throw Error("Building server embed without queue!");
     wantedEvent = (AntiAFKEventNames as any)[wantedEvent] ?? wantedEvent;
     return buildServerEmbed(this.server, this.queue, wantedEvent, config);

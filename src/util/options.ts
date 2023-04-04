@@ -10,22 +10,29 @@ import Https from 'https'
 import { SpectatorServerOpts } from '../localServer/plugins/spectator'
 import { TwoBAntiAFKOpts } from '../localServer/plugins/twoBAntiAFK'
 
+
+export type DiscordBotOptions = {
+  
+    enabled: boolean
+    botToken: string
+    prefix: string
+  
+}
+export type DiscordWebhookOptions = {
+  enabled: boolean
+      gameChat: BaseWebhookOpts
+      serverInfo: BaseWebhookOpts
+      queue: QueueSetup
+}
+export type QueueSetup = BaseWebhookOpts & {
+  reportAt: number
+}
+
 // Minecraft and discord options such as discord bot prefix and minecraft login info
 export interface Options {
   discord: {
-    bot?: {
-      enabled: boolean
-      botToken: string
-      prefix: string
-    }
-    webhooks?: {
-      enabled: boolean
-      gameChat: BaseWebhookOpts
-      serverInfo: BaseWebhookOpts
-      queue: BaseWebhookOpts & {
-        reportAt: number
-      }
-    }
+    bot?: DiscordBotOptions
+    webhooks?: DiscordWebhookOptions;
   }
   minecraft: {
     account: BotOptions
