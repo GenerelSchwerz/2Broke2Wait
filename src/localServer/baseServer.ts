@@ -70,22 +70,23 @@ export type IProxyServerEvents = {
 } & PrefixedBotEvents;
 
 export type Test<Events> = {
-  [nme in keyof Events as nme extends string ? `on${Capitalize<nme>}`: never]?: 
-    Events[nme] extends (...args: infer Args) => infer Ret ? (...args: Args) => Ret : never;
+  [nme in keyof Events as nme extends string ? `on${Capitalize<nme>}` : never]?: Events[nme] extends (
+    ...args: infer Args
+  ) => infer Ret
+    ? (...args: Args) => Ret
+    : never;
 };
 
-
-interface TestEvents  {
-  hi: (num: number) => string
+interface TestEvents {
+  hi: (num: number) => string;
 }
 
 // Strongly typed
 const test: Test<TestEvents> = {
-  onHi: (num) => "hi"
-}
+  onHi: (num) => "hi",
+};
 
 export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IProxyServerEvents> {
-
   public declare _server: ProxyServer<Opts, Events>;
   public declare name: string;
   public declare connectedCmds?: CommandMap;
@@ -104,7 +105,7 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
   // potential listener methods
   onPreStart?: (conn: Conn) => void;
   onPostStart?: () => void;
-  onPreStop?: () =>  void;
+  onPreStop?: () => void;
   onPostStop?: () => void;
   onBotStartup?: (bot: Bot) => void;
   onBotShutdown?: (bot: Bot) => void;
@@ -135,7 +136,6 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
     if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup);
     if (this.onRemoteError != null) this._server.on("remoteError" as any, this.onRemoteError);
     if (this.onRemoteKick != null) this._server.on("remoteKick" as any, this.onRemoteKick);
-    console.log(this.name, this.onRemoteError, this.onRemoteKick)
   }
 
   // This doesn't work since binding. Oh well, we'll never call this.
@@ -179,17 +179,15 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
   }
 }
 
-
 type OptExtr<Fuck> = Fuck extends ProxyServerPlugin<infer Opts, any> ? Opts : never;
 type EvExtr<Fuck> = Fuck extends ProxyServerPlugin<any, infer Events> ? Events : never;
-
 
 /**
  * Strongly typed server builder. Makes sure settings matches all plugins.
  */
 export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyServerEvents, AppliedSettings = false> {
   private _plugins: ProxyServerPlugin<any, any>[];
-  
+
   private _settings?: Opts;
   private _appliedSettings: AppliedSettings = false as any;
   constructor(
@@ -257,8 +255,6 @@ export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyS
   }
 }
 
-
-
 export class ProxyServer<
   Opts extends IProxyServerOpts,
   Events extends IProxyServerEvents
@@ -274,7 +270,7 @@ export class ProxyServer<
   public lsOpts: ServerOptions;
   public psOpts: Opts;
 
-  public manuallyStopped: boolean = false;
+  // public manuallyStopped: boolean = false;
   public ChatMessage!: typeof AgnogChMsg;
 
   public get rawServer(): Server {
@@ -321,17 +317,27 @@ export class ProxyServer<
     this._rawServer = createServer(lsOpts);
     this.ChatMessage = require("prismarine-chat")(bOpts.version);
 
-    console.log(this.psOpts.disconnectAllOnEnd)
     this.cmdHandler = new CommandHandler(this);
-    this.cmdHandler.loadProxyCommand("pstop", this.stop);
-    this.cmdHandler.loadDisconnectedCommand("pstart", this.start);
-
+    this.cmdHandler.loadProxyCommand("pstop", {
+      description: "stops the server",
+      usage: "pstop",
+      callable: this.stop,
+    });
+    this.cmdHandler.loadDisconnectedCommand("pstart", {
+      description: "starts the server",
+      usage: "pstart",
+      callable: this.start,
+    });
     this._rawServer.on("login", this.loginHandler);
   }
 
   // TODO: Broken typings.
   public loadPlugin<FoundOpts extends IProxyServerOpts, FoundEvents extends IProxyServerEvents>(
-    inserting: Opts extends FoundOpts ? Events extends FoundEvents ?  ProxyServerPlugin<FoundOpts, FoundEvents> : never : never
+    inserting: Opts extends FoundOpts
+      ? Events extends FoundEvents
+        ? ProxyServerPlugin<FoundOpts, FoundEvents>
+        : never
+      : never
   ): ProxyServer<Opts & FoundOpts, Events & FoundEvents> {
     inserting.onLoad(this as any);
     this.plugins.set(inserting.name, inserting as any);
@@ -361,24 +367,25 @@ export class ProxyServer<
 
   /**
    * To be used by plugins.
-   * @param key 
-   * @param data 
-   * @returns 
+   * @param key
+   * @param data
+   * @returns
    */
   public storePluginData(key: string, data: any) {
     return this.pluginStorage.set(key, data);
   }
 
-
   public getPluginData<Value extends any>(key: string): Value | undefined {
-    return this.pluginStorage.get(key)
+    return this.pluginStorage.get(key);
   }
 
   public start(): Conn {
     if (this.isProxyConnected()) return this._conn!;
-    this.closeConnections("Proxy restarted! Rejoin to re-sync.");
+
+   
+    // this.closeConnections("Proxy restarted! Rejoin to re-sync.");
     this._conn = new Conn(this.bOpts, this.cOpts);
-    this.manuallyStopped = false;
+    this.reconnectAllClients(this._conn);
     this.emit("starting" as any, this._conn);
     this.setup();
     this.emit("started" as any);
@@ -386,10 +393,12 @@ export class ProxyServer<
   }
 
   public stop(): void {
+    console.trace("here")
     if (!this.isProxyConnected()) return;
-    this.manuallyStopped = true;
+    // this.manuallyStopped = true;
     this.emit("stopping" as any);
-    this.closeConnections("Proxy manually stoppped.", true);
+    this.disconnectRemote();
+    // this.closeConnections("Proxy manually stoppped.", true);
     this.emit("stopped" as any);
   }
 
@@ -418,7 +427,7 @@ export class ProxyServer<
     this.emit("initialBotSetup" as any, this.remoteBot, this.psOpts);
 
     this.remoteBot.once("spawn", this.beginBotLogic);
-    this.remoteBot.on("kicked",  this.remoteClientDisconnect);
+    this.remoteBot.on("kicked", this.remoteClientDisconnect);
     this.remoteClient.on("login", () => {
       this._remoteIsConnected = true;
     });
@@ -448,10 +457,26 @@ export class ProxyServer<
     this.endBotLogic();
     if (info instanceof Error) {
       this.emit("remoteError" as any, info);
-      this.closeConnections("Connection reset by server.", true, `Javascript Error: ${info}`);
+
+      if (this.psOpts.disconnectAllOnEnd)
+        this.closeConnections("Connection reset by server.", true, `Javascript Error: ${info}`);
+      else {
+        this.broadcastMessage("[WARNING] Bot has errored!")
+        this.broadcastMessage("          You are still connected.")
+      }
+
     } else {
       this.emit("remoteKick" as any, info);
-      this.closeConnections("Connection reset by server.", true, info);
+      if (this.psOpts.disconnectAllOnEnd)
+        this.closeConnections("Connection reset by server.", true, info);
+      else {
+        this.broadcastMessage("[WARNING] Bot has disconnected!")
+        this.broadcastMessage("          You are still connected.")
+      }
+    }
+
+    if (this.psOpts.restartOnDisconnect) {
+      this.restart(1000);
     }
   };
 
@@ -460,28 +485,41 @@ export class ProxyServer<
 
     this.emit("closingConnections" as any, reason);
 
-
-    if (this.psOpts.disconnectAllOnEnd) {
-      Object.keys(this._rawServer.clients).forEach((clientId) => {
-        this._rawServer.clients[Number(clientId)].end(reason);
-      });
-    } else if (closeRemote) {
-      Object.values(this._rawServer.clients).forEach(client => {
-        this.message(client, '[WARNING] Bot was disconnected.')
-        this.message(client, 'Reconnect to check on the status of the bot.')
-      });
-    }
-
+    Object.keys(this._rawServer.clients).forEach((clientId) => {
+      this._rawServer.clients[Number(clientId)].end(reason);
+    });
+  
     if (closeRemote) {
-      this._conn?.disconnect();
-      this._remoteIsConnected = false;
-      this._conn = null;
-    }
-
-    if (this.psOpts.restartOnDisconnect && !this.manuallyStopped) {
-      this.restart(1000);
+      this.disconnectRemote();
     }
   };
+
+  private readonly disconnectRemote = () => {
+    if (this._conn != null) {
+      // const currentClients = Object.values(this._rawServer.clients);
+      // for (const pc of this._conn.pclients) {
+      //   const found = currentClients.find(c => pc.uuid === c.uuid);
+      //   if (found) {
+      //     (found as any).cachedClientMiddlewares = pc.toClientMiddlewares;
+      //     (found as any).cachedServerMiddlewares = pc.toServerMiddlewares;
+      //   }
+      // }
+
+      this._conn.disconnect();
+    }
+ 
+    this._remoteIsConnected = false;
+    this._conn = null;
+  }
+
+  private readonly reconnectAllClients = (conn: Conn) => {
+    Object.values(this._rawServer.clients).forEach(c => {
+      this.broadcastMessage("[INFO] Bot has started!")
+      this.broadcastMessage("Reconnect to see the new bot.")
+      this.cmdHandler.decoupleClientCmds(c as unknown as ProxyClient)
+      this.cmdHandler.updateClientCmds(c as unknown as ProxyClient);
+    })
+  }
 
   /**
    * Default login handler. This can/will be overriden by plugins.

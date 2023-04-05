@@ -1,12 +1,10 @@
-import { TwoBAntiAFKEvents, TwoBAntiAFKOpts } from './twoBAntiAFK'
 import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '../baseServer'
 
 import { Client, Conn, PacketMiddleware } from '@rob9315/mcproxy'
 import { ServerClient } from 'minecraft-protocol'
 
 import { sleep } from '../../util/index'
-import { FakePlayer, FakeSpectator } from './spectatorServer/fakes'
-import { WorldManager } from './spectatorServer/worldManager'
+import { WorldManager, FakePlayer, FakeSpectator } from './spectatorUtils'
 import { CommandMap } from '../../util/commandHandler'
 
 export interface SpectatorServerOpts extends IProxyServerOpts {
@@ -183,7 +181,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     return true
   }
 
-  link (client: ServerClient | Client) {
+  async link (client: ServerClient | Client) {
     if (this.server.conn == null) return
     if (client === this.server.conn.pclient) {
       this.server.message(client, 'Already in control, cannot link!')
@@ -196,6 +194,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.fakeSpectator?.revertPov(client)
       this.fakePlayer?.unregister(client as unknown as ServerClient)
       this.fakeSpectator?.revertToNormal(client as unknown as ServerClient)
+      await sleep(50);
       this.server.conn.link(client as unknown as Client)
       this.server.endBotLogic()
     } else {

@@ -1,5 +1,5 @@
 import { Conn } from '@rob9315/mcproxy'
-import { PacketQueuePredictor } from '../../abstract/packetQueuePredictor'
+import { PacketQueuePredictor } from './packetQueuePredictor'
 import { getWaitTime, hourAndMinToDateTime } from '../../util/remoteInfo'
 import type { Client, PacketMeta } from 'minecraft-protocol'
 
@@ -56,7 +56,6 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
   public playerlistHeaderPacketHandler (packetData: any) {
     // If no longer in queue, stop here
     if (!this._inQueue) {
-      console.log('what')
       return
     }
 

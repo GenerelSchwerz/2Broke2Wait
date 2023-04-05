@@ -9,7 +9,7 @@ import { MODULE_DEFAULT_SETTINGS, WalkAroundModuleOptions } from "@nxg-org/minef
 import { Conn } from "@rob9315/mcproxy";
 import { Bot } from "mineflayer";
 import { pathfinder } from "mineflayer-pathfinder";
-import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../../abstract/packetQueuePredictor";
+import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../predictors/packetQueuePredictor";
 import { CombinedPredictor } from "../predictors/combinedPredictor";
 import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin } from "../baseServer";
 import merge from "ts-deepmerge";

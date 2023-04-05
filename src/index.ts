@@ -3,6 +3,7 @@ import { validateOptions } from './util/config'
 import { botOptsFromConfig, Options, serverOptsFromConfig } from './util/options'
 import { ConsoleReporter, SpectatorServerPlugin, TwoBAntiAFKPlugin, WebhookReporter, MotdReporter } from './localServer/plugins'
 import { ServerBuilder } from './localServer/baseServer'
+import { buildClient } from './discord'
 const yaml = require('js-yaml')
 
 // ... If no errors were found, return the validated config
@@ -31,6 +32,8 @@ async function setup () {
   plugins.push(new TwoBAntiAFKPlugin());
  
 
+
+
   if (checkedConfig.discord.webhooks) {
     plugins.push(new WebhookReporter(checkedConfig.discord.webhooks))
   }
@@ -43,11 +46,17 @@ async function setup () {
     plugins.push(new MotdReporter(checkedConfig.localServerConfig.display))
   }
 
+
+
   const server = new ServerBuilder(serverOptions, bOpts)
     .addPlugins(...plugins)
     .setSettings(checkedConfig.localServerConfig)
     .build();
     
+  if (checkedConfig.discord.bot) {
+    buildClient(checkedConfig.discord.bot, server);
+  }
+
   server.start()
 }
 

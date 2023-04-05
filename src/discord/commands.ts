@@ -1,12 +1,10 @@
 import { CommandInteraction, OAuth2Scopes, ApplicationCommandOptionType } from "discord.js";
-
 import { Client, Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { DateTime, Duration } from "ts-luxon";
-import { sleep, sleepCancel } from "../util/index";
+
 import { hourAndMinToDateTime, pingTime, tentativeStartTime, waitUntilStartingTime } from "../util/remoteInfo";
-import { ProxyServer } from "../localServer/baseServer";
-import { AllEvents, AllOpts } from "../localServer/plugins";
-import { CombinedPredictor } from "../localServer/predictors/combinedPredictor";
+import { CombinedPredictor } from "../localServer/predictors";
+
 
 @Discord()
 @SlashGroup({ description: "Queue related commands", name: "queue" })
@@ -76,7 +74,6 @@ export class QueueCommands {
     let eta;
     let joiningAt;
     if (!Number.isNaN(queue.eta)) {
-      console.log(queue.eta);
       eta = Duration.fromMillis(queue.eta * 1000 - Date.now()).toFormat("h 'hours and' m 'minutes'");
       joiningAt = DateTime.local().plus({ seconds: queue.eta }).toFormat("hh:mm a, MM/dd/yyyy");
     } else {
@@ -145,13 +142,13 @@ export class LocalServerCommands {
     }
 
     if (!mcServer.isProxyConnected()) {
-      interaction.reply("We are already disconnected from the server!");
+      await interaction.reply("We are already disconnected from the server!");
       return;
     }
 
     mcServer.stop();
 
-    interaction.reply("Server stopped!");
+    await interaction.reply("Server stopped!");
   }
 
   @Slash({
@@ -191,7 +188,7 @@ export class LocalServerCommands {
     }
 
     if (mcServer.isProxyConnected()) {
-      interaction.reply("We are already connected to the server!");
+      await interaction.reply("We are already connected to the server!");
       return;
     }
 

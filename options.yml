@@ -98,8 +98,8 @@ discord:
 
   # Discord bot configuration.
   bot:
-    enabled: false
-    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.G6qVVV.Rl478Cq3k-iIyf-Y3LAbU_6WT6GN607Md3PDl0
+    enabled: true
+    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GDirCY.TyzZvqMIcsD2nIMpifyhEMQI6Dr5zt_YxckIgM
     prefix: "!"
 
   # Discord webhook configuration.
