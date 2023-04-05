@@ -28,9 +28,9 @@ minecraft:
 
 
 
-  # Minecraft-protocol configuration for our local server.
-  # Documentation: https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md#mineflayercreatebotoptions
-  # All options from there are valid.
+# Minecraft-protocol configuration for our local server.
+# Documentation: https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md#mineflayercreatebotoptions
+# All options from there are valid.
 localServer:
   host: localhost
   port: 25566
@@ -58,18 +58,6 @@ localServerConfig:
     # Has to be 64x64 and a png.
     # Can be a file path or a URL.
     favicon: https://cdn.discordapp.com/avatars/302885247924568084/346750b5f71641989abcc954d1eda061.png?size=64
-
-<<<<<<< HEAD
-  # Custom settings for the local server.
-  localServerProxyConfig:
-    disableCommands: false
-    disconnectAllOnEnd: true
-    logPlayerJoinLeave: false
-    linkOnConnect: true
-    restartOnDisconnect: true
-=======
->>>>>>> plugin_system
-
 
   spectator:
     logPlayerJoinLeave: false
@@ -103,9 +91,6 @@ localServerConfig:
 
   # Auto eat toggle     
   autoEat: true
-
-
-
 
 
 # Discord logging settings.
