@@ -11,19 +11,21 @@ const config = yaml.load(fs.readFileSync('./options.yml', 'utf-8'))
 const checkedConfig: Options = validateOptions(config)
 const bOpts = botOptsFromConfig(checkedConfig)
 
-const helpMsg =
-  '-------------------------------\n' +
-  'start    -> starts the server\n' +
-  'stop     -> stops the server\n' +
-  'restart  -> restarts the server\n' +
-  'status   -> displays info of service\n' +
-  'help     -> shows this message\n'
+  const helpMsg =
+    '-------------------------------\n' +
+    'start    -> starts the server\n' +
+    'stop     -> stops the server\n' +
+    'restart  -> restarts the server\n' +
+    'status   -> displays info of service\n' +
+    'help     -> shows this message\n'
 
 
 
 async function setup () {
 
   const serverOptions = await serverOptsFromConfig(checkedConfig)
+
+  console.log(checkedConfig)
 
   // for typing reasons, just make an array. I'll explain in due time.
   const plugins = [] 
@@ -40,12 +42,12 @@ async function setup () {
   }
 
   if (true) {
-    plugins.push(new MotdReporter(checkedConfig.minecraft.localServerProxyConfig.display))
+    plugins.push(new MotdReporter(checkedConfig.localServerConfig.display))
   }
 
   const server = new ServerBuilder(serverOptions, bOpts)
     .addPlugins(...plugins)
-    .setSettings(checkedConfig.minecraft.localServerProxyConfig)
+    .setSettings(checkedConfig.localServerConfig)
     .build();
     
   server.start()

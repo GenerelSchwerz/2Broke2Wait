@@ -115,6 +115,8 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
   onPlayerConnected?: (client: ServerClient, remoteConnected: boolean) => void;
   whileConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>;
   notConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>;
+  onRemoteKick?: (reason: string) => void;
+  onRemoteError?: (error: Error) => void;
 
   public onLoad(server: ProxyServer<Opts, Events>) {
     this._server = server;
@@ -131,6 +133,8 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
     if (this.onPlayerConnected != null) this._server.on("playerConnected" as any, this.onPlayerConnected);
     if (this.onOptionValidation != null) this._server.on("optionValidation" as any, this.onOptionValidation);
     if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup);
+    if (this.onRemoteError != null) this._server.on("remoteError" as any, this.onRemoteError);
+    if (this.onRemoteKick != null) this._server.on("remoteKick" as any, this.onRemoteKick);
   }
 
   // This doesn't work since binding. Oh well, we'll never call this.
@@ -146,7 +150,10 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
     if (this.onClosingConnections != null) this._server.off("closingConnections" as any, this.onClosingConnections);
 
     if (this.onPlayerConnected != null) this._server.off("playerConnected" as any, this.onPlayerConnected);
+    if (this.onOptionValidation != null) this._server.off("optionValidation" as any, this.onOptionValidation);
     if (this.onInitialBotSetup != null) this._server.off("initialBotSetup" as any, this.onInitialBotSetup);
+    if (this.onRemoteError != null) this._server.off("remoteError" as any, this.onRemoteError);
+    if (this.onRemoteKick != null) this._server.off("remoteKick" as any, this.onRemoteKick);
   }
 
   /**

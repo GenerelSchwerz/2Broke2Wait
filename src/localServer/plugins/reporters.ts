@@ -43,6 +43,14 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     console.log('Player has taken control of the bot!')
   }
 
+  onRemoteError = (error: Error) => {
+    console.error('[ERROR]: Remote disconnected!', error);
+  }
+
+  onRemoteKick = (reason: string) => {
+    console.warn('[KICKED] Remote disconnected!', reason);
+  }
+
   onPlayerConnected = (client: ServerClient, remoteConnected: boolean) => {
     const { address, family, port } = {
       address: "UNKNOWN",
@@ -82,20 +90,25 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 }
 
 export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
-  constructor(public readonly opts: Options["minecraft"]["localServerProxyConfig"]["display"]) {
+  constructor(public readonly opts: Options["localServerConfig"]["display"]) {
     super();
   }
 
   public onLoad(server: ProxyServer<AllOpts, AllEvents>): void {
     super.onLoad(server);
     server.on("botevent_health", this.botUpdatesMotd);
-    server.on("stopped", this.disconnectedServerMotd);
+    server.on("remoteKick", this.kickedServerMotd);
+    server.on("remoteError", this.errorServerMotd)
     server.on("enteredQueue", this.queueEnterMotd);
     server.on("leftQueue", this.inGameServerMotd);
   }
 
-  disconnectedServerMotd = () => {
-    this.setServerMotd(`Disconnected from ${this.getRemoteServerName()}`);
+  kickedServerMotd = (reason: string) => {
+    this.setServerMotd(`Kicked from ${this.getRemoteServerName()}!`);
+  };
+
+  errorServerMotd = (reason: Error) => {
+    this.setServerMotd(`Errored! Disconnected from ${this.getRemoteServerName()}!`);
   };
 
   queueEnterMotd = () => {

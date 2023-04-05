@@ -33,22 +33,22 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
     return this._queue;
   }
 
-  onPreStart =(conn: Conn) => {
+  onPreStart = (conn: Conn) => {
     this._queue = new CombinedPredictor(conn);
     this._queue.begin();
     this._queue.on("*", (...args: any[]) => {
       this.serverEmit((this._queue as any).event, ...args);
     });
-  }
+  };
 
-  onPreStop =() => {
+  onPreStop = () => {
     if (this._queue != null) this._queue.end();
-  }
+  };
 
-  onOptionValidation =(bot: Bot): void => {
-    // set configurations to default.
-    this.setServerOpts(merge(MODULE_DEFAULT_SETTINGS(bot), this.psOpts));
-  }
+  onOptionValidation = (bot: Bot): void => {
+    const antiAFKSettings = merge(MODULE_DEFAULT_SETTINGS(bot), this.psOpts.antiAFK.modules);
+    this.psOpts.antiAFK.modules = antiAFKSettings;
+  };
 
   onInitialBotSetup = (bot: Bot) => {
     if (this.psOpts.antiAFK.enabled) {
@@ -110,18 +110,16 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
         bannedFood: ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye"],
       });
     }
-  }
+  };
 
   onBotStartup = (bot: Bot) => {
     if (this._queue == null) throw "Somehow bot is starting without queue being initialized!";
     if (this.psOpts.antiAFK && !this._queue.inQueue) bot.antiafk.start();
     if (this.psOpts.autoEat && !this._queue.inQueue) bot.autoEat.enableAuto();
-  }
+  };
 
   onBotShutdown = (bot: Bot) => {
     if (this.psOpts.antiAFK) bot.antiafk.forceStop();
     if (this.psOpts.autoEat) bot.autoEat.disableAuto();
-  }
+  };
 }
-
-

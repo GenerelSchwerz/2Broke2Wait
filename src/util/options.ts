@@ -49,9 +49,10 @@ export interface Options {
       port: number;
       version: string;
     };
-    localServer: ServerOptions;
-    localServerProxyConfig: AllOpts;
   };
+
+  localServer: ServerOptions;
+  localServerConfig: AllOpts;
 }
 
 function httpConstruct(
@@ -215,8 +216,8 @@ async function getIcon(iconInfo?: string) {
 }
 
 export async function serverOptsFromConfig(opts: Options): Promise<ServerOptions> {
-  const serverOpts: ServerOptions = opts.minecraft.localServer;
-  serverOpts.favicon = await getIcon(opts.minecraft.localServer?.favicon);
+  const serverOpts: ServerOptions = opts.localServer;
+  serverOpts.favicon = await getIcon(opts.localServer?.favicon);
   return serverOpts;
 }
 
