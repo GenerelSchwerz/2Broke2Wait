@@ -102,6 +102,10 @@ export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     server.on('leftQueue', this.inGameServerMotd)
   }
 
+  onPostStart = () => {
+    this.setServerMotd(`Joining ${this.getRemoteServerName()}`)
+  };
+
   kickedServerMotd = (reason: string) => {
     this.setServerMotd(`Kicked from ${this.getRemoteServerName()}!`)
   }
@@ -239,17 +243,41 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     server.off('botevent_chat', this.onBotChat)
   }
 
-  onPreStart = async (): Promise<void> => {
-    const embed = this.buildServerEmbed('starting', this.serverInfo.config)
+  onPostStart = async (): Promise<void> => {
+    const embed = this.buildServerEmbed('started', this.serverInfo.config)
     embed.description = `Started at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n`
     await this.serverInfo.client.send({
       embeds: [embed]
     })
   }
 
-  onPreStop = async (): Promise<void> => {
-    const embed = this.buildServerEmbed('stopping', this.serverInfo.config)
+  onPostStop = async (): Promise<void> => {
+    const embed = this.buildServerEmbed('stopped', this.serverInfo.config)
     embed.description = `Closed at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n`
+    await this.serverInfo.client.send({
+      embeds: [embed]
+    })
+  }
+
+  onRemoteKick = async (reason: string) => {
+    const embed = this.buildServerEmbed('remoteKick', this.serverInfo.config)
+
+    embed.description = 
+      `Bot was kicked at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
+      `Reason: ${reason}`
+      
+    await this.serverInfo.client.send({
+      embeds: [embed]
+    })
+  }
+
+  onRemoteError = async (error: Error) => {
+    const embed = this.buildServerEmbed('remoteError', this.serverInfo.config)
+    
+    embed.description = 
+      `Bot errored out at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
+      `Error: ${Error}`
+      
     await this.serverInfo.client.send({
       embeds: [embed]
     })
