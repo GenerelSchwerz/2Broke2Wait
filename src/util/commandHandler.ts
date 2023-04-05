@@ -184,6 +184,7 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
 
     this.mostRecentTab.set(pclient.uuid, data.text)
 
+    // TODO: this technically fails in 2b queue since 2b server does not respond with tab_complete.
     if (pclient !== this.srv.proxy.pclient) {
       const matches = []
       const cmds = Object.keys(this.getActiveCmds(pclient))

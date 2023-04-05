@@ -1,8 +1,9 @@
 import { Conn } from '@rob9315/mcproxy'
 import { PacketQueuePredictor } from '../../abstract/packetQueuePredictor'
-import { getWaitTime } from '../../util/remoteInfo'
+import { getWaitTime, hourAndMinToDateTime } from '../../util/remoteInfo'
 
 import type { Client, PacketMeta } from 'minecraft-protocol'
+import { DateTime } from 'ts-luxon'
 
 export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
   private _startingPos: number = NaN
@@ -66,10 +67,12 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
     let pos = 2 // hardcoded
 
     if (header) {
-      const search = header.findIndex(element => element.text.toLowerCase().includes('position'))  // find pisition based on text relevance
-      if (search > -1) pos = search
-      const position: number = Number(header[pos].extra[0].text.replace(/\n/, ''))
+      const search0 = header.findIndex(element => element.text.toLowerCase().includes('position'))  // find pisition based on text relevance
+ 
+      if (search0 > -1) pos = search0
 
+      const position = Number(header[pos].extra[0].text.replace(/\n/, ''))
+   
       if (Number.isNaN(position)) {
         this.emit('invalidData', { position, eta: this._eta })
         return
@@ -80,7 +83,23 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
           this._startingPos = position
         }
         this._eta = this.getPredictedEta()
-        this.emit('queueUpdate', this._lastPos, position, this._eta)
+
+        let givenEta;
+        const search1 = header.findIndex(element => element.text.toLowerCase().includes('estimated')) // estimated "time", most likely.
+        if (search1 >= 0) {
+          const rawGivenEta: string = header[search1].extra[0].text.replace(/\n/, '') // XXhXXmXXs
+         
+          const val = rawGivenEta.match(/^(\d{1,2})h(?:([0-5]?\d)m)?(?:([0-5]?\d)s)?$/)
+          if (val != null) {
+            const [full, hours, minutes, seconds] = val;
+            const numHrs = Number(hours)
+            const numMin = Number(minutes)
+            givenEta = hourAndMinToDateTime(Number.isNaN(numHrs) ? 0 : numHrs, Number.isNaN(numMin) ? 0 : numMin).toSeconds();
+          }
+
+        }
+
+        this.emit('queueUpdate', this._lastPos, position, this._eta, givenEta)
         this._lastPos = position
       }
     }

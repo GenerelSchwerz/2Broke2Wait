@@ -11,13 +11,8 @@ import { Bot } from "mineflayer";
 import { pathfinder } from "mineflayer-pathfinder";
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../../abstract/packetQueuePredictor";
 import { CombinedPredictor } from "../predictors/combinedPredictor";
-import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin, ProxyServer, Test } from "../baseServer";
+import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin } from "../baseServer";
 import merge from "ts-deepmerge";
-import { DiscordWebhookOptions, Options, QueueSetup } from "../../util/options";
-import { DateTime, Duration } from "ts-luxon";
-import { APIEmbed, WebhookClient } from "discord.js";
-import { BaseWebhookOpts, WebhookEmbedConfig } from "../../abstract/webhookReporters";
-import { AntiAFKEventNames, buildClientEmbed, buildServerEmbed, updateWebhook, WebhookWrapper } from "../reporters/webhookUtil";
 
 export interface TwoBAntiAFKOpts extends IProxyServerOpts {
   antiAFK: {
@@ -38,7 +33,7 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
     return this._queue;
   }
 
-  onPreStart(conn: Conn) {
+  onPreStart =(conn: Conn) => {
     this._queue = new CombinedPredictor(conn);
     this._queue.begin();
     this._queue.on("*", (...args: any[]) => {
@@ -46,16 +41,16 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
     });
   }
 
-  onPreStop() {
+  onPreStop =() => {
     if (this._queue != null) this._queue.end();
   }
 
-  onOptionValidation(bot: Bot): void {
+  onOptionValidation =(bot: Bot): void => {
     // set configurations to default.
     this.setServerOpts(merge(MODULE_DEFAULT_SETTINGS(bot), this.psOpts));
   }
 
-  onInitialBotSetup(bot: Bot) {
+  onInitialBotSetup = (bot: Bot) => {
     if (this.psOpts.antiAFK.enabled) {
       bot.loadPlugin(pathfinder);
       bot.loadPlugin(antiAFK);
@@ -117,65 +112,16 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
     }
   }
 
-  onBotStartup(bot: Bot) {
+  onBotStartup = (bot: Bot) => {
     if (this._queue == null) throw "Somehow bot is starting without queue being initialized!";
     if (this.psOpts.antiAFK && !this._queue.inQueue) bot.antiafk.start();
     if (this.psOpts.autoEat && !this._queue.inQueue) bot.autoEat.enableAuto();
   }
 
-  onBotShutdown(bot: Bot) {
+  onBotShutdown = (bot: Bot) => {
     if (this.psOpts.antiAFK) bot.antiafk.forceStop();
     if (this.psOpts.autoEat) bot.autoEat.disableAuto();
   }
 }
 
 
-
-export class TwoBWehook extends TwoBAntiAFKPlugin {
-  public queueInfo: WebhookWrapper & QueueSetup
-
-  constructor(webhookUrls: DiscordWebhookOptions) {
-    super();
-
-    this.queueInfo = {
-      client: new WebhookClient({ url: webhookUrls.queue.url }),
-      ...webhookUrls.queue,
-    };
-
-    updateWebhook(this.queueInfo);
-  }
-
-
-  public onLoad(server: ProxyServer<TwoBAntiAFKOpts, TwoBAntiAFKEvents>): void {
-      super.onLoad(server);
-      server.on('queueUpdate', this.onQueueUpdate)
-  }
-
-  public onUnload(): void {
-      
-  }
-
-  onQueueUpdate = async (oldPos: number, newPos: number, eta: number) => {
-    const embed = this.buildServerEmbed('queueUpdate');
-    
-    const strETA = !Number.isNaN(eta)
-      ? Duration.fromMillis(eta * 1000 - Date.now()).toFormat("h 'hours and ' m 'minutes'")
-      : 'Unknown (NaN)'
-
-    embed.description =
-      `Current time: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
-      `Old position: ${oldPos}\n` +
-      `New position: ${newPos}\n` +
-      `Estimated ETA: ${strETA}`
-
-    await this.queueInfo.client.send({
-      embeds: [embed]
-    })
-  }
-
-  buildServerEmbed(wantedEvent: keyof TwoBAntiAFKEvents, config: WebhookEmbedConfig = {}) {
-    if (this.queue == null) throw Error("Building server embed without queue!");
-    wantedEvent = (AntiAFKEventNames as any)[wantedEvent] ?? wantedEvent;
-    return buildServerEmbed(this.server, this.queue, wantedEvent, config);
-  }
-}

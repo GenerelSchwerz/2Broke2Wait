@@ -11,7 +11,7 @@ export interface PacketQueuePredictorEvents {
   invalidData: (...any: any[]) => PromiseLike
   enteredQueue: () => PromiseLike
   leftQueue: () => PromiseLike
-  queueUpdate: (oldPos: number, newPos: number, eta: number) => PromiseLike
+  queueUpdate: (oldPos: number, newPos: number, eta: number, providedEta?: number) => PromiseLike
   '*': PacketQueuePredictorEvents[Exclude<keyof PacketQueuePredictorEvents, '*'>]
 }
 

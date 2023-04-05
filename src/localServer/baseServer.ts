@@ -85,6 +85,7 @@ const test: Test<TestEvents> = {
 }
 
 export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IProxyServerEvents> {
+
   public declare _server: ProxyServer<Opts, Events>;
   public declare name: string;
   public declare connectedCmds?: CommandMap;
@@ -101,37 +102,44 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
   }
 
   // potential listener methods
-  onPreStart?(conn: Conn): void;
-  onPreStop?(): void;
-  onBotStartup?(bot: Bot): void;
-  onBotShutdown?(bot: Bot): void;
-  onProxySetup?(conn: Conn): void;
-  onOptionValidation?(bot: Bot): void;
-  onInitialBotSetup?(bot: Bot): void;
-  onClosingConnections?(reason: string): void;
-  onPlayerConnected?(player: ServerClient, remoteConnected: boolean): void;
-  whileConnectedLoginHandler?(player: ServerClient): Promise<boolean>;
-  notConnectedLoginHandler?(player: ServerClient): Promise<boolean>;
+  onPreStart?: (conn: Conn) => void;
+  onPostStart?: () => void;
+  onPreStop?: () =>  void;
+  onPostStop?: () => void;
+  onBotStartup?: (bot: Bot) => void;
+  onBotShutdown?: (bot: Bot) => void;
+  onProxySetup?: (conn: Conn) => void;
+  onOptionValidation?: (bot: Bot) => void;
+  onInitialBotSetup?: (bot: Bot) => void;
+  onClosingConnections?: (reason: string) => void;
+  onPlayerConnected?: (client: ServerClient, remoteConnected: boolean) => void;
+  whileConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>;
+  notConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>;
 
   public onLoad(server: ProxyServer<Opts, Events>) {
     this._server = server;
     // TODO: Generalize this.
-    if (this.onPreStop != null) this._server.on("stopping", this.onPreStop.bind(this));
-    if (this.onPreStart != null) this._server.on("starting" as any, this.onPreStart.bind(this));
-    if (this.onProxySetup != null) this._server.on("proxySetup" as any, this.onProxySetup.bind(this));
-    if (this.onBotStartup != null) this._server.on("botStartup" as any, this.onBotStartup.bind(this));
-    if (this.onBotShutdown != null) this._server.on("botShutdown" as any, this.onBotShutdown.bind(this));
-    if (this.onClosingConnections != null) this._server.on("closingConnections" as any, this.onClosingConnections.bind(this));
+    if (this.onPreStop != null) this._server.on("stopping", this.onPreStop);
+    if (this.onPostStop != null) this._server.on("stopped", this.onPostStop);
+    if (this.onPreStart != null) this._server.on("starting" as any, this.onPreStart);
+    if (this.onPostStart != null) this._server.on("started", this.onPostStart);
+    if (this.onProxySetup != null) this._server.on("proxySetup" as any, this.onProxySetup);
+    if (this.onBotStartup != null) this._server.on("botStartup" as any, this.onBotStartup);
+    if (this.onBotShutdown != null) this._server.on("botShutdown" as any, this.onBotShutdown);
+    if (this.onClosingConnections != null) this._server.on("closingConnections" as any, this.onClosingConnections);
 
-    if (this.onPlayerConnected != null) this._server.on("playerConnected" as any, this.onPlayerConnected.bind(this));
-    if (this.onOptionValidation != null) this._server.on("optionValidation" as any, this.onOptionValidation.bind(this));
-    if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup.bind(this));
+    if (this.onPlayerConnected != null) this._server.on("playerConnected" as any, this.onPlayerConnected);
+    if (this.onOptionValidation != null) this._server.on("optionValidation" as any, this.onOptionValidation);
+    if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup);
   }
 
   // This doesn't work since binding. Oh well, we'll never call this.
-  public onUnload() {
+  public onUnload(server: ProxyServer<Opts, Events>) {
+    this._server = server;
     if (this.onPreStop != null) this._server.off("stopping", this.onPreStop);
+    if (this.onPostStop != null) this._server.off("stopped", this.onPostStop);
     if (this.onPreStart != null) this._server.off("starting" as any, this.onPreStart);
+    if (this.onPostStart != null) this._server.off("started", this.onPostStart);
     if (this.onProxySetup != null) this._server.off("proxySetup" as any, this.onProxySetup);
     if (this.onBotStartup != null) this._server.off("botStartup" as any, this.onBotStartup);
     if (this.onBotShutdown != null) this._server.off("botShutdown" as any, this.onBotShutdown);
@@ -139,8 +147,6 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
 
     if (this.onPlayerConnected != null) this._server.off("playerConnected" as any, this.onPlayerConnected);
     if (this.onInitialBotSetup != null) this._server.off("initialBotSetup" as any, this.onInitialBotSetup);
-
-    console.log(this.server.listenerCount("stopping"));
   }
 
   /**
@@ -155,6 +161,14 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
   public setServerOpts(opts: Partial<Opts>) {
     this.server.psOpts = merge(opts, this.psOpts) as any;
   }
+
+  public share(key: string, data: any) {
+    return this.server.storePluginData(key, data);
+  }
+
+  public getShared<Value extends any>(key: string): Value | undefined {
+    return this.server.getPluginData(key);
+  }
 }
 
 
@@ -167,7 +181,7 @@ type EvExtr<Fuck> = Fuck extends ProxyServerPlugin<any, infer Events> ? Events :
  */
 export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyServerEvents, AppliedSettings = false> {
   private _plugins: ProxyServerPlugin<any, any>[];
-
+  
   private _settings?: Opts;
   private _appliedSettings: AppliedSettings = false as any;
   constructor(
@@ -242,32 +256,26 @@ export class ProxyServer<
   Events extends IProxyServerEvents
 > extends TypedEventEmitter<Events> {
   protected readonly plugins: Map<string, ProxyServerPlugin<IProxyServerOpts, IProxyServerEvents>> = new Map();
-
-  public readonly cmdHandler: CommandHandler<any>; // CommandHandler<ProxyServer<Opts, Events>>
-
-  public ChatMessage!: typeof AgnogChMsg;
-
+  protected readonly pluginStorage: Map<string, any> = new Map();
+  protected readonly cmdHandler: CommandHandler<ProxyServer<Opts, Events>>;
   protected readonly _rawServer: Server;
+
+  protected _conn: Conn | null;
+  public bOpts: BotOptions;
+  public cOpts: Partial<ConnOptions>;
+  public lsOpts: ServerOptions;
+  public psOpts: Opts;
+
+  public manuallyStopped: boolean = false;
+  public ChatMessage!: typeof AgnogChMsg;
 
   public get rawServer(): Server {
     return this._rawServer;
   }
 
-  protected _conn: Conn | null;
-
   public get proxy(): Conn | null {
     return this._conn;
   }
-
-  public bOpts: BotOptions;
-
-  public cOpts: Partial<ConnOptions>;
-
-  public lsOpts: ServerOptions;
-
-  public psOpts: Opts;
-
-  public manuallyStopped: boolean = false;
 
   public get conn(): Conn | null {
     return this._conn;
@@ -301,8 +309,8 @@ export class ProxyServer<
     this.cOpts = cOpts;
     this.lsOpts = lsOpts;
     this.psOpts = psOpts;
-    this._rawServer = createServer(lsOpts);
     this._conn = null;
+    this._rawServer = createServer(lsOpts);
     this.ChatMessage = require("prismarine-chat")(bOpts.version);
 
     this.cmdHandler = new CommandHandler(this);
@@ -326,12 +334,35 @@ export class ProxyServer<
 
   public unloadPlugin(removing: ProxyServerPlugin<any, any> | string) {
     if (removing instanceof String) {
-      this.plugins.get(removing as string)?.onUnload();
+      this.plugins.get(removing as string)?.onUnload(this);
       this.plugins.delete(removing as string);
     } else {
-      this.plugins.get((removing as ProxyServerPlugin<any, any>).name)?.onUnload();
+      this.plugins.get((removing as ProxyServerPlugin<any, any>).name)?.onUnload(this);
       this.plugins.delete((removing as ProxyServerPlugin<any, any>).name);
     }
+  }
+
+  public hasPlugin(removing: ProxyServerPlugin<any, any> | string) {
+    if (removing instanceof String) {
+      return Boolean(this.plugins.get(removing as string));
+    } else {
+      return Boolean(this.plugins.get((removing as ProxyServerPlugin<any, any>).name));
+    }
+  }
+
+  /**
+   * To be used by plugins.
+   * @param key 
+   * @param data 
+   * @returns 
+   */
+  public storePluginData(key: string, data: any) {
+    return this.pluginStorage.set(key, data);
+  }
+
+
+  public getPluginData<Value extends any>(key: string): Value | undefined {
+    return this.pluginStorage.get(key)
   }
 
   public start(): Conn {
