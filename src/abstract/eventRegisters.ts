@@ -2,9 +2,9 @@ import EventEmitter2 from 'eventemitter2'
 import { EventEmitter } from 'events'
 import { Client } from 'minecraft-protocol'
 import type { Bot, BotEvents } from 'mineflayer'
+import { IProxyServerEvents, ProxyServer } from '../localServer/baseServer'
 import { ClientEmitters, ClientEvent, ClientListener } from '../util/utilTypes'
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from './packetQueuePredictor'
-import { IProxyServerEvents, ProxyServer } from './proxyServer'
 
 export abstract class EventRegister<Src extends EventEmitter | EventEmitter2, Event> {
   constructor (protected _emitter: Src, public readonly wantedEvent: Event) {
@@ -56,7 +56,7 @@ export abstract class ClientEventRegister<
 export abstract class ServerEventRegister<
   Event extends IProxyServerEvents,
   Key extends keyof Event,
-  Srv extends ProxyServer = ProxyServer,
+  Srv extends ProxyServer<any, Event> = ProxyServer<any, Event>,
 > extends EventRegister<Srv, Key> {
   constructor (
     srv: Srv,

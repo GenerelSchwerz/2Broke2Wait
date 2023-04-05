@@ -11,7 +11,7 @@ export interface PacketQueuePredictorEvents {
   invalidData: (...any: any[]) => PromiseLike
   enteredQueue: () => PromiseLike
   leftQueue: () => PromiseLike
-  queueUpdate: (oldPos: number, newPos: number, eta: number) => PromiseLike
+  queueUpdate: (oldPos: number, newPos: number, eta: number, providedEta?: number) => PromiseLike
   '*': PacketQueuePredictorEvents[Exclude<keyof PacketQueuePredictorEvents, '*'>]
 }
 
@@ -28,6 +28,11 @@ export abstract class PacketQueuePredictor<
   protected _inQueue: boolean = false
   protected _lastPos: number = NaN
   protected _eta: number = NaN
+
+  /**
+   *  managed by {@link EventEmitter2}
+   */
+  public readonly event!: keyof PacketQueuePredictorEvents
 
   public get lastPos () {
     return this._lastPos

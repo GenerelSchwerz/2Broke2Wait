@@ -25,26 +25,41 @@ minecraft:
     port: 25565
     version: 1.12.2
 
+
+
+
   # Minecraft-protocol configuration for our local server.
   # Documentation: https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md#mineflayercreatebotoptions
   # All options from there are valid.
-  localServer:
-    host: localhost
-    port: 25566
-    version: 1.12.2
-    online-mode: false
-    maxPlayers: 1
+localServer:
+  host: localhost
+  port: 25566
+  version: 1.12.2
+  online-mode: false
+  maxPlayers: 1
 
-  # Customization options provided.
-  # Simplified favicon option (currently only filepath).
-  localServerOptions:
-    motdOptions:
-      prefix: §6
+# Custom settings for the local server.
+localServerConfig:
+
+  disableCommands: false
+  disconnectAllOnEnd: false
+  restartOnDisconnect: true
+  linkOnConnect: false
+
+  # Security: who is allowed to join. Null for anyone.
+  security:
+    allowList: null
+    kickMessage: Default kick message
+
+  display:
+    motdPrefix: "§6"
+    proxyChatPrefix: "§6>>P§r "
 
     # Has to be 64x64 and a png.
     # Can be a file path or a URL.
     favicon: https://cdn.discordapp.com/avatars/302885247924568084/346750b5f71641989abcc954d1eda061.png?size=64
 
+<<<<<<< HEAD
   # Custom settings for the local server.
   localServerProxyConfig:
     disableCommands: false
@@ -52,39 +67,45 @@ minecraft:
     logPlayerJoinLeave: false
     linkOnConnect: true
     restartOnDisconnect: true
+=======
+>>>>>>> plugin_system
 
+
+  spectator:
+    logPlayerJoinLeave: false
+  
     # Leave this off, this is broken for now.
     worldCaching: false
 
-    # Security: who is allowed to join. Null for anyone.
-    security:
-      allowList: null
-      kickMessage: Default kick message
 
-    # AntiAFK options.
-    antiAFK:
 
-      enabled: true
+  # AntiAFK options.
+  antiAFK:
 
-      # AntiAFK module settings. Leave this be for now.
-      # I will include documentation at a later date.
-      modules:
-        RandomMovementModule:
-          enabled: false
-        ChatBotModule:
-          enabled: false
+    enabled: true
 
-      # AntiAFK passive settings. Leave this be for now.
-      # I will include documentation at a later date.
-      passives:
-        KillAuraPassive:
-          playerWhitelist: []
-          reach: 4
-          multi: false
-          enabled: true
+    # AntiAFK module settings. Leave this be for now.
+    # I will include documentation at a later date.
+    modules:
+      RandomMovementModule:
+        enabled: false
+      ChatBotModule:
+        enabled: false
 
-    # Auto eat toggle     
-    autoEat: true
+    # AntiAFK passive settings. Leave this be for now.
+    # I will include documentation at a later date.
+    passives:
+      KillAuraPassive:
+        playerWhitelist: []
+        reach: 4
+        multi: false
+        enabled: true
+
+  # Auto eat toggle     
+  autoEat: true
+
+
+
 
 
 # Discord logging settings.
