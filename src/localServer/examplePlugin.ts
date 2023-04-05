@@ -86,6 +86,7 @@ export class GotoPlacePlugin extends ProxyServerPlugin {
       this.server.message(client, `Made it!`)
     } catch (e) {
       this.server.message(client, `Did not make it...`)
+      console.error(e);
     } 
     
     // basic clean up, then we're all good :thumbsup:
@@ -115,12 +116,12 @@ export class GotoPlacePlugin extends ProxyServerPlugin {
     proxy.unlink();
     this.server.message(client, `Moving to: (${numX}, ${numZ}) w/ range ${numRange}`)
 
-    // attempt to go to goal, just handle error if it fails.
     try {
       await bot.pathfinder.goto(new goals.GoalNearXZ(numX, numZ, numRange));
       this.server.message(client, `Made it!`)
     } catch (e) {
       this.server.message(client, `Did not make it...`)
+      console.error(e);
     }
 
      // basic clean up, then we're all good :thumbsup:
