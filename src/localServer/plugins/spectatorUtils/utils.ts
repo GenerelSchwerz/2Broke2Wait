@@ -1,13 +1,12 @@
 import { SpectatorServerOpts } from '../spectator'
 
-
 export const DefaultProxyOpts: SpectatorServerOpts = {
   security: {
     whitelist: undefined,
     kickMessage: 'Default kick message'
   },
   display: {
-    motdPrefix: "§6",
+    motdPrefix: '§6',
     proxyChatPrefix: '§6P>> §r'
   },
 
@@ -15,5 +14,5 @@ export const DefaultProxyOpts: SpectatorServerOpts = {
   disableCommands: false,
   disconnectAllOnEnd: true,
   worldCaching: false,
-  restartOnDisconnect: true,
+  restartOnDisconnect: true
 }

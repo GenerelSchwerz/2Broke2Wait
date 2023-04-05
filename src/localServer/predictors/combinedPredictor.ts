@@ -64,12 +64,12 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
     let pos = 2 // hardcoded
 
     if (header) {
-      const search0 = header.findIndex(element => element.text.toLowerCase().includes('position'))  // find pisition based on text relevance
- 
+      const search0 = header.findIndex(element => element.text.toLowerCase().includes('position')) // find pisition based on text relevance
+
       if (search0 > -1) pos = search0
 
       const position = Number(header[pos].extra[0].text.replace(/\n/, ''))
-   
+
       if (Number.isNaN(position)) {
         this.emit('invalidData', { position, eta: this._eta })
         return
@@ -81,19 +81,18 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
         }
         this._eta = this.getPredictedEta()
 
-        let givenEta;
+        let givenEta
         const search1 = header.findIndex(element => element.text.toLowerCase().includes('estimated')) // estimated "time", most likely.
         if (search1 >= 0) {
           const rawGivenEta: string = header[search1].extra[0].text.replace(/\n/, '') // XXhXXmXXs
-         
+
           const val = rawGivenEta.match(/^(\d{1,2})h(?:([0-5]?\d)m)?(?:([0-5]?\d)s)?$/)
           if (val != null) {
-            const [full, hours, minutes, seconds] = val;
+            const [full, hours, minutes, seconds] = val
             const numHrs = Number(hours)
             const numMin = Number(minutes)
-            givenEta = hourAndMinToDateTime(Number.isNaN(numHrs) ? 0 : numHrs, Number.isNaN(numMin) ? 0 : numMin).toSeconds();
+            givenEta = hourAndMinToDateTime(Number.isNaN(numHrs) ? 0 : numHrs, Number.isNaN(numMin) ? 0 : numMin).toSeconds()
           }
-
         }
 
         this.emit('queueUpdate', this._lastPos, position, this._eta, givenEta)

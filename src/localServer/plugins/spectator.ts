@@ -19,7 +19,6 @@ export interface SpectatorServerEvents extends IProxyServerEvents {
 
 export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, SpectatorServerEvents> {
   public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
-  name = 'Spectator Server'
 
   public worldManager: WorldManager | null = null
   public fakeSpectator: FakeSpectator | null = null
@@ -63,6 +62,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
         if (res0) this.server.message(client, 'Connecting to view. Type /unview to exit')
       }
     },
+
     unview: {
       description: 'Unlink the spectating player\'s perspective',
       callable: (client) => {
@@ -194,7 +194,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.fakeSpectator?.revertPov(client)
       this.fakePlayer?.unregister(client as unknown as ServerClient)
       this.fakeSpectator?.revertToNormal(client as unknown as ServerClient)
-      await sleep(50);
+      await sleep(50)
       this.server.conn.link(client as unknown as Client)
       this.server.endBotLogic()
     } else {
