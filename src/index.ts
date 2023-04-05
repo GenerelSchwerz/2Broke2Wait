@@ -34,7 +34,7 @@ async function setup () {
 
 
 
-  if (checkedConfig.discord.webhooks) {
+  if (checkedConfig.discord.webhooks?.enabled) {
     plugins.push(new WebhookReporter(checkedConfig.discord.webhooks))
   }
 
@@ -53,7 +53,7 @@ async function setup () {
     .setSettings(checkedConfig.localServerConfig)
     .build();
     
-  if (checkedConfig.discord.bot) {
+  if (checkedConfig.discord.bot?.enabled) {
     buildClient(checkedConfig.discord.bot, server);
   }
 

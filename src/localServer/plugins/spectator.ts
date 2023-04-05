@@ -79,7 +79,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
           return
         }
 
-        if (this.fakeSpectator?.clientsInCamera[client.uuid].status) {
+        if (this.fakeSpectator?.clientsInCamera[client.uuid]?.status) {
           this.server.message(client, "You are viewing the bot's perspective.")
         }
 
@@ -89,7 +89,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     }
   }
 
-  onProxySetup =(conn: Conn): void => {
+  onProxySetup = (conn: Conn): void => {
     const data = conn.toClientDefaultMiddleware != null ? conn.toClientDefaultMiddleware : []
     const data1 = conn.toServerDefaultMiddleware != null ? conn.toServerDefaultMiddleware : []
     conn.toClientDefaultMiddleware = [...this.genToClientMiddleware(conn), ...data]

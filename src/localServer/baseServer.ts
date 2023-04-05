@@ -393,11 +393,9 @@ export class ProxyServer<
   }
 
   public stop(): void {
-    console.trace("here")
     if (!this.isProxyConnected()) return;
-    // this.manuallyStopped = true;
     this.emit("stopping" as any);
-    this.disconnectRemote();
+    this.disconnectRemote('Proxy manually stopped.');
     // this.closeConnections("Proxy manually stoppped.", true);
     this.emit("stopped" as any);
   }
@@ -428,6 +426,7 @@ export class ProxyServer<
 
     this.remoteBot.once("spawn", this.beginBotLogic);
     this.remoteBot.on("kicked", this.remoteClientDisconnect);
+    this.remoteBot.on("end", this.remoteClientDisconnect);
     this.remoteClient.on("login", () => {
       this._remoteIsConnected = true;
     });
@@ -453,16 +452,20 @@ export class ProxyServer<
   };
 
   private readonly remoteClientDisconnect = async (info: string | Error) => {
-    if (this.controllingPlayer != null) this.controllingPlayer.end("Connection reset by server.");
+
+    if (this.remoteBot == null) return // assume we've already exited ( we want to leave early on kicks )
+
     this.endBotLogic();
+
     if (info instanceof Error) {
       this.emit("remoteError" as any, info);
 
+    
       if (this.psOpts.disconnectAllOnEnd)
         this.closeConnections("Connection reset by server.", true, `Javascript Error: ${info}`);
       else {
         this.broadcastMessage("[WARNING] Bot has errored!")
-        this.broadcastMessage("          You are still connected.")
+        this.broadcastMessage("You are still connected.")
       }
 
     } else {
@@ -471,9 +474,12 @@ export class ProxyServer<
         this.closeConnections("Connection reset by server.", true, info);
       else {
         this.broadcastMessage("[WARNING] Bot has disconnected!")
-        this.broadcastMessage("          You are still connected.")
+        this.broadcastMessage("You are still connected.")
       }
     }
+
+    this._remoteIsConnected = false;
+    this._conn = null;
 
     if (this.psOpts.restartOnDisconnect) {
       this.restart(1000);
@@ -490,11 +496,11 @@ export class ProxyServer<
     });
   
     if (closeRemote) {
-      this.disconnectRemote();
+      this.disconnectRemote(closeReason);
     }
   };
 
-  private readonly disconnectRemote = () => {
+  private readonly disconnectRemote = (reason: string) => {
     if (this._conn != null) {
       // const currentClients = Object.values(this._rawServer.clients);
       // for (const pc of this._conn.pclients) {
@@ -505,11 +511,9 @@ export class ProxyServer<
       //   }
       // }
 
-      this._conn.disconnect();
+      this._conn.stateData.bot._client.end("[2B2W]: " + reason);
+      this._conn.pclients.forEach(this._conn.detach.bind(this._conn));
     }
- 
-    this._remoteIsConnected = false;
-    this._conn = null;
   }
 
   private readonly reconnectAllClients = (conn: Conn) => {

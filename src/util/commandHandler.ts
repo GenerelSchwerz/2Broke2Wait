@@ -129,7 +129,6 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     const allowedCmds = this.getActiveCmds(client);
     if (cmds.length === 1) {
       const [cmd, ...args] = cmds[0].split(' ')
-      console.log("found cmd:", cmd);
       if (!cmd.startsWith(this.prefix)) return true
       const cmdFunc = allowedCmds[cmd]
       if (cmdFunc) this.executeCmd(cmdFunc, client, ...args)
@@ -147,7 +146,6 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
   }
 
   private executeCmd(cmd: CommandInfo, client: Client | ServerClient, ...args: any[]) {
-    console.log("executing", cmd)
     if (cmd instanceof Function) {
       cmd.call(this.srv, client, ...args)
     } else {
@@ -167,7 +165,6 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     data: any,
     meta: PacketMeta
   ) => {
-    console.log(meta, data)
     if (this.srv.isProxyConnected()) return
     const { message }: { message: string } = data
     return await this.commandHandler(client, ...message.split('|'))
@@ -186,7 +183,6 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     if (this.srv.proxy == null || pclient == null) return
     if (meta.name !== 'tab_complete') return
     
-    console.log("to server:", data);
     this.mostRecentTab.set(pclient.uuid, data.text)
 
     // TODO: this technically fails in 2b queue since 2b server does not respond with tab_complete.
@@ -203,7 +199,7 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
   }
 
   proxyTabCompleteIntercepter: PacketMiddleware = async ({ meta, data, pclient }) => {
-    // console.log("fuck!:", meta)
+
     if (this.srv.proxy == null || pclient == null) return
     if (meta.name !== 'tab_complete') return
     const { matches: orgMatches }: { matches: string[] } = data
@@ -227,7 +223,6 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
       if (text == null) throw Error('Somehow missed a tab_complete')
     }
 
-    console.log("searching via:", text, "data:", data.matches)
     const matches = []
     for (const cmd of Object.keys(this.getActiveCmds(pclient))) {
       if (cmd.startsWith(text)) {
@@ -236,7 +231,6 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
     }
 
     data.matches = data.matches.concat(...matches)
-    console.log("new matches:", data.matches)
     return data
   }
 
@@ -253,7 +247,6 @@ export class CommandHandler<Server extends ProxyServer<any, any>> extends TypedE
   }
 
   updateClientCmds (client: Client) {
-    console.log("updating cmds", !!this.srv.proxy)
     this.srv.proxy?.attach(client as any, {
       toServerMiddleware: [...(client.toServerMiddlewares ?? []), this.proxyCommandHandler, this.proxyTabCompleteListener],
       toClientMiddleware: [...(client.toClientMiddlewares ?? []), this.proxyTabCompleteIntercepter]
