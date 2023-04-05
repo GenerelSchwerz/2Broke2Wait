@@ -25,8 +25,6 @@ async function setup () {
 
   const serverOptions = await serverOptsFromConfig(checkedConfig)
 
-  console.log(checkedConfig)
-
   // for typing reasons, just make an array. I'll explain in due time.
   const plugins = [] 
   plugins.push(new SpectatorServerPlugin());

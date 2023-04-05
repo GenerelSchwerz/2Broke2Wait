@@ -135,6 +135,7 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IPr
     if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup);
     if (this.onRemoteError != null) this._server.on("remoteError" as any, this.onRemoteError);
     if (this.onRemoteKick != null) this._server.on("remoteKick" as any, this.onRemoteKick);
+    console.log(this.name, this.onRemoteError, this.onRemoteKick)
   }
 
   // This doesn't work since binding. Oh well, we'll never call this.
@@ -320,6 +321,7 @@ export class ProxyServer<
     this._rawServer = createServer(lsOpts);
     this.ChatMessage = require("prismarine-chat")(bOpts.version);
 
+    console.log(this.psOpts.disconnectAllOnEnd)
     this.cmdHandler = new CommandHandler(this);
     this.cmdHandler.loadProxyCommand("pstop", this.stop);
     this.cmdHandler.loadDisconnectedCommand("pstart", this.start);
@@ -387,7 +389,7 @@ export class ProxyServer<
     if (!this.isProxyConnected()) return;
     this.manuallyStopped = true;
     this.emit("stopping" as any);
-    this.closeConnections("Proxy stoppped.", true);
+    this.closeConnections("Proxy manually stoppped.", true);
     this.emit("stopped" as any);
   }
 
@@ -416,9 +418,7 @@ export class ProxyServer<
     this.emit("initialBotSetup" as any, this.remoteBot, this.psOpts);
 
     this.remoteBot.once("spawn", this.beginBotLogic);
-    this.remoteBot.on("kicked", (info) => {
-      if (this.psOpts.disconnectAllOnEnd) this.remoteClientDisconnect(info);
-    });
+    this.remoteBot.on("kicked",  this.remoteClientDisconnect);
     this.remoteClient.on("login", () => {
       this._remoteIsConnected = true;
     });
@@ -456,22 +456,30 @@ export class ProxyServer<
   };
 
   private readonly closeConnections = (closeReason: string, closeRemote = false, additional?: string) => {
-    const reason = additional ? closeReason + additional : closeReason;
+    const reason = additional ? closeReason + " Reason: " + additional : closeReason;
 
     this.emit("closingConnections" as any, reason);
 
-    Object.keys(this._rawServer.clients).forEach((clientId) => {
-      this._rawServer.clients[Number(clientId)].end(reason);
-    });
+
+    if (this.psOpts.disconnectAllOnEnd) {
+      Object.keys(this._rawServer.clients).forEach((clientId) => {
+        this._rawServer.clients[Number(clientId)].end(reason);
+      });
+    } else if (closeRemote) {
+      Object.values(this._rawServer.clients).forEach(client => {
+        this.message(client, '[WARNING] Bot was disconnected.')
+        this.message(client, 'Reconnect to check on the status of the bot.')
+      });
+    }
 
     if (closeRemote) {
       this._conn?.disconnect();
       this._remoteIsConnected = false;
       this._conn = null;
+    }
 
-      if (this.psOpts.restartOnDisconnect && !this.manuallyStopped) {
-        this.restart(1000);
-      }
+    if (this.psOpts.restartOnDisconnect && !this.manuallyStopped) {
+      this.restart(1000);
     }
   };
 

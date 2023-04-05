@@ -42,8 +42,9 @@ localServer:
 localServerConfig:
 
   disableCommands: false
+  disconnectAllOnEnd: false
   restartOnDisconnect: true
-  linkOnConnect: true
+  linkOnConnect: false
 
   # Security: who is allowed to join. Null for anyone.
   security:

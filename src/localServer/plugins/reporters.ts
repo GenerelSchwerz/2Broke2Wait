@@ -40,7 +40,7 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
   }
 
   onBotShutdown = (bot: Bot) => {
-    console.log('Player has taken control of the bot!')
+    console.log('Bot has stopped moving independently!')
   }
 
   onRemoteError = (error: Error) => {

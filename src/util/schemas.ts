@@ -177,6 +177,10 @@ export const configSchema = joi.object({
         .boolean()
         .default(true)
         .description("Whether or not the bot should reconnect when disconnected."),
+      disconectAllOnEnd: joi
+        .boolean()
+        .default(true)
+        .description("Whether to kick connected clients when the remote bot disconnects"),
       antiAFK: joi
         .object({
           /* todo lmao */
