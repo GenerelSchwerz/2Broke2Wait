@@ -25,16 +25,11 @@ async function setup () {
 
   const serverOptions = await serverOptsFromConfig(checkedConfig)
 
-<<<<<<< HEAD
-  const rawServer = createServer(serverOptions)
-  rawServer.on('connection', (c) => console.log("hi", c.socket.address()))
-=======
   // for typing reasons, just make an array. I'll explain in due time.
   const plugins = [] 
   plugins.push(new SpectatorServerPlugin());
   plugins.push(new TwoBAntiAFKPlugin());
  
->>>>>>> plugin_system
 
   if (checkedConfig.discord.webhooks) {
     plugins.push(new WebhookReporter(checkedConfig.discord.webhooks))
@@ -44,65 +39,8 @@ async function setup () {
     plugins.push(new ConsoleReporter());
   }
 
-<<<<<<< HEAD
-  // server-specific events
-  afkServer.on('setup', () => {
-    if (checkedConfig.discord.webhooks?.enabled) {
-      applyWebhookListeners(afkServer, checkedConfig.discord.webhooks)
-    }
-  })
-
-  afkServer.on('started', () => {
-    console.log('Server started!\n' + helpMsg)
-    inGameServerMotd()
-  })
-
-  afkServer.on('stopped', () => {
-    console.log('Server stopped!\nYou can start it with "start"')
-  })
-
-  afkServer.on('enteredQueue', () => {
-    queueEnterMotd()
-    afkServer.on('queueUpdate', queueServerMotd)
-  })
-
-  afkServer.on('leftQueue', () => {
-    inGameServerMotd()
-    afkServer.removeListener('queueUpdate', queueServerMotd)
-  })
-
-  afkServer.on('remoteKick', async (reason) => {
-    console.log('remoteKick:', reason)
-    disconnectedServerMotd()
-    afkServer.removeListener('queueUpdate', queueServerMotd)
-  })
-
-  afkServer.on('remoteError', async (error) => {
-    console.log('remoteError:', error)
-    disconnectedServerMotd()
-    afkServer.removeListener('queueUpdate', queueServerMotd)
-  })
-  
-  afkServer.on('botevent:health', (bot) => {
-    botUpdatesMotd(bot)
-  })
-
-
-  afkServer.start()
-
-  /// //////////////////////////////////////////
-  //              functions                  //
-  /// //////////////////////////////////////////
-
-  function getServerName (): string {
-    return (
-      checkedConfig.minecraft.remoteServer.host +
-      (checkedConfig.minecraft.remoteServer.port !== 25565 ? ':' + checkedConfig.minecraft.remoteServer.port : '')
-    )
-=======
   if (true) {
     plugins.push(new MotdReporter(checkedConfig.localServerConfig.display))
->>>>>>> plugin_system
   }
 
   const server = new ServerBuilder(serverOptions, bOpts)
