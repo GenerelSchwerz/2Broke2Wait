@@ -3,17 +3,18 @@ import { IntentsBitField } from 'discord.js'
 
 import './commands'
 import { Options } from '../util/options.js'
-import { AntiAFKServer } from '../impls/antiAfkServer'
+import { ProxyServer } from '../localServer/baseServer'
+import { AllEvents, AllOpts } from '../localServer/plugins'
 
 declare module 'discordx' {
   interface Client {
-    mcServer: AntiAFKServer
+    mcServer: ProxyServer<AllOpts, AllEvents>
   }
 }
 
 export async function buildClient (
   { botToken, prefix }: Exclude<Options['discord']['bot'], undefined>,
-  server: AntiAFKServer
+  server: ProxyServer<AllOpts, AllEvents>
 ): Promise<Client> {
   const client = new Client({
     simpleCommand: {
