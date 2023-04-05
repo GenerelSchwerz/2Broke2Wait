@@ -6,7 +6,7 @@ import { SocksClient } from 'socks'
 import * as dns from 'dns'
 import * as net from 'net'
 import Https from 'https'
-import { AllOpts, BaseWebhookOpts } from '../localServer/plugins'
+import { AllOpts, BaseWebhookOpts } from '../localServer/builtinPlugins'
 
 export interface DiscordBotOptions {
   enabled: boolean

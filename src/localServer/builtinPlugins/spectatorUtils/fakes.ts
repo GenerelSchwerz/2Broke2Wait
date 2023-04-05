@@ -418,6 +418,7 @@ export class FakeSpectator {
       const [transformedName, transformedData] = result[0]
       client.write(transformedName, transformedData)
     } else {
+      console.log("spectator:", name, data)
       client.write(name, data)
     }
   }

@@ -1,9 +1,13 @@
 import * as fs from 'fs'
 import { validateOptions } from './util/config'
 import { botOptsFromConfig, Options, serverOptsFromConfig } from './util/options'
-import { ConsoleReporter, SpectatorServerPlugin, TwoBAntiAFKPlugin, WebhookReporter, MotdReporter } from './localServer/plugins'
-import { ServerBuilder } from './localServer/baseServer'
+import { ConsoleReporter, SpectatorServerPlugin, TwoBAntiAFKPlugin, WebhookReporter, MotdReporter } from './localServer/builtinPlugins'
+import { ProxyServerPlugin, ServerBuilder } from './localServer/baseServer'
 import { buildClient } from './discord'
+import { CommandMap } from './util/commandHandler'
+import { goals } from 'mineflayer-pathfinder'
+import { once } from 'events'
+import { GotoPlacePlugin } from './localServer/examplePlugin'
 const yaml = require('js-yaml')
 
 // ... If no errors were found, return the validated config
@@ -20,6 +24,7 @@ const helpMsg =
     'status   -> displays info of service\n' +
     'help     -> shows this message\n'
 
+    
 async function setup () {
   const serverOptions = await serverOptsFromConfig(checkedConfig)
 
@@ -28,22 +33,29 @@ async function setup () {
   plugins.push(new SpectatorServerPlugin())
   plugins.push(new TwoBAntiAFKPlugin())
 
-  if (checkedConfig.discord.webhooks?.enabled) {
-    plugins.push(new WebhookReporter(checkedConfig.discord.webhooks))
-  }
-
-  if (true) {
-    plugins.push(new ConsoleReporter())
-  }
-
-  if (true) {
-    plugins.push(new MotdReporter(checkedConfig.localServerConfig.display))
-  }
 
   const server = new ServerBuilder(serverOptions, bOpts)
     .addPlugins(...plugins)
     .setSettings(checkedConfig.localServerConfig)
     .build()
+
+  // everything after here is strongly typed.
+  // If a plugin does not meet the types provided ^^^, then it will fail.
+
+  server.loadPlugin(new GotoPlacePlugin());
+
+
+  if (true) {
+    server.loadPlugin(new ConsoleReporter())
+  }
+
+  if (true) {
+    server.loadPlugin(new MotdReporter(checkedConfig.localServerConfig.display))
+  }
+
+  if (checkedConfig.discord.webhooks?.enabled) {
+    server.loadPlugin(new WebhookReporter(checkedConfig.discord.webhooks))
+  }
 
   if (checkedConfig.discord.bot?.enabled) {
     buildClient(checkedConfig.discord.bot, server)

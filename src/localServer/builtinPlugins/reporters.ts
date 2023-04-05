@@ -8,8 +8,10 @@ import { APIEmbed, WebhookClient } from 'discord.js'
 import { DiscordWebhookOptions, Options, QueueSetup } from '../../util/options'
 import { CombinedPredictor } from '../predictors/combinedPredictor'
 import type { Bot } from 'mineflayer'
+import { TwoBAntiAFKEvents, TwoBAntiAFKOpts } from './twoBAntiAFK'
+import { SpectatorServerEvents, SpectatorServerOpts } from './spectator'
 
-export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
+export class ConsoleReporter extends ProxyServerPlugin<TwoBAntiAFKOpts & SpectatorServerOpts, SpectatorServerEvents & TwoBAntiAFKEvents> {
   constructor (public debug = false) {
     super()
   }

@@ -4,7 +4,7 @@ import { IntentsBitField } from 'discord.js'
 import './commands'
 import { Options } from '../util/options.js'
 import { ProxyServer } from '../localServer/baseServer'
-import { AllEvents, AllOpts } from '../localServer/plugins'
+import { AllEvents, AllOpts } from '../localServer/builtinPlugins'
 
 declare module 'discordx' {
   interface Client {

@@ -5,8 +5,8 @@ import { Arguments, ListType, TypedEventEmitter, U2I, U2T } from '../util/utilTy
 import { CommandHandler, CommandMap } from '../util/commandHandler'
 import { ChatMessage as AgnogChMsg } from 'prismarine-chat'
 import { sleep } from '../util/index'
-import { SpectatorServerEvents, SpectatorServerOpts } from './plugins/spectator'
-import { TwoBAntiAFKEvents, TwoBAntiAFKPlugin } from './plugins/twoBAntiAFK'
+import { SpectatorServerEvents, SpectatorServerOpts } from './builtinPlugins/spectator'
+import { TwoBAntiAFKEvents, TwoBAntiAFKPlugin } from './builtinPlugins/twoBAntiAFK'
 import merge from 'ts-deepmerge'
 
 /**
@@ -86,7 +86,7 @@ const test: Test<TestEvents> = {
   onHi: (num) => 'hi'
 }
 
-export class ProxyServerPlugin<Opts extends IProxyServerOpts, Events extends IProxyServerEvents> {
+export class ProxyServerPlugin<Opts extends IProxyServerOpts = IProxyServerOpts, Events extends IProxyServerEvents = IProxyServerEvents> {
   public declare _server: ProxyServer<Opts, Events>
   public declare connectedCmds?: CommandMap
   public declare disconnectedCmds?: CommandMap
@@ -331,6 +331,7 @@ export class ProxyServer<
   }
 
   // TODO: Broken typings.
+  // Use the publicly exposed builder instead.
   public loadPlugin<FoundOpts extends IProxyServerOpts, FoundEvents extends IProxyServerEvents>(
     inserting: Opts extends FoundOpts
       ? Events extends FoundEvents
