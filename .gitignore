@@ -4,7 +4,7 @@ dist/
 pkg/
 ncc/
 worlds/
-src/unused/
+src/**/unused/
 yarn-error.log
 yarn.lock
 package-lock.json
