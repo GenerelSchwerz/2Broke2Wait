@@ -189,6 +189,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.server.message(client, 'Linking')
 
       this.fakeSpectator?.revertPov(client)
+      this.fakeSpectator?.linkedFakeBot.unsubscribe(client)
       this.fakeSpectator?.revertToBotGamemode(client)
       await sleep(50)
       this.server.endBotLogic()
