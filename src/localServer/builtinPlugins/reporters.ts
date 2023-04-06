@@ -1,17 +1,15 @@
-import { ServerClient } from 'minecraft-protocol'
-import { AllEvents, AllOpts, BaseWebhookOpts } from '.'
-import { ProxyServerPlugin, ProxyServer } from '../baseServer'
-import { Conn } from '@rob9315/mcproxy'
-
-import { DateTime, Duration } from 'ts-luxon'
 import { APIEmbed, WebhookClient } from 'discord.js'
-import { DiscordWebhookOptions, Options, QueueSetup } from '../../util/options'
-import { CombinedPredictor } from '../predictors/combinedPredictor'
+import { ServerClient } from 'minecraft-protocol'
 import type { Bot } from 'mineflayer'
-import { TwoBAntiAFKEvents, TwoBAntiAFKOpts } from './twoBAntiAFK'
+import { DateTime, Duration } from 'ts-luxon'
+import { AllEvents, AllOpts, BaseWebhookOpts } from '.'
+import { DiscordWebhookOptions, Options, QueueSetup } from '../../types/options'
+import { ProxyServer, ProxyServerPlugin } from '../baseServer'
+import { CombinedPredictor } from '../predictors/combinedPredictor'
 import { SpectatorServerEvents, SpectatorServerOpts } from './spectator'
+import { TwoBAntiAFKEvents, TwoBAntiAFKOpts } from './twoBAntiAFK'
 
-export class ConsoleReporter extends ProxyServerPlugin<TwoBAntiAFKOpts & SpectatorServerOpts, SpectatorServerEvents & TwoBAntiAFKEvents> {
+export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
   constructor (public debug = false) {
     super()
   }

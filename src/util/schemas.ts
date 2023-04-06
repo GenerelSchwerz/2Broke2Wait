@@ -19,7 +19,6 @@ const packetSchema = joi
 // Schema used to validate Discord tokens (26 char, period, 6 char, period, 38 char)
 const tokenSchema = joi
   .string()
-  .length(72)
   .pattern(/^[a-zA-Z0-9_].*$/)
 
 const proxySchema = joi.object({

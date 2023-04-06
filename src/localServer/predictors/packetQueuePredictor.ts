@@ -5,7 +5,7 @@ import { StrictEventEmitter } from 'strict-event-emitter-types'
 
 import type { Bot, BotEvents } from 'mineflayer'
 
-import type { ClientEmitters, ClientEvent, ClientListener, PromiseLike } from '../../util/utilTypes'
+import type { ClientEmitters, ClientEvent, ClientListener, PromiseLike } from '../../types/util'
 
 export interface PacketQueuePredictorEvents {
   invalidData: (...any: any[]) => PromiseLike

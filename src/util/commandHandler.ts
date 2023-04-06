@@ -1,7 +1,6 @@
-import { TypedEventEmitter } from './utilTypes'
+import { TypedEventEmitter } from '../types/util'
 import { ProxyServer } from '../localServer/baseServer'
 import { PacketMeta, ServerClient } from 'minecraft-protocol'
-import type { Block } from 'prismarine-block'
 import { Client, PacketMiddleware } from '@rob9315/mcproxy'
 import { sleep } from './index'
 import type { Vec3 } from 'vec3'

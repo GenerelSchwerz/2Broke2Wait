@@ -1,7 +1,7 @@
 import { EventEmitter2, ConstructorOptions } from 'eventemitter2'
 import type { Client } from 'minecraft-protocol'
 import type { Bot, BotEvents } from 'mineflayer'
-import { StrictEventEmitter } from 'strict-event-emitter-types'
+import type { StrictEventEmitter } from 'strict-event-emitter-types'
 
 export type DeepPartial<T, Num extends number = 9999, Temp extends any[] = []> = Temp['length'] extends Num
   ? T

@@ -2,7 +2,7 @@ import { Client } from 'discordx'
 import { IntentsBitField } from 'discord.js'
 
 import './commands'
-import { Options } from '../util/options.js'
+import type { Options } from '../types/options'
 import { ProxyServer } from '../localServer/baseServer'
 import { AllEvents, AllOpts } from '../localServer/builtinPlugins'
 

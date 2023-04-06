@@ -1,7 +1,7 @@
 import { Client, Server, createServer, ServerOptions, ServerClient } from 'minecraft-protocol'
 import { BotOptions, Bot, BotEvents } from 'mineflayer'
 import { ConnOptions, Conn, Client as ProxyClient } from '@rob9315/mcproxy'
-import { Arguments, ListType, TypedEventEmitter, U2I, U2T } from '../util/utilTypes'
+import { Arguments, ListType, TypedEventEmitter, U2I } from '../types/util'
 import { CommandHandler, CommandMap } from '../util/commandHandler'
 import { ChatMessage as AgnogChMsg } from 'prismarine-chat'
 import { sleep } from '../util/index'
@@ -56,6 +56,7 @@ export type IProxyServerEvents = {
   closingConnections: (reason: string) => void
 
   playerConnected: (client: ServerClient, remoteConnected: boolean) => void
+  unauthorizedConnection: (client: ServerClient, reason?: string) => void
   playerDisconnected: (client: ServerClient) => void
   optionValidation: (bot: Bot) => void
   initialBotSetup: (bot: Bot) => void
@@ -113,8 +114,8 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts = IProxyServerOpts,
   onInitialBotSetup?: (bot: Bot) => void
   onClosingConnections?: (reason: string) => void
   onPlayerConnected?: (client: ServerClient, remoteConnected: boolean) => void
-  whileConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>
-  notConnectedLoginHandler?: (player: ServerClient) => Promise<boolean>
+  whileConnectedLoginHandler?: (player: ServerClient) => Promise<boolean> | boolean
+  notConnectedLoginHandler?: (player: ServerClient) => Promise<boolean> | boolean
   onRemoteKick?: (reason: string) => void
   onRemoteError?: (error: Error) => void
 
@@ -193,9 +194,8 @@ export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyS
     public readonly lsOpts: ServerOptions,
     public readonly bOpts: BotOptions,
     public readonly cOpts: Partial<ConnOptions> = {},
-    ...plugins: Array<ProxyServerPlugin<any, any>>
   ) {
-    this._plugins = plugins
+    this._plugins = []
   }
 
   public get appliedSettings (): AppliedSettings {
@@ -535,6 +535,7 @@ export class ProxyServer<
         port: 'unknown',
         ...actualUser.socket.address()
       }
+      this.emit('unauthorizedConnection' as any, actualUser);
       actualUser.end(this.psOpts.security?.kickMessage ?? 'You are not in the whitelist')
       return
     }
@@ -544,6 +545,7 @@ export class ProxyServer<
       : this.remoteClient?.username === actualUser.username
 
     if (!allowedToControl) {
+      this.emit('unauthorizedConnection' as any, actualUser);
       actualUser.end('This user is not allowed to control the bot!')
       return // early end.
     }
