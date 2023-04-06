@@ -190,9 +190,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     if (this.server.conn.pclient == null) {
       this.server.message(client, 'Linking')
 
-      this.fakeSpectator?.linkedFakeBot.unsubscribe(client)
-      this.fakeSpectator?.revertPov(client)
-      this.fakeSpectator?.revertToBotGamemode(client)
+      this.fakeSpectator?.revertToBotStatus(client);
       await sleep(50)
       this.server.endBotLogic()
       this.server.conn.link(client as unknown as Client)
@@ -209,7 +207,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
         this.server.message(client, 'Cannot unlink as not in control!')
         return
       }
-      this.fakeSpectator?.linkedFakeBot.subscribe(client)
       this.fakeSpectator?.makeSpectator(client)
       this.server.message(client, 'Unlinking')
     }
@@ -223,10 +220,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       return
     }
     if (this.fakeSpectator == null) return false
-    this.fakeSpectator.linkedFakeBot.subscribe(client);
-    this.fakeSpectator.makeSpectator(client)
 
-    await sleep(50);
     return this.fakeSpectator!.linkToBotPov(client)
   }
 

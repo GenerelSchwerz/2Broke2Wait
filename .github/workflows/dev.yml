@@ -10,7 +10,7 @@ jobs:
   build_dev_x64:
     strategy:
       matrix:
-        target: [win, macos, linux]
+        os: [windows-latest, macos-latest, ubuntu-latest]
         include:
           - target: win
             artifact: "2bored2wait-win-x64-${{github.sha}}.exe"
@@ -19,7 +19,7 @@ jobs:
           - target: linux
             artifact: "2bored2wait-linux-x64-${{github.sha}}"
 
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.os}}
     name: X64
     steps:
       - uses: actions/checkout@v3
@@ -41,7 +41,9 @@ jobs:
         run: |
           mkdir pkg
           npx caxa -i . -o "pkg/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+        
         # npx pkg . --target node16-${{matrix.target}}-x64 -o "pkg/${{matrix.artifact}}"
+
 
       - uses: actions/upload-artifact@v3
         with:

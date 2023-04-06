@@ -6,6 +6,7 @@ import { performance } from "perf_hooks";
 import type { Item as ItemType, NotchItem } from "prismarine-item";
 import merge from "ts-deepmerge";
 import { Vec3 } from "vec3";
+import { sleep } from "../../../util";
 
 const itemLoader = require("prismarine-item/index.js"); // ncc compat, get default.
 const fetch = require("node-fetch");
@@ -186,7 +187,7 @@ export class FakeBotEntity {
       pitch: -Math.floor(((this.entityRef.pitch / Math.PI) * 128) % 256),
       onGround: this.entityRef.onGround,
     });
-    
+
     this.writeAll("entity_head_rotation", {
       entityId: this.entityRef.id,
       // headYaw: this.entityRef.yaw,
@@ -465,8 +466,21 @@ export class GhostHandler {
       flags: 7,
       flyingSpeed: 0.05000000074505806,
       walkingSpeed: 0.10000000149011612,
-    });   
+    });
+    
+    this.linkedFakeBot.subscribe(client);
   }
+
+  public revertPov(client: Client | ServerClient) {
+    if (!this.clientsInCamera[client.uuid]) return false;
+
+    this.writeRaw(client, "camera", {
+      cameraId: this.bot.entity.id,
+    });
+    this.unregister(client);
+    return true;
+  }
+
 
   public revertToBotGamemode(client: ServerClient | Client) {
     this.writeRaw(client, "position", {
@@ -491,12 +505,21 @@ export class GhostHandler {
     });
 
     this.writeRaw(client, a.name, a.data);
-
-
-    console.log("reverting to bot gamemode: ", gameModeToNotchian(this.bot.game.gameMode))
   }
 
-  public linkToBotPov(client: Client | ServerClient) {
+
+  public revertToBotStatus(client: Client | ServerClient) {
+    this.linkedFakeBot.unsubscribe(client);
+    this.revertPov(client);
+    this.revertToBotGamemode(client);
+  }
+
+  public async linkToBotPov(client: Client | ServerClient) {
+
+    this.makeSpectator(client)
+
+    await sleep(50) // allow bot to spawn on client end.
+
     if (this.clientsInCamera[client.uuid]) {
         console.warn("Already in the camera", client.username);
         this.unregister(client)
@@ -527,14 +550,6 @@ export class GhostHandler {
     return true;
   }
 
-  revertPov(client: Client | ServerClient) {
-    if (!this.clientsInCamera[client.uuid]) return false;
-    this.writeRaw(client, "camera", {
-      cameraId: this.bot.entity.id,
-    });
-    this.unregister(client);
-    return true;
-  }
 
   register(client: Client | ServerClient, cleanup: () => void = () => {}) {
     if (this.clientsInCamera[client.uuid]) {
