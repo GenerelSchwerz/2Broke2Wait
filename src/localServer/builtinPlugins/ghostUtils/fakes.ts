@@ -469,7 +469,6 @@ export class GhostHandler {
   }
 
   public makeSpectator(client: ServerClient | Client) {
-    this.linkedFakeBot.subscribe(client);
     this.writeRaw(client, "player_info", {
       action: 1,
       data: [{ UUID: client.uuid, gamemode: 3 }],
@@ -526,7 +525,8 @@ export class GhostHandler {
     this.writeRaw(client, "camera", {
       cameraId: this.bot.entity.id,
     });
-    const updatePos = () => this.writeRaw(client, "position", {
+    const updatePos = () => 
+    this.writeRaw(client, "position", {
       ...this.bot.entity.position,
       yaw: 180 - (this.bot.entity.yaw * 180) / Math.PI,
       pitch: -(this.bot.entity.pitch * 180) / Math.PI,
@@ -542,7 +542,6 @@ export class GhostHandler {
     this.bot.on("move", onMove);
     this.bot.once("end", cleanup);
     client.once("end", cleanup);
-    this.linkedFakeBot.unsubscribe(client);
     this.register(client, true, cleanup);
     return true;
   }
