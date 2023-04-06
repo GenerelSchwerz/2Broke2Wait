@@ -109,16 +109,14 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
   // ======================= //
 
   private buildFakeData (conn: Conn) {
-    this.fakePlayer = new FakeBotEntity(conn.stateData.bot as any, {
+    this.fakePlayer = new FakeBotEntity(conn.stateData.bot, {
       username: conn.stateData.bot.username,
       uuid: conn.stateData.bot._client.uuid,
       positionTransformer: conn.positionTransformer
     })
 
-    this.fakeSpectator = new GhostHandler(conn.stateData.bot as any, {
-      positionTransformer: conn.positionTransformer
-    })
-
+    this.fakeSpectator = new GhostHandler(this.fakePlayer)
+    this.fakePlayer.sync();
     conn.stateData.bot.once('end', () => {
       this.fakePlayer?.unsync()
     })
@@ -193,8 +191,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.fakeSpectator?.revertPov(client)
       this.fakeSpectator?.revertToBotGamemode(client)
       await sleep(50)
-      this.server.conn.link(client as unknown as Client)
       this.server.endBotLogic()
+      this.server.conn.link(client as unknown as Client)
     } else {
       const mes = `Cannot link. User §3${this.server.conn.pclient.username}:§r is linked.`
       this.server.message(client, mes)
@@ -289,9 +287,9 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       switch (meta.name) {
         case 'use_entity':
           if (this.fakeSpectator?.clientsInCamera[pclient.uuid] == null) return data
-          if (!this.fakeSpectator.clientsInCamera[pclient.uuid].status && data.target === FakePlayer.fakePlayerId) {
+          if (!this.fakeSpectator.clientsInCamera[pclient.uuid].spectating && data.target === this.fakeSpectator.linkedFakeBot.entityRef.id) {
             if (data.mouse === 0 || data.mouse === 1) {
-              this.fakeSpectator.makeViewingBotPov(pclient)
+              this.fakeSpectator.linkToBotPov(pclient)
             }
           }
           break
