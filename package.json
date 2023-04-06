@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@discordx/importer": "^1.1.10",
-    "@nxg-org/mineflayer-antiafk": "^1.4.11",
+    "@nxg-org/mineflayer-antiafk": "^1.4.13",
     "@nxg-org/mineflayer-auto-eat": "^2.1.7",
     "@rob9315/mcproxy": "IceTank/mcproxy-1.git#position-spoofing",
     "@types/node": "^18.15.10",

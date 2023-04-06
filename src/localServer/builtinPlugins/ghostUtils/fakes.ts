@@ -173,29 +173,20 @@ export class FakeBotEntity {
   public onLinkedMove = (pos: Vec3) => {
     this.entityRef.syncToEntityPos(this.linkedEntity);
 
-    // From flying-squid updatePosition.js
-    // known position is very important because the diff (/delta) send to players is floored hence is not precise enough
-    // storing the known position allows to compensate next time a diff is sent
-    // without the known position, the error accumulate fast and player position is incorrect from the point of view
-    // of other players
-    // const knownPosition = this.fakePlayerEntity.knownPosition
-
     this.writeAll("entity_teleport", {
       entityId: this.entityRef.id,
       ...this.entityRef.knownPosition,
       yaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127), // convert to int.
       pitch: -Math.floor(((this.entityRef.pitch / Math.PI) * 128) % 256),
-      // ...this.entityRef.getPositionData(),
       onGround: this.entityRef.onGround
     });
     this.writeAll("entity_look", {
       entityId: this.entityRef.id,
-      // yaw: this.entityRef.yaw,
-      // pitch: this.entityRef.pitch,
       yaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127),
       pitch: -Math.floor(((this.entityRef.pitch / Math.PI) * 128) % 256),
       onGround: this.entityRef.onGround,
     });
+    
     this.writeAll("entity_head_rotation", {
       entityId: this.entityRef.id,
       // headYaw: this.entityRef.yaw,

@@ -241,10 +241,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@nxg-org/mineflayer-antiafk@^1.4.11":
-  version "1.4.11"
-  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-antiafk/-/mineflayer-antiafk-1.4.11.tgz#3a92bb921ad3f264480a385d02aa9bdb9dab3d1c"
-  integrity sha512-bxZai3ToSjcqKObO/xM27i/2WwOBFcdzafqd4bKhe89hIzEef3YvcaJDaBqzPLJW84x7bwkjdXHfUdBfSdNTFw==
+"@nxg-org/mineflayer-antiafk@^1.4.12":
+  version "1.4.12"
+  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-antiafk/-/mineflayer-antiafk-1.4.12.tgz#95a7b3da75d68c047b8a8dd0829841026a976439"
+  integrity sha512-2oV6iziceWZ74AV7iwHUQQW2rME0vjfSpYJ+sFJjvmoz5EZgBBJ+6vj+4IOYJCluDL8Qt9qzIESydMFp3gutEg==
   dependencies:
     "@nxg-org/mineflayer-util-plugin" "^1.6.0"
     strict-event-emitter-types "^2.0.0"

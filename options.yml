@@ -77,8 +77,15 @@ localServerConfig:
     modules:
       RandomMovementModule:
         enabled: false
+
+
       ChatBotModule:
-        enabled: false
+        enabled: true
+        messages: ["hi there", "Gen on top"]
+        random: true
+        delay: 5000
+        variation: 1000 # potential +/- difference in ms to delay
+        count: 10 # spam 10 of these messages
 
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.
