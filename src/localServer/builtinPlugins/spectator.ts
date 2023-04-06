@@ -19,7 +19,8 @@ export interface SpectatorServerEvents extends IProxyServerEvents {
 }
 
 export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, SpectatorServerEvents> {
-  public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
+  public static readonly notControllingBlockedPackets: string[] = []
+  //'entity_metadata', 'abilities', 'position'
 
   public worldManager: WorldManager | null = null
   public fakeSpectator: GhostHandler | null = null
@@ -58,8 +59,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
 
     view: {
       description: 'Link the spectating player\'s perspective',
-      callable: (client) => {
-        const res0 = this.makeViewFakePlayer(client)
+      callable: async (client) => {
+        const res0 = await this.makeViewFakePlayer(client)
         if (res0) this.server.message(client, 'Connecting to view. Type /unview to exit')
       }
     },
@@ -80,7 +81,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
           return
         }
 
-        if (this.fakeSpectator?.clientsInCamera[client.uuid]?.spectating) {
+        if (this.fakeSpectator?.clientsInCamera[client.uuid]) {
           this.server.message(client, "You are viewing the bot's perspective.")
         }
 
@@ -110,8 +111,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
 
   private buildFakeData (conn: Conn) {
     this.fakePlayer = new FakeBotEntity(conn.stateData.bot, {
-      username: conn.stateData.bot.username,
-      uuid: conn.stateData.bot._client.uuid,
+      username: "[B] " + conn.stateData.bot.username.substring(0, 12),
+      // uuid: conn.stateData.bot._client.uuid,
       positionTransformer: conn.positionTransformer
     })
 
@@ -159,6 +160,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     const connect = this.server.psOpts.linkOnConnect && this.server.conn?.pclient == null
 
     if (!connect) {
+      this.fakeSpectator?.linkedFakeBot.subscribe(client)
       this.fakeSpectator!.register(client)
       this.fakeSpectator!.makeSpectator(client)
 
@@ -188,8 +190,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     if (this.server.conn.pclient == null) {
       this.server.message(client, 'Linking')
 
-      this.fakeSpectator?.revertPov(client)
       this.fakeSpectator?.linkedFakeBot.unsubscribe(client)
+      this.fakeSpectator?.revertPov(client)
       this.fakeSpectator?.revertToBotGamemode(client)
       await sleep(50)
       this.server.endBotLogic()
@@ -215,14 +217,17 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     this.server.beginBotLogic()
   }
 
-  makeViewFakePlayer (client: ServerClient | Client) {
+  async makeViewFakePlayer (client: ServerClient | Client) {
     if (client === this.server.conn?.pclient) {
       this.server.message(client, 'Cannot get into the view. You are controlling the bot')
       return
     }
     if (this.fakeSpectator == null) return false
-    this.fakeSpectator.register(client)
-    return this.fakeSpectator.linkToBotPov(client)
+    this.fakeSpectator.linkedFakeBot.subscribe(client);
+    this.fakeSpectator.makeSpectator(client)
+
+    await sleep(50);
+    return this.fakeSpectator!.linkToBotPov(client)
   }
 
   makeViewNormal (client: ServerClient | Client) {
@@ -230,7 +235,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.server.message(client, 'Cannot get out off the view. You are controlling the bot')
       return
     }
-    return this.fakeSpectator?.revertPov(client) ?? false
+    if (this.fakeSpectator == null) return false
+    return this.fakeSpectator.revertPov(client)
   }
 
   // ======================= //
@@ -288,8 +294,10 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       if (conn == null || pclient == null) return
       switch (meta.name) {
         case 'use_entity':
-          if (this.fakeSpectator?.clientsInCamera[pclient.uuid] == null) return data
-          if (!this.fakeSpectator.clientsInCamera[pclient.uuid].spectating && data.target === this.fakeSpectator.linkedFakeBot.entityRef.id) {
+          if (!this.fakeSpectator) return data;
+          if (this.fakeSpectator.clientsInCamera[pclient.uuid] != null) return data
+
+          if (data.target === this.fakeSpectator.linkedFakeBot.entityRef.id) {
             if (data.mouse === 0 || data.mouse === 1) {
               this.fakeSpectator.linkToBotPov(pclient)
             }

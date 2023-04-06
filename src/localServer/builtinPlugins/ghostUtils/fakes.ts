@@ -37,6 +37,7 @@ const NoneItemData = {
 } as any;
 
 class FakeEntity {
+  armor: Array<NotchItem | undefined>;
   id: number;
   knownPosition: Vec3;
   yaw: number;
@@ -46,7 +47,7 @@ class FakeEntity {
   onGround: boolean;
   mainHand?: NotchItem;
   offHand?: NotchItem;
-  armor: Array<NotchItem | undefined>;
+
 
   constructor(id: number, pos: Vec3, yaw: number, pitch: number, onGround = true) {
     this.id = id;
@@ -182,19 +183,22 @@ export class FakeBotEntity {
     this.writeAll("entity_teleport", {
       entityId: this.entityRef.id,
       ...this.entityRef.knownPosition,
-      yaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127),
+      yaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127), // convert to int.
       pitch: -Math.floor(((this.entityRef.pitch / Math.PI) * 128) % 256),
       // ...this.entityRef.getPositionData(),
-      // onGround: this.bot.entity.onGround
+      onGround: this.entityRef.onGround
     });
     this.writeAll("entity_look", {
       entityId: this.entityRef.id,
+      // yaw: this.entityRef.yaw,
+      // pitch: this.entityRef.pitch,
       yaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127),
       pitch: -Math.floor(((this.entityRef.pitch / Math.PI) * 128) % 256),
       onGround: this.entityRef.onGround,
     });
     this.writeAll("entity_head_rotation", {
       entityId: this.entityRef.id,
+      // headYaw: this.entityRef.yaw,
       headYaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127),
     });
   };
@@ -262,7 +266,7 @@ export class FakeBotEntity {
     this.doForAllClients(this.writePlayerEntity);
   };
 
-  async   writePlayerInfo(client: ServerClient) {
+  async writePlayerInfo(client: ServerClient) {
     let properties = [];
     if (this.opts.skinLookup) {
       let response;
@@ -283,13 +287,13 @@ export class FakeBotEntity {
         console.error("Skin lookup failed", err, response);
       }
     }
-    console.log("writing info!!")
+
     this.writeRaw(client, "player_info", {
       action: 0,
       data: [
         {
           UUID: this.opts.uuid,
-          name: "B" + this.opts.username,
+          name: this.opts.username,
           properties,
           gamemode: gameModeToNotchian(this.linkedBot.game.gameMode),
           ping: 0,
@@ -344,7 +348,7 @@ export class FakeBotEntity {
     });
   }
 
-  private spawn(client: ServerClient) {
+  public spawn(client: ServerClient) {
     
     this.writePlayerInfo(client).then(() => this.writePlayerEntity(client)).catch(console.error);
   }
@@ -380,16 +384,6 @@ export class FakeBotEntity {
 }
 
 export class GhostInfo {
-  private _spectating: boolean;
-
-  public get spectating() {
-    return this._spectating;
-  }
-
-  public set spectating(val: boolean) {
-    this.cleanup();
-    this._spectating = val;
-  }
 
   public readonly clientRef: Client;
   public readonly pos: Vec3;
@@ -399,10 +393,9 @@ export class GhostInfo {
 
   public cleanup: () => void;
 
-  constructor(client: Client, spectating = false, cleanup = () => {}) {
+  constructor(client: Client, cleanup = () => {}) {
     this.clientRef = client;
     this.cleanup = cleanup;
-    this._spectating = spectating;
     this.pos = new Vec3(0, 0, 0);
     this.yaw = 0;
     this.pitch = 0;
@@ -493,7 +486,6 @@ export class GhostHandler {
     });
 
     const a = packetAbilities(this.bot);
-    console.log(a);
     const notchGM = gameModeToNotchian(this.bot.game.gameMode);
     this.writeRaw(client, a.name, a.data);
 
@@ -515,21 +507,19 @@ export class GhostHandler {
 
   public linkToBotPov(client: Client | ServerClient) {
     if (this.clientsInCamera[client.uuid]) {
-      if (this.clientsInCamera[client.uuid].spectating) {
         console.warn("Already in the camera", client.username);
-        return false;
-      }
+        this.unregister(client)
     }
 
   
     this.writeRaw(client, "camera", {
-      cameraId: this.bot.entity.id,
+      cameraId: this.linkedFakeBot.entityRef.id,
     });
     const updatePos = () => 
     this.writeRaw(client, "position", {
-      ...this.bot.entity.position,
-      yaw: 180 - (this.bot.entity.yaw * 180) / Math.PI,
-      pitch: -(this.bot.entity.pitch * 180) / Math.PI,
+      ...this.linkedFakeBot.entityRef.knownPosition,
+      yaw: 180 - (this.linkedFakeBot.entityRef.yaw * 180) / Math.PI,
+      pitch: -(this.linkedFakeBot.entityRef.pitch * 180) / Math.PI,
     });
 
     updatePos();
@@ -542,13 +532,12 @@ export class GhostHandler {
     this.bot.on("move", onMove);
     this.bot.once("end", cleanup);
     client.once("end", cleanup);
-    this.register(client, true, cleanup);
+    this.register(client, cleanup);
     return true;
   }
 
   revertPov(client: Client | ServerClient) {
     if (!this.clientsInCamera[client.uuid]) return false;
-    if (!this.clientsInCamera[client.uuid].spectating) return false;
     this.writeRaw(client, "camera", {
       cameraId: this.bot.entity.id,
     });
@@ -556,21 +545,18 @@ export class GhostHandler {
     return true;
   }
 
-  register(client: Client | ServerClient, status: boolean = false, cleanup: () => void = () => {}) {
+  register(client: Client | ServerClient, cleanup: () => void = () => {}) {
     if (this.clientsInCamera[client.uuid]) {
       this.clientsInCamera[client.uuid].cleanup();
     }
-    this.clientsInCamera[client.uuid] = new GhostInfo(client, status, cleanup);
+    this.clientsInCamera[client.uuid] = new GhostInfo(client, cleanup);
   }
 
   unregister(client: ServerClient | Client) {
-    this.register(client, false, () => {});
-  }
-
-  initializeAllClients(clients: Iterable<ServerClient | Client>) {
-    for (const client of clients) {
-      this.register(client);
+    if (this.clientsInCamera[client.uuid]) {
+      this.clientsInCamera[client.uuid].cleanup();
     }
+    delete this.clientsInCamera[client.uuid];
   }
 }
 
