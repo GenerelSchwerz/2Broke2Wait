@@ -98,6 +98,7 @@ export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     server.on('remoteError', this.errorServerMotd)
     server.on('enteredQueue', this.queueEnterMotd)
     server.on('leftQueue', this.inGameServerMotd)
+    server.on('queueUpdate', this.queueUpdateMotd)
   }
 
   onPostStart = () => {
@@ -114,6 +115,21 @@ export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   queueEnterMotd = () => {
     this.setServerMotd(`Entered queue on ${this.getRemoteServerName()}`)
+  }
+
+  queueUpdateMotd = (oldPos: number, newPos: number, eta: number, givenEta?: number) => {
+    let etaStr
+    if (Number.isNaN(eta)) {
+      etaStr = 'ETA: Unknown.'
+    } else {
+      etaStr = `ETA: ${Duration.fromMillis(eta * 1000 - Date.now()).toFormat("d'd', h'hr', m'min'")}`
+    }
+
+    if (!Number.isNaN(givenEta) && givenEta != null) {
+      etaStr += ` | Given ETA: ${Duration.fromMillis(givenEta * 1000 - Date.now()).toFormat("d'd', h'hr', m'min'")}`
+    }
+
+    this.setServerMotd(`${this.getRemoteServerName()} | Pos: ${newPos}\n${etaStr}`)
   }
 
   inGameServerMotd = () => {
