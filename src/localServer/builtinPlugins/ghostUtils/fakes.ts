@@ -1,742 +1,595 @@
-// import { IPositionTransformer, packetAbilities } from "@rob9315/mcproxy";
-// import { Client, PacketMeta, ServerClient } from "minecraft-protocol";
-// import { GameState, Bot } from "mineflayer";
-// import type { Entity } from "prismarine-entity";
-// import { performance } from "perf_hooks";
-// import type { Item as ItemType, NotchItem } from "prismarine-item";
-// import merge from "ts-deepmerge";
-// import { Vec3 } from "vec3";
-
-// const itemLoader = require("prismarine-item/index.js"); // ncc compat, get default.
-// const fetch = require("node-fetch");
-
-// function gameModeToNotchian(gamemode: string): 1 | 0 | 2 {
-//   switch (gamemode) {
-//     case "survival":
-//       return 0;
-//     case "creative":
-//       return 1;
-//     case "adventure":
-//       return 2;
-//     default:
-//       return 0;
-//   }
-// }
-
-// function notchItemEqual(item1?: NotchItem, item2?: NotchItem) {
-//   item1 = item1 ?? {};
-//   item2 = item2 ?? {};
-//   return JSON.stringify(item1) === JSON.stringify(item2);
-// }
-
-// const NoneItemData = {
-//   blockId: -1,
-//   itemCount: undefined,
-//   itemDamage: undefined,
-//   nbtData: undefined,
-// } as any;
-
-// class FakeEntity {
-//   id: number;
-//   knownPosition: Vec3;
-//   yaw: number;
-//   pitch: number;
-//   oldYaw: number;
-//   oldPitch: number;
-//   onGround: boolean;
-//   mainHand?: NotchItem;
-//   offHand?: NotchItem;
-//   armor: Array<NotchItem | undefined>;
-
-//   constructor(id: number, pos: Vec3, yaw: number, pitch: number, onGround = true) {
-//     this.id = id;
-//     this.knownPosition = pos;
-//     this.yaw = yaw;
-//     this.pitch = pitch;
-//     this.oldYaw = yaw;
-//     this.oldPitch = pitch;
-//     this.onGround = onGround;
-//     this.armor = [];
-//   }
-
-//   static fromEntity(id: number, entity: Entity, PrisItem: typeof ItemType) {
-//     const tmp = new FakeEntity(id, entity.position, entity.yaw, entity.pitch, entity.onGround);
-//     tmp.syncToEntity(entity, PrisItem);
-//     return tmp;
-//   }
-
-//   public syncToEntityPos(entity: Entity) {
-//     this.knownPosition.set(entity.position.x, entity.position.y, entity.position.z);
-//     this.oldYaw = this.yaw;
-//     this.oldPitch = this.pitch;
-//     this.yaw = entity.yaw;
-//     this.pitch = entity.pitch;
-//     this.onGround = entity.onGround;
-//   }
-
-//   public syncToEntity(entity: Entity, PrisItem: typeof ItemType) {
-//     this.syncToEntityPos(entity);
-//     this.mainHand = PrisItem.toNotch(entity.heldItem);
-//     this.offHand = PrisItem.toNotch(entity.equipment[1]); // updated on entities, but maybe not the bot.
-//     this.armor = entity.equipment.slice(2).map((i) => PrisItem.toNotch(i));
-//   }
-// }
-
-// type NewFakePlayerOpts = {
-//   name: string;
-//   uuid: string;
-//   skinLookup: boolean;
-// };
-
-// const DefaultPlayerOpts: NewFakePlayerOpts = {
-//   name: "GhostPlayer",
-//   uuid: "a01e3843-e521-3998-958a-f459800e4d11",
-//   skinLookup: false,
-// };
-
-// type AllowedClient = Client | ServerClient;
-
-// export class NewFakePlayer {
-//   public static fakeIdStart = 99999;
-//   public static howManyMade = 0;
-
-//   public readonly opts: NewFakePlayerOpts;
-//   public readonly entityRef: FakeEntity;
-
-//   public readonly linkedBot: Bot;
-//   public readonly linkedClients: Map<string, AllowedClient> = new Map();
-
-//   protected PrisItem: typeof ItemType;
-
-//   public get linkedEntity() {
-//     return this.linkedBot.entity;
-//   }
-
-//   constructor(bot: Bot, opts: Partial<NewFakePlayerOpts>) {
-//     this.opts = merge(DefaultPlayerOpts, opts) as any;
-//     this.linkedBot = bot;
-//     this.PrisItem = itemLoader(bot.version);
-//     const id = NewFakePlayer.fakeIdStart + NewFakePlayer.howManyMade++;
-//     this.entityRef = FakeEntity.fromEntity(id, bot.entity, this.PrisItem);
-//   }
-
-//   ////////////////
-//   // util funcs //
-//   ////////////////
-
-//   public onLinkedMove = (pos: Vec3) => {
-//     this.entityRef.syncToEntityPos(this.linkedEntity);
-
-//     // From flying-squid updatePosition.js
-//       // known position is very important because the diff (/delta) send to players is floored hence is not precise enough
-//       // storing the known position allows to compensate next time a diff is sent
-//       // without the known position, the error accumulate fast and player position is incorrect from the point of view
-//       // of other players
-//       // const knownPosition = this.fakePlayerEntity.knownPosition
-
-//       this.writeAll("entity_teleport", {
-//         entityId: FakePlayer.fakePlayerId,
-//         ...this.entityRef.knownPosition,
-//         yaw: this.entityRef.yaw,
-//         pitch: this.entityRef.pitch,
-//         onGround: this.entityRef.onGround,
-//         // onGround: this.bot.entity.onGround
-//       });
-//       this.writeAll("entity_look", {
-//         entityId: this.entityRef.id,
-//         yaw: this.entityRef.yaw,
-//         pitch: this.entityRef.pitch,
-//         onGround: this.entityRef.onGround,
-//       });
-//       this.writeAll("entity_head_rotation", {
-//         entityId: this.entityRef.id,
-//         headYaw: this.entityRef.yaw,
-//       });
-//   };
-
-//   public onLinkedForceMove = () => {
-//     this.entityRef.syncToEntityPos(this.linkedEntity);
-//     this.writeAll("entity_teleport", {
-//       entityId: this.entityRef.id,
-//       ...this.entityRef.knownPosition,
-//       yaw: this.entityRef.yaw,
-//       pitch: this.entityRef.pitch,
-//       onGround: this.entityRef.onGround,
-//     });
-//   }
-
-//   public onItemChange = () => {
-//     this.linkedBot.updateHeldItem() // shouldn't be needed.
-
-//     const mainHand = this.linkedBot.heldItem != null ? this.PrisItem.toNotch(this.linkedBot.heldItem) : NoneItemData;
-//     const offHand = this.linkedBot.inventory.slots[45] ? this.PrisItem.toNotch(this.linkedBot.inventory.slots[45]) : NoneItemData;
-
-//     const entityEquipWrite = (slot: number, item: ItemType) =>
-//       this.writeAll('entity_equipment', {entityId: this.entityRef.id, slot, item})
-
-
-//     if (!notchItemEqual(mainHand, this.entityRef.mainHand)) {
-//       entityEquipWrite(0, mainHand);
-//       this.entityRef.mainHand = mainHand;
-//     }
-
-//     if (!notchItemEqual(offHand, this.entityRef.offHand)) {
-//       entityEquipWrite(1, offHand)
-//       this.entityRef.offHand = offHand;
-//     }
-
-
-
-//     // main hand
-
-
-//     updateEquipment(client: ServerClient) {
-//       this.bot.updateHeldItem();
-//       const mainHand = this.bot.heldItem != null ? this.pItem.toNotch(this.bot.heldItem) : NoneItemData;
-//       const offHand = this.bot.inventory.slots[45] ? this.pItem.toNotch(this.bot.inventory.slots[45]) : NoneItemData;
-//       // Main hand
-//       if (!notchItemEqual(mainHand, this.fakePlayerEntity.mainHand)) {
-//         this.writeRaw(client, "entity_equipment", {
-//           entityId: FakePlayer.fakePlayerId,
-//           slot: 0,
-//           item: mainHand,
-//         });
-//         this.fakePlayerEntity.mainHand = mainHand;
-//       }
-//       // Off-Hand
-//       if (!notchItemEqual(offHand, this.fakePlayerEntity.offHand)) {
-//         this.writeRaw(client, "entity_equipment", {
-//           entityId: FakePlayer.fakePlayerId,
-//           slot: 1,
-//           item: offHand,
-//         });
-//         this.fakePlayerEntity.offHand = offHand;
-//       }
-//       // Armor
-//       const equipmentMap = [5, 4, 3, 2];
-//       for (let i = 0; i < 4; i++) {
-//         // Armor slots start at 5
-//         const armorItem = this.bot.inventory.slots[i + 5]
-//           ? this.pItem.toNotch(this.bot.inventory.slots[i + 5])
-//           : NoneItemData;
-//         if (notchItemEqual(armorItem, this.fakePlayerEntity.armor[i])) continue;
-//         this.writeRaw(client, "entity_equipment", {
-//           entityId: FakePlayer.fakePlayerId,
-//           slot: equipmentMap[i],
-//           item: armorItem,
-//         });
-//         this.fakePlayerEntity.armor[i] = armorItem;
-//       }
-//     }
-//   }
-
-//   protected setup() {
-//     this.linkedBot.on("move", this.onLinkedMove);
-//     this.linkedBot.on('forcedMove', this.onLinkedForceMove)
-//   }
-
-//   protected write(client: AllowedClient, name: string, data: any) {
-//     client.write(name, data);
-//   }
-
-//   protected writeAll(name: string, data: any) {
-//     for (const c of this.linkedClients.values()) {
-//       this.write(c, name, data);
-//     }
-//   }
-
-//   public subscribe(client: AllowedClient) {
-//     this.linkedClients.set(client.uuid, client);
-//   }
-// }
-
-// export class FakePlayer {
-//   name: string;
-//   uuid: string;
-//   skinLookup: boolean;
-//   bot: Bot;
-//   fakePlayerEntity: FakeEntity;
-//   static fakePlayerId: number = 9999;
-//   listenerMove: () => void = () => {};
-//   listenerForceMove: () => void = () => {};
-//   listenerPhysics: () => void = () => {};
-//   listenerInventory: () => void = () => {};
-//   listenerWorldLeave: () => void = () => {};
-//   listenerWorldJoin: () => void = () => {};
-//   pItem: typeof ItemType;
-//   connectedClients: ServerClient[];
-//   private isSpawnedMap: Record<string, boolean> = {};
-//   private readonly positionTransformer: IPositionTransformer | undefined;
-//   constructor(
-//     bot: Bot,
-//     options: { username?: string; uuid?: string; skinLookup?: boolean; positionTransformer?: IPositionTransformer } = {}
-//   ) {
-//     this.name = options.username ?? "Player";
-//     this.uuid = options.uuid ?? "a01e3843-e521-3998-958a-f459800e4d11";
-//     this.skinLookup = options.skinLookup ?? true;
-//     this.bot = bot;
-//     this.pItem = itemLoader(bot.version);
-//     this.fakePlayerEntity = FakeEntity.fromEntity(FakePlayer.fakePlayerId, bot.entity, this.pItem)
-//     this.initListener();
-//     this.connectedClients = [];
-//     this.positionTransformer = options.positionTransformer;
-//   }
-
-//   private writeRaw(client: ServerClient | Client, name: string, data: any) {
-//     if (this.positionTransformer != null) {
-//       const result = this.positionTransformer.onSToCPacket(name, data);
-//       if (!result) return;
-//       if (result && result.length > 1) return;
-//       const [transformedName, transformedData] = result[0];
-//       client.write(transformedName, transformedData);
-//     } else {
-//       client.write(name, data);
-//     }
-//   }
-
-//   private initListener() {
-//     const writeIfSpawned = (name: string, data: Object) => {
-//       this.connectedClients.forEach((c) => {
-//         if (!this.isSpawnedMap[c.uuid]) return;
-//         this.writeRaw(c, name, data);
-//       });
-//     };
-//     this.listenerMove = () => {
-//       // From flying-squid updatePosition.js
-//       // known position is very important because the diff (/delta) send to players is floored hence is not precise enough
-//       // storing the known position allows to compensate next time a diff is sent
-//       // without the known position, the error accumulate fast and player position is incorrect from the point of view
-//       // of other players
-//       // const knownPosition = this.fakePlayerEntity.knownPosition
-//       const position = this.bot.entity.position;
-
-//       const entityPosition = position; // 1.12.2 Specific
-//       this.fakePlayerEntity.knownPosition = position;
-//       this.fakePlayerEntity.onGround = this.bot.entity.onGround;
-//       this.fakePlayerEntity.yaw = this.bot.entity.yaw;
-//       this.fakePlayerEntity.pitch = this.bot.entity.pitch;
-//       writeIfSpawned("entity_teleport", {
-//         entityId: FakePlayer.fakePlayerId,
-//         x: entityPosition.x,
-//         y: entityPosition.y,
-//         z: entityPosition.z,
-//         yaw: -(Math.floor(((this.bot.entity.yaw / Math.PI) * 128 + 255) % 256) - 127),
-//         pitch: -Math.floor(((this.bot.entity.pitch / Math.PI) * 128) % 256),
-//         // onGround: this.bot.entity.onGround
-//         onGround: false,
-//       });
-//       writeIfSpawned("entity_look", {
-//         entityId: FakePlayer.fakePlayerId,
-//         yaw: -(Math.floor(((this.bot.entity.yaw / Math.PI) * 128 + 255) % 256) - 127),
-//         pitch: -Math.floor(((this.bot.entity.pitch / Math.PI) * 128) % 256),
-//         onGround: false,
-//       });
-//       writeIfSpawned("entity_head_rotation", {
-//         entityId: FakePlayer.fakePlayerId,
-//         headYaw: -(Math.floor(((this.bot.entity.yaw / Math.PI) * 128 + 255) % 256) - 127),
-//       });
-//     };
-//     this.listenerForceMove = () => {
-//       this.fakePlayerEntity.knownPosition = this.bot.entity.position;
-//       this.fakePlayerEntity.yaw = this.bot.entity.yaw;
-//       this.fakePlayerEntity.pitch = this.bot.entity.pitch;
-
-//       writeIfSpawned("entity_teleport", {
-//         entityId: 9999,
-//         x: this.bot.entity.position.x,
-//         y: this.bot.entity.position.y,
-//         z: this.bot.entity.position.z,
-//         yaw: this.bot.entity.yaw,
-//         pitch: this.bot.entity.pitch,
-//         onGround: this.bot.entity.onGround,
-//       });
-//     };
-//     this.listenerInventory = () => {
-//       this.connectedClients.forEach((c) => {
-//         if (!this.isSpawnedMap[c.uuid]) return;
-//         this.updateEquipment(c);
-//       });
-//     };
-//     this.listenerWorldLeave = () => {
-//       const timeout = setTimeout(() => {
-//         this.bot._client.off("position", this.listenerWorldJoin);
-//       }, 5000);
-//       this.bot._client.once("position", () => {
-//         clearTimeout(timeout);
-//         this.listenerWorldJoin();
-//       });
-//       this.connectedClients.forEach((c) => {
-//         if (!this.isSpawnedMap[c.uuid]) return;
-//         this.writeDestroyEntity(c);
-//       });
-//     };
-//     this.listenerWorldJoin = () => {
-//       this.connectedClients.forEach((c) => {
-//         if (!this.isSpawnedMap[c.uuid]) return;
-//         this.writePlayerEntity(c);
-//       });
-//     };
-//     this.bot.on("move", this.listenerMove);
-//     // setInterval(this.listenerMove.bind(this), 50)
-//     this.bot.on("forcedMove", this.listenerForceMove);
-//     this.bot.inventory.on("updateSlot", this.listenerInventory);
-//     this.bot._client.on("mcproxy:heldItemSlotUpdate", () => {
-//       if (this.listenerInventory) this.listenerInventory();
-//     });
-//     this.bot.on("respawn", this.listenerWorldLeave);
-//   }
-
-//   register(client: ServerClient) {
-//     if (!this.connectedClients.includes(client)) {
-//       this.connectedClients.push(client);
-//       this.spawn(client);
-//     }
-//   }
-
-//   unregister(client: ServerClient) {
-//     this.connectedClients = this.connectedClients.filter((c) => c !== client);
-//     this.deSpawn(client);
-//   }
-
-//   destroy() {
-//     this.bot.removeListener("move", this.listenerMove);
-//     this.bot.removeListener("forcedMove", this.listenerForceMove);
-//     if (this.listenerInventory) {
-//       this.bot.inventory.removeListener("updateSlot", this.listenerInventory);
-//     }
-//     this.bot.removeListener("respawn", this.listenerWorldLeave);
-//   }
-
-//   async writePlayerInfo(client: ServerClient) {
-//     // console.info('Sending request', `https://sessionserver.mojang.com/session/minecraft/profile/${this.uuid}?unsigned=false`)
-//     let properties = [];
-//     if (this.skinLookup) {
-//       let response;
-//       try {
-//         response = await fetch(
-//           `https://sessionserver.mojang.com/session/minecraft/profile/${this.uuid}?unsigned=false`
-//         );
-//         if (response.status !== 204) {
-//           const p = await response.json();
-//           properties = p?.properties ?? [];
-//           if (properties?.length !== 1) {
-//             console.warn("Skin lookup failed for", this.uuid);
-//           }
-//         } else {
-//           console.warn("Offline mode, no skin for", this.uuid);
-//         }
-//       } catch (err) {
-//         console.error("Skin lookup failed", err, response);
-//       }
-//     }
-//     // console.info('Player profile', p)
-//     this.writeRaw(client, "player_info", {
-//       action: 0,
-//       data: [
-//         {
-//           UUID: this.uuid,
-//           name: this.name,
-//           properties,
-//           gamemode: gameModeToNotchian(this.bot.game.gameMode),
-//           ping: 0,
-//         },
-//       ],
-//     });
-//   }
-
-//   updateEquipment(client: ServerClient) {
-//     this.bot.updateHeldItem();
-//     const mainHand = this.bot.heldItem != null ? this.pItem.toNotch(this.bot.heldItem) : NoneItemData;
-//     const offHand = this.bot.inventory.slots[45] ? this.pItem.toNotch(this.bot.inventory.slots[45]) : NoneItemData;
-//     // Main hand
-//     if (!notchItemEqual(mainHand, this.fakePlayerEntity.mainHand)) {
-//       this.writeRaw(client, "entity_equipment", {
-//         entityId: FakePlayer.fakePlayerId,
-//         slot: 0,
-//         item: mainHand,
-//       });
-//       this.fakePlayerEntity.mainHand = mainHand;
-//     }
-//     // Off-Hand
-//     if (!notchItemEqual(offHand, this.fakePlayerEntity.offHand)) {
-//       this.writeRaw(client, "entity_equipment", {
-//         entityId: FakePlayer.fakePlayerId,
-//         slot: 1,
-//         item: offHand,
-//       });
-//       this.fakePlayerEntity.offHand = offHand;
-//     }
-//     // Armor
-//     const equipmentMap = [5, 4, 3, 2];
-//     for (let i = 0; i < 4; i++) {
-//       // Armor slots start at 5
-//       const armorItem = this.bot.inventory.slots[i + 5]
-//         ? this.pItem.toNotch(this.bot.inventory.slots[i + 5])
-//         : NoneItemData;
-//       if (notchItemEqual(armorItem, this.fakePlayerEntity.armor[i])) continue;
-//       this.writeRaw(client, "entity_equipment", {
-//         entityId: FakePlayer.fakePlayerId,
-//         slot: equipmentMap[i],
-//         item: armorItem,
-//       });
-//       this.fakePlayerEntity.armor[i] = armorItem;
-//     }
-//   }
-
-//   private writePlayerEntity(client: ServerClient) {
-//     this.writeRaw(client, "named_entity_spawn", {
-//       entityId: FakePlayer.fakePlayerId,
-//       playerUUID: this.uuid,
-//       x: this.bot.entity.position.x,
-//       y: this.bot.entity.position.y,
-//       z: this.bot.entity.position.z,
-//       yaw: this.bot.entity.yaw,
-//       pitch: this.bot.entity.pitch,
-//       metadata: [
-//         {
-//           key: 5,
-//           type: 6,
-//           value: true, // No gravity
-//         },
-//       ],
-//     });
-
-//     this.updateEquipment(client);
-
-//     this.writeRaw(client, "entity_look", {
-//       entityId: FakePlayer.fakePlayerId,
-//       yaw: this.bot.entity.yaw,
-//       pitch: this.bot.entity.pitch,
-//       onGround: this.bot.entity.onGround,
-//     });
-
-//     this.writeRaw(client, "entity_head_rotation", {
-//       entityId: FakePlayer.fakePlayerId,
-//       headYaw: -(Math.floor(((this.bot.entity.yaw / Math.PI) * 128 + 255) % 256) - 127),
-//     });
-//   }
-
-//   private spawn(client: ServerClient) {
-//     // if (this.isSpawned) throw new Error('Already spawned')
-//     if (client.uuid in this.isSpawnedMap && this.isSpawnedMap[client.uuid]) console.warn("Already spawned");
-//     // this.initListener()
-//     this.writePlayerInfo(client)
-//       .then(() => {
-//         this.writePlayerEntity(client);
-//         this.isSpawnedMap[client.uuid] = true;
-//       })
-//       .catch(console.error);
-//   }
-
-//   private writeDestroyEntity(client: ServerClient) {
-//     this.writeRaw(client, "entity_destroy", {
-//       entityIds: [FakePlayer.fakePlayerId],
-//     });
-//   }
-
-//   private deSpawn(client: ServerClient) {
-//     // if (!this.isSpawned) throw new Error('Nothing to de-spawn player not spawned')
-//     if (client.uuid in this.isSpawnedMap) {
-//       // if (!this.isSpawnedMap[client.uuid]) console.warn('Nothing to de-spawn player not spawned')
-//     }
-//     this.writeDestroyEntity(client);
-//     this.writeRaw(client, "player_info", {
-//       action: 4,
-//       data: [
-//         {
-//           UUID: this.uuid,
-//         },
-//       ],
-//     });
-//     this.isSpawnedMap[client.uuid] = false;
-//   }
-// }
-
-// class SpectatorInfo {
-//   private _status: boolean;
-
-//   public get status() {
-//     return this._status;
-//   }
-
-//   public set status(val: boolean) {
-//     this.cleanup();
-//     this._status = val;
-//   }
-
-//   public readonly client: Client;
-//   public position: Vec3 = new Vec3(0, 0, 0);
-//   public yaw: number = 0;
-//   public pitch: number = 0;
-//   public onGround: boolean = false;
-//   public readonly cleanup: () => void;
-//   constructor(client: Client, position: Vec3, status: boolean = false, cleanup: () => void = () => {}) {
-//     this.client = client;
-//     this.cleanup = cleanup;
-//     this.position = position;
-//     this._status = status;
-
-//     this.client.on("packet", this.posListener);
-//   }
-
-//   posListener = (data: any, meta: PacketMeta) => {
-//     if (meta.name.includes("position")) {
-//       this.position = new Vec3(data.x, data.y, data.z);
-//       this.onGround = data.onGround;
-//     }
-//     if (meta.name.includes("look")) {
-//       this.yaw = data.yaw;
-//       this.pitch = data.pitch;
-//       this.onGround = data.onGround;
-//     }
-//   };
-// }
-
-// export class FakeSpectator {
-//   bot: Bot;
-//   clientsInCamera: Record<string, SpectatorInfo> = {};
-//   positionTransformer?: IPositionTransformer;
-//   constructor(bot: Bot, options: { positionTransformer?: IPositionTransformer } = {}) {
-//     this.bot = bot;
-//     this.positionTransformer = options.positionTransformer;
-//   }
-
-//   private writeRaw(client: ServerClient | Client, name: string, data: any) {
-//     if (this.positionTransformer != null) {
-//       const result = this.positionTransformer.onSToCPacket(name, data);
-//       if (!result) return;
-//       if (result && result.length > 1) return;
-//       const [transformedName, transformedData] = result[0];
-//       client.write(transformedName, transformedData);
-//     } else {
-//       client.write(name, data);
-//     }
-//   }
-
-//   makeSpectator(client: ServerClient) {
-//     this.writeRaw(client, "player_info", {
-//       action: 1,
-//       data: [
-//         {
-//           UUID: client.uuid,
-//           gamemode: 3,
-//         },
-//       ],
-//     });
-//     this.writeRaw(client, "game_state_change", {
-//       reason: 3, // https://wiki.vg/index.php?title=Protocol&oldid=14204#Change_Game_State
-//       gameMode: 3,
-//     });
-//     this.writeRaw(client, "abilities", {
-//       flags: 7,
-//       flyingSpeed: 0.05000000074505806,
-//       walkingSpeed: 0.10000000149011612,
-//     });
-//   }
-
-//   revertToNormal(client: ServerClient) {
-//     this.writeRaw(client, "position", {
-//       ...this.bot.entity.position,
-//       yaw: this.bot.entity.yaw,
-//       pitch: this.bot.entity.pitch,
-//       onGround: this.bot.entity.onGround,
-//     });
-//     const a = packetAbilities(this.bot);
-//     this.writeRaw(client, a.name, a.data);
-//     this.writeRaw(client, "game_state_change", {
-//       reason: 3, // https://wiki.vg/index.php?title=Protocol&oldid=14204#Change_Game_State
-//       gameMode: gameModeToNotchian(this.bot.game.gameMode),
-//     });
-//   }
-
-//   tpToFakePlayer(client: Client | ServerClient) {
-//     this.writeRaw(client, "position", {
-//       ...this.bot.entity.position,
-//     });
-//   }
-
-//   tpToCoords(client: Client | ServerClient, x?: number, y?: number, z?: number) {
-//     console.log({
-//       x: x && !isNaN(x) ? x : this.clientsInCamera[client.uuid].position.x,
-//       y: y && !isNaN(y) ? y : this.clientsInCamera[client.uuid].position.y,
-//       z: z && !isNaN(z) ? z : this.clientsInCamera[client.uuid].position.z,
-//       // yaw: this.clientsInCamera[client.uuid].yaw,
-//       // pitch: this.clientsInCamera[client.uuid].pitch,
-//       // onGround: this.clientsInCamera[client.uuid].onGround
-//     });
-//     this.writeRaw(client, "position", {
-//       x: x && !isNaN(x) ? x : this.clientsInCamera[client.uuid].position.x,
-//       y: y && !isNaN(y) ? y : this.clientsInCamera[client.uuid].position.y,
-//       z: z && !isNaN(z) ? z : this.clientsInCamera[client.uuid].position.z,
-//       yaw: this.clientsInCamera[client.uuid].yaw,
-//       pitch: this.clientsInCamera[client.uuid].pitch,
-//       onGround: this.clientsInCamera[client.uuid].onGround,
-//     });
-//   }
-
-//   register(client: Client | ServerClient, status: boolean = false, cleanup: () => void = () => {}) {
-//     this.clientsInCamera[client.uuid]?.cleanup();
-//     this.clientsInCamera[client.uuid] = new SpectatorInfo(client, this.bot.entity.position.clone(), status, cleanup);
-//   }
-
-//   unregister(client: Client | ServerClient) {
-//     this.register(client, false, () => {});
-//   }
-
-//   makeViewingBotPov(client: Client | ServerClient) {
-//     if (this.clientsInCamera[client.uuid]) {
-//       if (this.clientsInCamera[client.uuid].status) {
-//         console.warn("Already in the camera", client.username);
-//         return false;
-//       }
-//     } else {
-//       this.register(client);
-//     }
-
-//     this.writeRaw(client, "camera", {
-//       cameraId: FakePlayer.fakePlayerId,
-//     });
-//     const updatePos = () => {
-//       this.writeRaw(client, "position", {
-//         ...this.bot.entity.position,
-//         yaw: 180 - (this.bot.entity.yaw * 180) / Math.PI,
-//         pitch: -(this.bot.entity.pitch * 180) / Math.PI,
-//         onGround: this.bot.entity.onGround,
-//       });
-//     };
-//     updatePos();
-//     const onMove = () => updatePos();
-//     const cleanup = () => {
-//       this.bot.removeListener("move", onMove);
-//       this.bot.removeListener("end", cleanup);
-//       client.removeListener("end", cleanup);
-//     };
-//     this.bot.on("move", onMove);
-//     this.bot.once("end", cleanup);
-//     client.once("end", cleanup);
-//     this.register(client, true, cleanup);
-//     return true;
-//   }
-
-//   revertPov(client: Client | ServerClient) {
-//     if (!this.clientsInCamera[client.uuid]) return false;
-//     if (!this.clientsInCamera[client.uuid].status) return false;
-//     this.writeRaw(client, "camera", {
-//       cameraId: this.bot.entity.id,
-//     });
-//     this.unregister(client);
-//     return true;
-//   }
-// }
-
-// function gamemodeToNumber(str: GameState["gameMode"]) {
-//   if (str === "survival") {
-//     return 0;
-//   } else if (str === "creative") {
-//     return 1;
-//   } else if (str === "adventure") {
-//     return 2;
-//   } else if (str === "spectator") {
-//     return 3;
-//   }
-// }
+import { IPositionTransformer, packetAbilities } from "@rob9315/mcproxy";
+import { Client, PacketMeta, ServerClient } from "minecraft-protocol";
+import { GameState, Bot } from "mineflayer";
+import type { Entity } from "prismarine-entity";
+import { performance } from "perf_hooks";
+import type { Item as ItemType, NotchItem } from "prismarine-item";
+import merge from "ts-deepmerge";
+import { Vec3 } from "vec3";
+
+const itemLoader = require("prismarine-item/index.js"); // ncc compat, get default.
+const fetch = require("node-fetch");
+
+function gameModeToNotchian(gamemode: string): 1 | 0 | 2 {
+  switch (gamemode) {
+    case "survival":
+      return 0;
+    case "creative":
+      return 1;
+    case "adventure":
+      return 2;
+    default:
+      return 0;
+  }
+}
+
+function notchItemEqual(item1?: NotchItem, item2?: NotchItem) {
+  item1 = item1 ?? {};
+  item2 = item2 ?? {};
+  return JSON.stringify(item1) === JSON.stringify(item2);
+}
+
+const NoneItemData = {
+  blockId: -1,
+  itemCount: undefined,
+  itemDamage: undefined,
+  nbtData: undefined,
+} as any;
+
+class FakeEntity {
+  id: number;
+  knownPosition: Vec3;
+  yaw: number;
+  pitch: number;
+  oldYaw: number;
+  oldPitch: number;
+  onGround: boolean;
+  mainHand?: NotchItem;
+  offHand?: NotchItem;
+  armor: Array<NotchItem | undefined>;
+
+  constructor(id: number, pos: Vec3, yaw: number, pitch: number, onGround = true) {
+    this.id = id;
+    this.knownPosition = pos;
+    this.yaw = yaw;
+    this.pitch = pitch;
+    this.oldYaw = yaw;
+    this.oldPitch = pitch;
+    this.onGround = onGround;
+    this.armor = [];
+  }
+
+  static fromEntity(id: number, entity: Entity, PrisItem: typeof ItemType) {
+    const tmp = new FakeEntity(id, entity.position, entity.yaw, entity.pitch, entity.onGround);
+    tmp.syncToEntity(entity, PrisItem);
+    return tmp;
+  }
+
+  public syncToEntityPos(entity: Entity) {
+    this.knownPosition.set(entity.position.x, entity.position.y, entity.position.z);
+    this.oldYaw = this.yaw;
+    this.oldPitch = this.pitch;
+    this.yaw = entity.yaw;
+    this.pitch = entity.pitch;
+    this.onGround = entity.onGround;
+  }
+
+  public syncToEntity(entity: Entity, PrisItem: typeof ItemType) {
+    this.syncToEntityPos(entity);
+    this.mainHand = PrisItem.toNotch(entity.heldItem);
+    this.offHand = PrisItem.toNotch(entity.equipment[1]); // updated on entities, but maybe not the bot.
+    this.armor = entity.equipment.slice(2).map((i) => PrisItem.toNotch(i));
+  }
+
+  public getPositionData() {
+    return {
+      ...this.knownPosition,
+      yaw: this.yaw,
+      pitch: this.pitch,
+      onGround: this.onGround,
+    };
+  }
+}
+
+type FakeBotEntityOpts = {
+  username: string;
+  uuid: string;
+  skinLookup: boolean;
+  positionTransformer?: IPositionTransformer
+};
+
+const DefaultPlayerOpts: FakeBotEntityOpts = {
+  username: "GhostPlayer",
+  uuid: "a01e3843-e521-3998-958a-f459800e4d11",
+  skinLookup: false,
+};
+
+type AllowedClient = Client | ServerClient;
+type OmitX<ToRemove extends number, Args extends any[], Remain extends any[] = []> = ToRemove extends Remain["length"]
+  ? Args
+  : Args extends []
+  ? never
+  : Args extends [first?: infer Arg, ...i: infer Rest]
+  ? OmitX<ToRemove, Rest, [...Remain, Arg]>
+  : never;
+
+export class FakeBotEntity {
+  public static id = 99999;
+
+  private _destroyed = false;
+
+  public readonly opts: FakeBotEntityOpts;
+  public readonly entityRef: FakeEntity;
+
+  public readonly linkedBot: Bot;
+  public readonly linkedClients: Map<string, ServerClient> = new Map();
+
+  protected PrisItem: typeof ItemType;
+
+  positionTransformer?: IPositionTransformer
+
+  public get linkedEntity() {
+    return this.linkedBot.entity;
+  }
+
+  public get destroyed() {
+    return this._destroyed;
+  }
+
+  constructor(bot: Bot, opts: Partial<FakeBotEntityOpts> = {}) {
+    this.opts = merge(DefaultPlayerOpts, opts) as any;
+    this.linkedBot = bot;
+    this.PrisItem = itemLoader(bot.version);
+    this.entityRef = FakeEntity.fromEntity(FakeBotEntity.id, bot.entity, this.PrisItem);
+    this.positionTransformer = this.opts.positionTransformer;
+  }
+
+  ////////////////
+  // util funcs //
+  ////////////////
+
+  writeRaw = writeRaw;
+
+  getPositionData = getPositionData;
+
+  protected writeAll(name: string, data: any) {
+    for (const c of this.linkedClients.values()) {
+      this.writeRaw(c, name, data);
+    }
+  }
+
+  public doForAllClients = <Func extends (client: ServerClient, ...args: any[]) => any>(
+    func: Func,
+    ...args: OmitX<1, Parameters<Func>>
+  ) => {
+    for (const c of this.linkedClients.values()) {
+      func(c, ...args);
+    }
+  };
+
+  public onLinkedMove = (pos: Vec3) => {
+    this.entityRef.syncToEntityPos(this.linkedEntity);
+
+    // From flying-squid updatePosition.js
+    // known position is very important because the diff (/delta) send to players is floored hence is not precise enough
+    // storing the known position allows to compensate next time a diff is sent
+    // without the known position, the error accumulate fast and player position is incorrect from the point of view
+    // of other players
+    // const knownPosition = this.fakePlayerEntity.knownPosition
+
+    this.writeAll("entity_teleport", {
+      entityId: this.entityRef.id,
+      ...this.entityRef.getPositionData(),
+      // onGround: this.bot.entity.onGround
+    });
+    this.writeAll("entity_look", {
+      entityId: this.entityRef.id,
+      yaw: this.entityRef.yaw,
+      pitch: this.entityRef.pitch,
+      onGround: this.entityRef.onGround,
+    });
+    this.writeAll("entity_head_rotation", {
+      entityId: this.entityRef.id,
+      headYaw: this.entityRef.yaw,
+    });
+  };
+
+  public onLinkedForceMove = () => {
+    this.entityRef.syncToEntityPos(this.linkedEntity);
+    this.writeAll("entity_teleport", {
+      entityId: this.entityRef.id,
+      ...this.entityRef.getPositionData(),
+    });
+  };
+
+  public onItemChange = () => {
+    this.linkedBot.updateHeldItem(); // shouldn't be needed.
+    this.doForAllClients(this.updateEquipmentFor);
+  };
+
+  public updateEquipmentFor = (client: ServerClient) => {
+    const mainHand = this.linkedBot.heldItem != null ? this.PrisItem.toNotch(this.linkedBot.heldItem) : NoneItemData;
+    const offHand = this.linkedBot.inventory.slots[45]
+      ? this.PrisItem.toNotch(this.linkedBot.inventory.slots[45])
+      : NoneItemData;
+
+    const entityEquipWrite = (slot: number, item: ItemType) =>
+      this.writeRaw(client, "entity_equipment", { entityId: this.entityRef.id, slot, item });
+
+    if (!notchItemEqual(mainHand, this.entityRef.mainHand)) {
+      entityEquipWrite(0, mainHand);
+      this.entityRef.mainHand = mainHand;
+    }
+
+    if (!notchItemEqual(offHand, this.entityRef.offHand)) {
+      entityEquipWrite(1, offHand);
+      this.entityRef.offHand = offHand;
+    }
+
+    const equipmentMap = [5, 4, 3, 2];
+    for (let i = 0; i < 4; i++) {
+      const armorItem = this.linkedBot.inventory.slots[i + 5]
+        ? this.PrisItem.toNotch(this.linkedBot.inventory.slots[i + 5])
+        : NoneItemData;
+
+      if (!notchItemEqual(armorItem, this.entityRef.armor[i])) {
+        entityEquipWrite(equipmentMap[i], armorItem);
+        this.entityRef.armor[i] = armorItem;
+      }
+    }
+  };
+
+  listenerWorldLeave = () => {
+    // listen for 5 seconds, then determine that we are not re-joining.
+    const timeout = setTimeout(() => {
+      this.linkedBot._client.off("position", this.listenerWorldJoin);
+    }, 5000);
+
+    // if new pos happens, clear removal listener and fire event.
+    this.linkedBot._client.once("position", () => {
+      clearTimeout(timeout);
+      this.listenerWorldJoin();
+    });
+    this.doForAllClients(this.writeDestroyEntity);
+  };
+
+  listenerWorldJoin = () => {
+    this.doForAllClients(this.writePlayerEntity);
+  };
+
+  async writePlayerInfo(client: ServerClient) {
+    let properties = [];
+    if (this.opts.skinLookup) {
+      let response;
+      try {
+        response = await fetch(
+          `https://sessionserver.mojang.com/session/minecraft/profile/${this.opts.uuid}?unsigned=false`
+        );
+        if (response.status !== 204) {
+          const p = await response.json();
+          properties = p?.properties ?? [];
+          if (properties?.length !== 1) {
+            console.warn("Skin lookup failed for", this.opts.uuid);
+          }
+        } else {
+          console.warn("Offline mode, no skin for", this.opts.uuid);
+        }
+      } catch (err) {
+        console.error("Skin lookup failed", err, response);
+      }
+    }
+    this.writeRaw(client, "player_info", {
+      action: 0,
+      data: [
+        {
+          UUID: this.opts.uuid,
+          name: this.opts.username,
+          properties,
+          gamemode: gameModeToNotchian(this.linkedBot.game.gameMode),
+          ping: 0,
+        },
+      ],
+    });
+  }
+
+  private writePlayerEntity = (client: ServerClient) => {
+    this.writeRaw(client, "named_entity_spawn", {
+      entityId: this.entityRef.id,
+      playerUUID: this.opts.uuid,
+      ...this.entityRef.knownPosition,
+      yaw: this.entityRef.yaw,
+      pitch: this.entityRef.pitch,
+      metadata: [
+        {
+          key: 5,
+          type: 6,
+          value: true, // No gravity
+        },
+      ],
+    });
+
+    this.updateEquipmentFor(client);
+
+    this.writeRaw(client, "entity_look", {
+      entityId: this.entityRef.id,
+      yaw: this.entityRef.yaw,
+      pitch: this.entityRef.pitch,
+      onGround: this.entityRef.onGround,
+    });
+
+    this.writeRaw(client, "entity_head_rotation", {
+      entityId: this.entityRef.id,
+      headYaw: this.entityRef.yaw,
+    });
+  };
+
+  private writeDestroyEntity(client: ServerClient) {
+    this.writeRaw(client, "entity_destroy", {
+      entityIds: [this.entityRef.id],
+    });
+  }
+
+  private deSpawn(client: ServerClient) {
+    this.writeDestroyEntity(client);
+    this.writeRaw(client, "player_info", {
+      action: 4,
+      data: [{ UUID: this.opts.uuid }],
+    });
+  }
+
+  private spawn(client: ServerClient) {
+    this.writePlayerInfo(client)
+      .then(() => {
+        this.writePlayerEntity(client);
+      })
+      .catch(console.error);
+  }
+
+  public subscribe(client: AllowedClient) {
+    this.linkedClients.set(client.uuid, client as ServerClient);
+    this.spawn(client as ServerClient);
+  }
+
+  public unsubscribe(client: AllowedClient) {
+    this.deSpawn(client as ServerClient);
+    this.linkedClients.delete(client.uuid);
+  }
+
+  public sync() {
+    this.entityRef.syncToEntity(this.linkedBot.entity, this.PrisItem);
+    this.linkedBot.on("move", this.onLinkedMove);
+    this.linkedBot.on("forcedMove", this.onLinkedForceMove);
+    this.linkedBot.inventory.on("updateSlot", this.onItemChange);
+    this.linkedBot._client.on("mcproxy:heldItemSlotUpdate", this.onItemChange);
+    this.linkedBot.on("respawn", this.listenerWorldLeave);
+    this._destroyed = false;
+  }
+
+  public unsync() {
+    this.linkedBot.off("move", this.onLinkedMove);
+    this.linkedBot.off("forcedMove", this.onLinkedForceMove);
+    this.linkedBot.inventory.off("updateSlot", this.onItemChange);
+    this.linkedBot._client.off("mcproxy:heldItemSlotUpdate", this.onItemChange);
+    this.linkedBot.off("respawn", this.listenerWorldLeave);
+    this._destroyed = true;
+  }
+}
+
+export class GhostInfo {
+  private _spectating: boolean;
+
+  public get spectating() {
+    return this._spectating;
+  }
+
+  public set spectating(val: boolean) {
+    this.cleanup();
+    this._spectating = val;
+  }
+
+  public readonly clientRef: Client;
+  public readonly pos: Vec3;
+  public yaw: number;
+  public pitch: number;
+  public onGround: boolean;
+
+  public cleanup: () => void;
+
+  constructor(client: Client, spectating = false, cleanup = () => {}) {
+    this.clientRef = client;
+    this.cleanup = cleanup;
+    this._spectating = spectating;
+    this.pos = new Vec3(0, 0, 0);
+    this.yaw = 0;
+    this.pitch = 0;
+    this.onGround = false;
+  }
+
+  getPositionData = getPositionData;
+
+  posListener = (data: any, meta: PacketMeta) => {
+    if (meta.name.includes("position")) {
+      this.pos.set(data.x, data.y, data.z);
+      this.onGround = data.onGround;
+    }
+    if (meta.name.includes("look")) {
+      this.yaw = data.yaw;
+      this.pitch = data.pitch;
+      this.onGround = data.onGround;
+    }
+  };  
+}
+
+
+type GhostHandlerOpts = {
+  positionTransformer?: IPositionTransformer;
+}
+
+const DefaultGhostHandlerOpts: GhostHandlerOpts = {
+  
+}
+
+export class GhostHandler {
+  public readonly linkedFakeBot: FakeBotEntity;
+  public readonly clientsInCamera: Record<string, GhostInfo> = {};
+
+  public opts: GhostHandlerOpts;
+  public positionTransformer?: IPositionTransformer;
+
+  public get linkedBot() {
+    return this.linkedFakeBot.linkedBot;
+  }
+
+  constructor(host: FakeBotEntity, opts: Partial<GhostHandlerOpts> = {}) {
+    this.linkedFakeBot = host;
+    this.opts = merge(DefaultGhostHandlerOpts, opts) as any;
+    this.positionTransformer = this.opts.positionTransformer;
+  }
+
+  writeRaw = writeRaw;
+
+  public tpToFakePlayer(client: ServerClient | Client) {
+    this.writeRaw(client, "position", this.linkedFakeBot.entityRef.getPositionData());
+  }
+
+  public tpToOtherClient(client: ServerClient, username: string) {
+    let target;
+    for (const clientUser in this.clientsInCamera) {
+      if (username === clientUser) {
+        target = this.clientsInCamera[clientUser];
+        break;
+      }
+    }
+    if (!target) return;
+    this.writeRaw(client, "position", target.getPositionData());
+  }
+
+  public makeSpectator(client: ServerClient | Client) {
+    this.writeRaw(client, "player_info", {
+      action: 1,
+      data: [{ UUID: client.uuid, gamemode: 3 }],
+    });
+
+    // https://wiki.vg/index.php?title=Protocol&oldid=14204#Change_Game_State
+    this.writeRaw(client, "game_state_change", { reason: 3, gameMode: 3 });
+
+    this.writeRaw(client, "abilities", {
+      flags: 7,
+      flyingSpeed: 0.05000000074505806,
+      walkingSpeed: 0.10000000149011612,
+    });
+  }
+
+  public revertToBotGamemode(client: ServerClient | Client) {
+    this.writeRaw(client, "position", this.linkedFakeBot.entityRef.getPositionData());
+
+    const a = packetAbilities(this.linkedBot);
+    this.writeRaw(client, a.name, a.data);
+
+    // https://wiki.vg/index.php?title=Protocol&oldid=14204#Change_Game_State
+    this.writeRaw(client, "game_state_change", {
+      reason: 3,
+      gameMode: gameModeToNotchian(this.linkedBot.game.gameMode),
+    });
+  }
+
+  public linkToBotPov(client: Client | ServerClient) {
+    if (this.clientsInCamera[client.uuid]) {
+      if (this.clientsInCamera[client.uuid].spectating) {
+        console.warn("Already in the camera", client.username);
+        return false;
+      }
+    } else {
+      this.register(client as ServerClient);
+    }
+
+    this.writeRaw(client, "camera", {
+      cameraId: this.linkedFakeBot.entityRef.id,
+    });
+    const updatePos = () => this.writeRaw(client, "position", this.linkedFakeBot.entityRef.getPositionData());
+
+    updatePos();
+    const onMove = () => updatePos();
+    const cleanup = () => {
+      this.linkedBot.removeListener("move", onMove);
+      this.linkedBot.removeListener("end", cleanup);
+      client.removeListener("end", cleanup);
+    };
+    this.linkedBot.on("move", onMove);
+    this.linkedBot.once("end", cleanup);
+    client.once("end", cleanup);
+    this.register(client as ServerClient, true, cleanup);
+    return true;
+  }
+
+  revertPov(client: Client | ServerClient) {
+    if (!this.clientsInCamera[client.uuid]) return false;
+    if (!this.clientsInCamera[client.uuid].spectating) return false;
+    this.writeRaw(client, "camera", {
+      cameraId: this.linkedFakeBot.entityRef.id,
+    });
+    this.unregister(client as ServerClient);
+    return true;
+  }
+
+  register(client: Client | ServerClient, status: boolean = false, cleanup: () => void = () => {}) {
+    if (this.clientsInCamera[client.uuid]) {
+      this.clientsInCamera[client.uuid].cleanup();
+    }
+    this.clientsInCamera[client.uuid] = new GhostInfo(client, status, cleanup);
+
+    if (status) this.linkedFakeBot.subscribe(client);
+    else this.linkedFakeBot.unsubscribe(client);
+  }
+
+  unregister(client: ServerClient) {
+    this.register(client, false, () => {});
+  }
+
+  initializeAllClients(clients: Iterable<ServerClient>) {
+    for (const client of clients) {
+      this.register(client);
+    }
+  }
+}
+
+
+function gamemodeToNumber(str: GameState["gameMode"]) {
+  if (str === "survival") {
+    return 0;
+  } else if (str === "creative") {
+    return 1;
+  } else if (str === "adventure") {
+    return 2;
+  } else if (str === "spectator") {
+    return 3;
+  }
+}
+
+function writeRaw(
+  this: {
+    positionTransformer?: IPositionTransformer;
+  },
+  client: ServerClient | Client,
+  name: string,
+  data: any
+) {
+  if (this.positionTransformer != null) {
+    const result = this.positionTransformer.onSToCPacket(name, data);
+    if (!result) return;
+    if (result && result.length > 1) return;
+    const [transformedName, transformedData] = result[0];
+    client.write(transformedName, transformedData);
+  } else {
+    client.write(name, data);
+  }
+}
+
+function getPositionData(this: { yaw: number; pitch: number; onGround: boolean; pos: Vec3 }) {
+  return {
+    ...this.pos,
+    yaw: this.yaw,
+    pitch: this.pitch,
+    onGround: this.onGround,
+  };
+}

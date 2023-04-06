@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "caxa": "^3.0.1",
+    "mineflayer": "^4.8.1",
     "pkg": "^5.8.1",
     "ts-standard": "^12.0.2",
     "typescript": "^5.0.3"

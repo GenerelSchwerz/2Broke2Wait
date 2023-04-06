@@ -6,6 +6,7 @@ import { ServerClient } from 'minecraft-protocol'
 import { sleep } from '../../util/index'
 import { WorldManager, FakePlayer, FakeSpectator } from './spectatorUtils'
 import { CommandMap } from '../../util/commandHandler'
+import { FakeBotEntity, GhostHandler } from './ghostUtils/fakes'
 
 export interface SpectatorServerOpts extends IProxyServerOpts {
   linkOnConnect: boolean
@@ -21,8 +22,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
   public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
 
   public worldManager: WorldManager | null = null
-  public fakeSpectator: FakeSpectator | null = null
-  public fakePlayer: FakePlayer | null = null
+  public fakeSpectator: GhostHandler | null = null
+  public fakePlayer: FakeBotEntity | null = null
 
   connectedCmds: CommandMap = {
     link: {
@@ -79,7 +80,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
           return
         }
 
-        if (this.fakeSpectator?.clientsInCamera[client.uuid]?.status) {
+        if (this.fakeSpectator?.clientsInCamera[client.uuid]?.spectating) {
           this.server.message(client, "You are viewing the bot's perspective.")
         }
 
@@ -108,18 +109,18 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
   // ======================= //
 
   private buildFakeData (conn: Conn) {
-    this.fakePlayer = new FakePlayer(conn.stateData.bot as any, {
+    this.fakePlayer = new FakeBotEntity(conn.stateData.bot as any, {
       username: conn.stateData.bot.username,
       uuid: conn.stateData.bot._client.uuid,
       positionTransformer: conn.positionTransformer
     })
 
-    this.fakeSpectator = new FakeSpectator(conn.stateData.bot as any, {
+    this.fakeSpectator = new GhostHandler(conn.stateData.bot as any, {
       positionTransformer: conn.positionTransformer
     })
 
     conn.stateData.bot.once('end', () => {
-      this.fakePlayer?.destroy()
+      this.fakePlayer?.unsync()
     })
   }
 
@@ -160,7 +161,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     const connect = this.server.psOpts.linkOnConnect && this.server.conn?.pclient == null
 
     if (!connect) {
-      this.fakePlayer!.register(client)
       this.fakeSpectator!.register(client)
       this.fakeSpectator!.makeSpectator(client)
 
@@ -173,7 +173,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
 
     client.once('end', () => {
       if (client.uuid === this.server.conn?.pclient?.uuid) this.server.beginBotLogic()
-      this.fakePlayer?.unregister(client)
       this.fakeSpectator?.unregister(client)
       this.unlink(client)
     })
@@ -192,8 +191,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.server.message(client, 'Linking')
 
       this.fakeSpectator?.revertPov(client)
-      this.fakePlayer?.unregister(client as unknown as ServerClient)
-      this.fakeSpectator?.revertToNormal(client as unknown as ServerClient)
+      this.fakeSpectator?.revertToBotGamemode(client)
       await sleep(50)
       this.server.conn.link(client as unknown as Client)
       this.server.endBotLogic()
@@ -210,8 +208,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
         this.server.message(client, 'Cannot unlink as not in control!')
         return
       }
-      this.fakePlayer?.register(client as unknown as ServerClient)
-      this.fakeSpectator?.makeSpectator(client as unknown as ServerClient)
+      this.fakeSpectator?.makeSpectator(client)
       this.server.message(client, 'Unlinking')
     }
     this.server.conn.unlink()
@@ -225,7 +222,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     }
     if (this.fakeSpectator == null) return false
     this.fakeSpectator.register(client)
-    return this.fakeSpectator.makeViewingBotPov(client)
+    return this.fakeSpectator.linkToBotPov(client)
   }
 
   makeViewNormal (client: ServerClient | Client) {
