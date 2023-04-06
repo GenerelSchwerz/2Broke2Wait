@@ -37,10 +37,15 @@ jobs:
         run: |
           npx tsc
 
+      - name: Potentially install typescript
+        if: matrix.os == 'windows-latest'
+        run: npm add typescript
+
+      - name: Make destination folder
+        run: mkdir pkg
+
       - name: Build
-        run: |
-          mkdir pkg
-          npx caxa -i . -o "pkg/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
+        run: npx caxa -i . -o "pkg/${{matrix.artifact}}" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/lib/index.js" --exclude ".git" --exclude "src" --exclude "ncc"
         
         # npx pkg . --target node16-${{matrix.target}}-x64 -o "pkg/${{matrix.artifact}}"
 

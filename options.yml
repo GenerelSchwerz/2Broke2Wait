@@ -10,7 +10,7 @@ minecraft:
 
   # Custom implementation of a SOCKS4/5 proxy.
   proxy:
-    enabled: false
+    enabled: true
     protocol: socks5
     info:
       host: 199.58.185.9
@@ -21,7 +21,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: localhost
+    host: 2b2t.org
     port: 25565
     version: 1.12.2
 
@@ -44,7 +44,7 @@ localServerConfig:
   # Experimental, but does work. (Some commands break)
   disconnectAllOnEnd: true
   restartOnDisconnect: true
-  linkOnConnect: false
+  linkOnConnect: true
 
   # Security: who is allowed to join. Null for anyone.
   security:
