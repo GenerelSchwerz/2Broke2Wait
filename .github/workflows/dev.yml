@@ -12,11 +12,11 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
         include:
-          - target: win
+          - os: win
             artifact: "2bored2wait-win-x64-${{github.sha}}.exe"
-          - target: macos
+          - os: macos
             artifact: "2bored2wait-macos-x64-${{github.sha}}"
-          - target: linux
+          - os: linux
             artifact: "2bored2wait-linux-x64-${{github.sha}}"
 
     runs-on: ${{matrix.os}}
