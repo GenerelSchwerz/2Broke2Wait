@@ -207,6 +207,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
         this.server.message(client, 'Cannot unlink as not in control!')
         return
       }
+      this.fakeSpectator?.linkedFakeBot.subscribe(client)
       this.fakeSpectator?.makeSpectator(client)
       this.server.message(client, 'Unlinking')
     }
