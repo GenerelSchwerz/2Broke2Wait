@@ -167,7 +167,7 @@ export class FakeBotEntity {
     ...args: OmitX<1, Parameters<Func>>
   ) => {
     for (const c of this.linkedClients.values()) {
-      func(c, ...args);
+      func.call(this, c, ...args);
     }
   };
 

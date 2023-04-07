@@ -171,6 +171,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.link(client)
     }
 
+    this.server.runCmd(client, 'phelp');
+
     client.once('end', () => {
       if (client.uuid === this.server.conn?.pclient?.uuid) this.server.beginBotLogic()
       this.fakeSpectator?.unregister(client)

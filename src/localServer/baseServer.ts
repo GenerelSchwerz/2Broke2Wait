@@ -400,6 +400,10 @@ export class ProxyServer<
     return this.pluginStorage.get(key);
   }
 
+  public runCmd(client: ProxyClient | ServerClient, cmd: string, ...args: string[]) {
+    this.cmdHandler.manualRun(cmd, client, ...args)
+  }
+
   public start(): Conn {
     if (this.isProxyConnected()) return this._conn!;
     this.manuallyStopped = false;
