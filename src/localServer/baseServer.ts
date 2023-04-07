@@ -1,13 +1,14 @@
-import { Client, Server, createServer, ServerOptions, ServerClient } from 'minecraft-protocol'
-import { BotOptions, Bot, BotEvents } from 'mineflayer'
-import { ConnOptions, Conn, Client as ProxyClient } from '@rob9315/mcproxy'
-import { Arguments, ListType, TypedEventEmitter, U2I } from '../types/util'
-import { CommandHandler, CommandMap } from '../util/commandHandler'
-import { ChatMessage as AgnogChMsg } from 'prismarine-chat'
-import { sleep } from '../util/index'
-import { SpectatorServerEvents, SpectatorServerOpts } from './builtinPlugins/spectator'
-import { TwoBAntiAFKEvents, TwoBAntiAFKPlugin } from './builtinPlugins/twoBAntiAFK'
-import merge from 'ts-deepmerge'
+import { Client, Server, createServer, ServerOptions, ServerClient } from "minecraft-protocol";
+import { BotOptions, Bot, BotEvents } from "mineflayer";
+import { ConnOptions, Conn, Client as ProxyClient } from "@rob9315/mcproxy";
+import { Arguments, ListType, TypedEventEmitter, U2I } from "../types/util";
+import { CommandHandler, CommandMap } from "../util/commandHandler";
+import { ChatMessage as AgnogChMsg } from "prismarine-chat";
+import { sleep } from "../util/index";
+import { SpectatorServerEvents, SpectatorServerOpts } from "./builtinPlugins/spectator";
+import { TwoBAntiAFKEvents, TwoBAntiAFKPlugin } from "./builtinPlugins/twoBAntiAFK";
+import merge from "ts-deepmerge";
+import { LogConfig, Logger } from "../util/logger";
 
 /**
  * Interface for the ProxyServer options.
@@ -19,14 +20,14 @@ export interface IProxyServerOpts {
      * If not set all players are allowed to join.
      * Either a list off players allowed to connect to the proxy or a function that returns a boolean value.
      */
-    whitelist?: string[] | ((username: string) => boolean)
-    kickMessage: string
-  }
+    whitelist?: string[] | ((username: string) => boolean);
+    kickMessage: string;
+  };
 
   display: {
-    motdPrefix: string
-    proxyChatPrefix: string
-  }
+    motdPrefix: string;
+    proxyChatPrefix: string;
+  };
 
   /**
    * Disconnect all connected players once the proxy bot stops.
@@ -34,41 +35,46 @@ export interface IProxyServerOpts {
    * If not on players will still be connected but won't receive updates from the server.
    *
    */
-  disconnectAllOnEnd?: boolean
-  disableCommands?: boolean
+  disconnectAllOnEnd?: boolean;
+  disableCommands?: boolean;
 
   /**
    * Restart whenever remote bot disconnects. Defaults to false.
    */
-  restartOnDisconnect?: boolean
+  restartOnDisconnect?: boolean;
 }
 
-type PrefixedBotEvents<Prefix extends string = 'botevent'> = {
+export type OtherProxyOpts = {
+    cOpts?: Partial<ConnOptions>,
+    loggerOpts?: Partial<LogConfig>
+}
+
+type PrefixedBotEvents<Prefix extends string = "botevent"> = {
   [K in keyof BotEvents as K extends string ? `${Prefix}_${K}` : never]: (
     bot: Bot,
     ...args: Arguments<BotEvents[K]>
   ) => void;
-}
+};
 
 export type IProxyServerEvents = {
-  remoteKick: (reason: string) => void
-  remoteError: (error: Error) => void
-  closingConnections: (reason: string) => void
+  remoteKick: (reason: string) => void;
+  remoteError: (error: Error) => void;
+  closingConnections: (reason: string) => void;
 
-  playerConnected: (client: ServerClient, remoteConnected: boolean) => void
-  unauthorizedConnection: (client: ServerClient, reason?: string) => void
-  playerDisconnected: (client: ServerClient) => void
-  optionValidation: (bot: Bot) => void
-  initialBotSetup: (bot: Bot) => void
-  proxySetup: (conn: Conn) => void
-  botStartup: (bot: Bot) => void
-  botShutdown: (bot: Bot) => void
-  starting: (conn: Conn) => void
-  started: (conn: Conn) => void
-  stopping: () => void
-  stopped: () => void
-  restart: () => void
-} & PrefixedBotEvents
+  playerConnected: (client: ServerClient, remoteConnected: boolean) => void;
+  unauthorizedConnection: (client: ServerClient, reason?: string) => void;
+  playerDisconnected: (client: ServerClient) => void;
+  optionValidation: (bot: Bot) => void;
+  initialBotSetup: (bot: Bot) => void;
+  proxySetup: (conn: Conn) => void;
+  botStartup: (bot: Bot) => void;
+  botShutdown: (bot: Bot) => void;
+  starting: (conn: Conn) => void;
+  started: (conn: Conn) => void;
+  stopping: () => void;
+  stopped: () => void;
+  restart: () => void;
+} & PrefixedBotEvents;
 
 export type Test<Events> = {
   [nme in keyof Events as nme extends string ? `on${Capitalize<nme>}` : never]?: Events[nme] extends (
@@ -76,85 +82,88 @@ export type Test<Events> = {
   ) => infer Ret
     ? (...args: Args) => Ret
     : never;
-}
+};
 
 interface TestEvents {
-  hi: (num: number) => string
+  hi: (num: number) => string;
 }
 
 // Strongly typed
 const test: Test<TestEvents> = {
-  onHi: (num) => 'hi'
-}
+  onHi: (num) => "hi",
+};
 
-export class ProxyServerPlugin<Opts extends IProxyServerOpts = IProxyServerOpts, Events extends IProxyServerEvents = IProxyServerEvents> {
-  public declare _server: ProxyServer<Opts, Events>
-  public declare connectedCmds?: CommandMap
-  public declare disconnectedCmds?: CommandMap
+export class ProxyServerPlugin<
+  Opts extends IProxyServerOpts = IProxyServerOpts,
+  Events extends IProxyServerEvents = IProxyServerEvents
+> {
+  public declare _server: ProxyServer<Opts, Events>;
+  public declare connectedCmds?: CommandMap;
+  public declare disconnectedCmds?: CommandMap;
 
-  public get server (): ProxyServer<Opts, Events> {
-    if (this._server == null) throw Error('Server was wanted before proper initialization!')
-    return this._server
+  public get server(): ProxyServer<Opts, Events> {
+    if (this._server == null) throw Error("Server was wanted before proper initialization!");
+    return this._server;
   }
 
-  public get psOpts (): Opts {
-    if (this._server == null) throw Error('Proxy options were wanted before proper initialization!')
-    return this._server.psOpts
+  public get psOpts(): Opts {
+    if (this._server == null) throw Error("Proxy options were wanted before proper initialization!");
+    return this._server.psOpts;
   }
 
   // potential listener methods
-  onPreStart?: (conn: Conn) => void
-  onPostStart?: () => void
-  onPreStop?: () => void
-  onPostStop?: () => void
-  onBotStartup?: (bot: Bot) => void
-  onBotShutdown?: (bot: Bot) => void
-  onProxySetup?: (conn: Conn) => void
-  onOptionValidation?: (bot: Bot) => void
-  onInitialBotSetup?: (bot: Bot) => void
-  onClosingConnections?: (reason: string) => void
-  onPlayerConnected?: (client: ServerClient, remoteConnected: boolean) => void
-  whileConnectedLoginHandler?: (player: ServerClient) => Promise<boolean> | boolean
-  notConnectedLoginHandler?: (player: ServerClient) => Promise<boolean> | boolean
-  onRemoteKick?: (reason: string) => void
-  onRemoteError?: (error: Error) => void
+  onPreStart?: (conn: Conn) => void;
+  onPostStart?: () => void;
+  onPreStop?: () => void;
+  onPostStop?: () => void;
+  onBotStartup?: (bot: Bot) => void;
+  onBotShutdown?: (bot: Bot) => void;
+  onProxySetup?: (conn: Conn) => void;
+  onOptionValidation?: (bot: Bot) => void;
+  onInitialBotSetup?: (bot: Bot) => void;
+  onClosingConnections?: (reason: string) => void;
+  onPlayerConnected?: (client: ServerClient, remoteConnected: boolean) => void;
+  whileConnectedLoginHandler?: (player: ServerClient) => Promise<boolean> | boolean;
+  notConnectedLoginHandler?: (player: ServerClient) => Promise<boolean> | boolean;
+  onRemoteKick?: (reason: string) => void;
+  onRemoteError?: (error: Error) => void;
 
-  public onLoad (server: ProxyServer<Opts, Events>) {
-    this._server = server
+  public onLoad(server: ProxyServer<Opts, Events>) {
+    this._server = server;
     // TODO: Generalize this.
-    if (this.onPreStop != null) this._server.on('stopping', this.onPreStop)
-    if (this.onPostStop != null) this._server.on('stopped', this.onPostStop)
-    if (this.onPreStart != null) this._server.on('starting' as any, this.onPreStart)
-    if (this.onPostStart != null) this._server.on('started', this.onPostStart)
-    if (this.onProxySetup != null) this._server.on('proxySetup' as any, this.onProxySetup)
-    if (this.onBotStartup != null) this._server.on('botStartup' as any, this.onBotStartup)
-    if (this.onBotShutdown != null) this._server.on('botShutdown' as any, this.onBotShutdown)
-    if (this.onClosingConnections != null) this._server.on('closingConnections' as any, this.onClosingConnections)
+    if (this.onPreStop != null) this._server.on("stopping", this.onPreStop);
+    if (this.onPostStop != null) this._server.on("stopped", this.onPostStop);
+    if (this.onPreStart != null) this._server.on("starting" as any, this.onPreStart);
+    if (this.onPostStart != null) this._server.on("started", this.onPostStart);
+    if (this.onProxySetup != null) this._server.on("proxySetup" as any, this.onProxySetup);
+    if (this.onBotStartup != null) this._server.on("botStartup" as any, this.onBotStartup);
+    if (this.onBotShutdown != null) this._server.on("botShutdown" as any, this.onBotShutdown);
+    if (this.onClosingConnections != null) this._server.on("closingConnections" as any, this.onClosingConnections);
 
-    if (this.onPlayerConnected != null) this._server.on('playerConnected' as any, this.onPlayerConnected)
-    if (this.onOptionValidation != null) this._server.on('optionValidation' as any, this.onOptionValidation)
-    if (this.onInitialBotSetup != null) this._server.on('initialBotSetup' as any, this.onInitialBotSetup)
-    if (this.onRemoteError != null) this._server.on('remoteError' as any, this.onRemoteError)
-    if (this.onRemoteKick != null) this._server.on('remoteKick' as any, this.onRemoteKick)
+    if (this.onPlayerConnected != null) this._server.on("playerConnected" as any, this.onPlayerConnected);
+    if (this.onOptionValidation != null) this._server.on("optionValidation" as any, this.onOptionValidation);
+    if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup);
+    if (this.onRemoteError != null) this._server.on("remoteError" as any, this.onRemoteError);
+    if (this.onRemoteKick != null) this._server.on("remoteKick" as any, this.onRemoteKick);
   }
 
   // This doesn't work since binding. Oh well, we'll never call this.
-  public onUnload (server: ProxyServer<Opts, Events>) {
-    this._server = server
-    if (this.onPreStop != null) this._server.off('stopping', this.onPreStop)
-    if (this.onPostStop != null) this._server.off('stopped', this.onPostStop)
-    if (this.onPreStart != null) this._server.off('starting' as any, this.onPreStart)
-    if (this.onPostStart != null) this._server.off('started', this.onPostStart)
-    if (this.onProxySetup != null) this._server.off('proxySetup' as any, this.onProxySetup)
-    if (this.onBotStartup != null) this._server.off('botStartup' as any, this.onBotStartup)
-    if (this.onBotShutdown != null) this._server.off('botShutdown' as any, this.onBotShutdown)
-    if (this.onClosingConnections != null) this._server.off('closingConnections' as any, this.onClosingConnections)
+  public onUnload(server: ProxyServer<Opts, Events>) {
+    this._server = server;
+    if (this.onPreStop != null) this._server.off("stopping", this.onPreStop);
+    if (this.onPostStop != null) this._server.off("stopped", this.onPostStop);
+    if (this.onPreStart != null) this._server.off("starting" as any, this.onPreStart);
+    if (this.onPostStart != null) this._server.off("started", this.onPostStart);
+    if (this.onProxySetup != null) this._server.off("proxySetup" as any, this.onProxySetup);
+    if (this.onBotStartup != null) this._server.off("botStartup" as any, this.onBotStartup);
+    if (this.onBotShutdown != null) this._server.off("botShutdown" as any, this.onBotShutdown);
+    if (this.onClosingConnections != null) this._server.off("closingConnections" as any, this.onClosingConnections);
 
-    if (this.onPlayerConnected != null) this._server.off('playerConnected' as any, this.onPlayerConnected)
-    if (this.onOptionValidation != null) this._server.off('optionValidation' as any, this.onOptionValidation)
-    if (this.onInitialBotSetup != null) this._server.off('initialBotSetup' as any, this.onInitialBotSetup)
-    if (this.onRemoteError != null) this._server.off('remoteError' as any, this.onRemoteError)
-    if (this.onRemoteKick != null) this._server.off('remoteKick' as any, this.onRemoteKick)
+    if (this.onPlayerConnected != null) this._server.off("playerConnected" as any, this.onPlayerConnected);
+    if (this.onOptionValidation != null) this._server.off("optionValidation" as any, this.onOptionValidation);
+    if (this.onInitialBotSetup != null) this._server.off("initialBotSetup" as any, this.onInitialBotSetup);
+    if (this.onRemoteError != null) this._server.off("remoteError" as any, this.onRemoteError);
+    if (this.onRemoteKick != null) this._server.off("remoteKick" as any, this.onRemoteKick);
   }
 
   /**
@@ -163,59 +172,59 @@ export class ProxyServerPlugin<Opts extends IProxyServerOpts = IProxyServerOpts,
    * @param args
    */
   public serverEmit<E extends keyof Events>(event: E, ...args: Arguments<Events[E]>) {
-    this.server.emit(event, ...args)
+    this.server.emit(event, ...args);
   }
 
-  public setServerOpts (opts: Partial<Opts>) {
-    this.server.psOpts = merge(opts, this.psOpts) as any
+  public setServerOpts(opts: Partial<Opts>) {
+    this.server.psOpts = merge(opts, this.psOpts) as any;
   }
 
-  public share (key: string, data: any) {
-    return this.server.storePluginData(key, data)
+  public share(key: string, data: any) {
+    return this.server.storeSharedData(key, data);
   }
 
   public getShared<Value extends any>(key: string): Value | undefined {
-    return this.server.getPluginData(key)
+    return this.server.getSharedData(key);
   }
 }
 
-type OptExtr<Fuck> = Fuck extends ProxyServerPlugin<infer Opts, any> ? Opts : never
-type EvExtr<Fuck> = Fuck extends ProxyServerPlugin<any, infer Events> ? Events : never
+type OptExtr<Fuck> = Fuck extends ProxyServerPlugin<infer Opts, any> ? Opts : never;
+type EvExtr<Fuck> = Fuck extends ProxyServerPlugin<any, infer Events> ? Events : never;
 
 /**
  * Strongly typed server builder. Makes sure settings matches all plugins.
  */
 export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyServerEvents, AppliedSettings = false> {
-  private _plugins: Array<ProxyServerPlugin<any, any>>
+  private _plugins: Array<ProxyServerPlugin<any, any>>;
 
-  private _settings?: Opts
-  private readonly _appliedSettings: AppliedSettings = false as any
-  constructor (
+  private _settings?: Opts;
+  private readonly _appliedSettings: AppliedSettings = false as any;
+  constructor(
     public readonly lsOpts: ServerOptions,
     public readonly bOpts: BotOptions,
-    public readonly cOpts: Partial<ConnOptions> = {},
+    public readonly other: OtherProxyOpts = {}
   ) {
-    this._plugins = []
+    this._plugins = [];
   }
 
-  public get appliedSettings (): AppliedSettings {
-    return this._appliedSettings
+  public get appliedSettings(): AppliedSettings {
+    return this._appliedSettings;
   }
 
-  public get settings () {
-    return this._settings
+  public get settings() {
+    return this._settings;
   }
 
-  public get plugins () {
-    return this._plugins
+  public get plugins() {
+    return this._plugins;
   }
 
   public addPlugin<FoundEvent extends IProxyServerEvents, FoundOpts extends IProxyServerOpts>(
     this: ServerBuilder<Opts, Events, false>,
     plugin: ProxyServerPlugin<FoundOpts, FoundEvent>
   ): ServerBuilder<Opts & FoundOpts, Events & FoundEvent, AppliedSettings> {
-    this.plugins.push(plugin)
-    return this as any
+    this.plugins.push(plugin);
+    return this as any;
   }
 
   public addPlugins<
@@ -226,31 +235,31 @@ export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyS
     this: ServerBuilder<Opts, Events, false>,
     ...plugins: Plugins
   ): ServerBuilder<Opts & NewOpts, Events & NewEvs, AppliedSettings> {
-    this._plugins = this.plugins.concat(...plugins)
-    return this as any
+    this._plugins = this.plugins.concat(...plugins);
+    return this as any;
   }
 
   public addPluginStatic<FoundOpts extends IProxyServerOpts, FoundEvent extends IProxyServerEvents>(
     this: ServerBuilder<Opts, Events, false>,
     plugin: typeof ProxyServerPlugin<FoundOpts, FoundEvent>
   ): ServerBuilder<Opts & FoundOpts, Events & FoundEvent, AppliedSettings> {
-    const build = new plugin()
-    this.plugins.push(build)
-    return this as any
+    const build = new plugin();
+    this.plugins.push(build);
+    return this as any;
   }
 
-  public setSettings (settings: Opts): ServerBuilder<Opts, Events, true> {
+  public setSettings(settings: Opts): ServerBuilder<Opts, Events, true> {
     this._settings = settings;
-    (this as any)._appliedSettings = true
-    return this as any
+    (this as any)._appliedSettings = true;
+    return this as any;
   }
 
   public build<This extends ServerBuilder<Opts, Events, true>>(this: This) {
-    let srv = new ProxyServer(this.lsOpts, this.settings!, this.bOpts, this.cOpts)
+    let srv = new ProxyServer(this.lsOpts, this.settings!, this.bOpts, this.other);
     for (const plugin of this.plugins) {
-      srv = srv.loadPlugin(plugin)
+      srv = srv.loadPlugin(plugin);
     }
-    return srv as ProxyServer<Opts, Events>
+    return srv as ProxyServer<Opts, Events>;
   }
 }
 
@@ -258,80 +267,83 @@ export class ProxyServer<
   Opts extends IProxyServerOpts,
   Events extends IProxyServerEvents
 > extends TypedEventEmitter<Events> {
-  protected readonly plugins: Map<string, ProxyServerPlugin<IProxyServerOpts, IProxyServerEvents>> = new Map()
-  protected readonly pluginStorage: Map<string, any> = new Map()
-  protected readonly cmdHandler: CommandHandler<ProxyServer<Opts, Events>>
-  protected readonly _rawServer: Server
+  protected readonly plugins: Map<string, ProxyServerPlugin<IProxyServerOpts, IProxyServerEvents>> = new Map();
+  protected readonly pluginStorage: Map<string, any> = new Map();
+  protected readonly cmdHandler: CommandHandler<ProxyServer<Opts, Events>>;
+  protected readonly _rawServer: Server;
 
-  protected _conn: Conn | null
-  public bOpts: BotOptions
-  public cOpts: Partial<ConnOptions>
-  public lsOpts: ServerOptions
-  public psOpts: Opts
-
+  protected _conn: Conn | null;
+  public bOpts: BotOptions;
+  public cOpts: Partial<ConnOptions>;
+  public lsOpts: ServerOptions;
+  public psOpts: Opts;
 
   private manuallyStopped = false;
 
+  public logger: Logger;
 
   // public manuallyStopped: boolean = false;
-  public ChatMessage!: typeof AgnogChMsg
+  public ChatMessage!: typeof AgnogChMsg;
 
-  public get rawServer (): Server {
-    return this._rawServer
+  public get rawServer(): Server {
+    return this._rawServer;
   }
 
-  public get proxy (): Conn | null {
-    return this._conn
+  public get proxy(): Conn | null {
+    return this._conn;
   }
 
-  public get conn (): Conn | null {
-    return this._conn
+  public get conn(): Conn | null {
+    return this._conn;
   }
 
-  public get remoteBot (): Bot | null {
-    return this._conn?.stateData.bot ?? null
+  public get remoteBot(): Bot | null {
+    return this._conn?.stateData.bot ?? null;
   }
 
-  public get remoteClient (): Client | null {
-    return this._conn?.stateData.bot._client ?? null
+  public get remoteClient(): Client | null {
+    return this._conn?.stateData.bot._client ?? null;
   }
 
-  protected _remoteIsConnected: boolean = false
+  protected _remoteIsConnected: boolean = false;
 
-  public get controllingPlayer (): ProxyClient | null {
-    return this._conn?.pclient ?? null
+  public get controllingPlayer(): ProxyClient | null {
+    return this._conn?.pclient ?? null;
   }
 
-  public isPlayerControlling (): boolean {
-    return this._conn?.pclient != null
+  public isPlayerControlling(): boolean {
+    return this._conn?.pclient != null;
   }
 
-  public isProxyConnected () {
-    return this._remoteIsConnected
+  public isProxyConnected() {
+    return this._remoteIsConnected;
   }
 
-  constructor (lsOpts: ServerOptions, psOpts: Opts, bOpts: BotOptions, cOpts: Partial<ConnOptions> = {}) {
-    super()
-    this.bOpts = bOpts
-    this.cOpts = cOpts
-    this.lsOpts = lsOpts
-    this.psOpts = psOpts
-    this._conn = null
-    this._rawServer = createServer(lsOpts)
-    this.ChatMessage = require('prismarine-chat')(bOpts.version)
+  constructor(lsOpts: ServerOptions, psOpts: Opts, bOpts: BotOptions, other: OtherProxyOpts = {}) {
+    super();
+    this.bOpts = bOpts;
+    this.cOpts = other.cOpts ?? {};
+    this.lsOpts = lsOpts;
+    this.psOpts = psOpts;
+    this._conn = null;
 
-    this.cmdHandler = new CommandHandler(this)
-    this.cmdHandler.loadProxyCommand('pstop', {
-      description: 'stops the server',
-      usage: 'pstop',
-      callable: this.stop
-    })
-    this.cmdHandler.loadDisconnectedCommand('pstart', {
-      description: 'starts the server',
-      usage: 'pstart',
-      callable: this.start
-    })
-    this._rawServer.on('login', this.loginHandler)
+    this.logger = new Logger(other?.loggerOpts);
+    this.logger.enable()
+    this._rawServer = createServer(lsOpts);
+    this.ChatMessage = require("prismarine-chat")(bOpts.version);
+
+    this.cmdHandler = new CommandHandler(this);
+    this.cmdHandler.loadProxyCommand("pstop", {
+      description: "stops the server",
+      usage: "pstop",
+      callable: this.stop,
+    });
+    this.cmdHandler.loadDisconnectedCommand("pstart", {
+      description: "starts the server",
+      usage: "pstart",
+      callable: this.start,
+    });
+    this._rawServer.on("login", this.loginHandler);
   }
 
   // TODO: Broken typings.
@@ -343,29 +355,29 @@ export class ProxyServer<
         : never
       : never
   ): ProxyServer<Opts & FoundOpts, Events & FoundEvents> {
-    inserting.onLoad(this as any)
-    this.plugins.set(inserting.constructor.name, inserting as any)
-    if (inserting.connectedCmds != null) this.cmdHandler.loadProxyCommands(inserting.connectedCmds)
-    if (inserting.disconnectedCmds != null) this.cmdHandler.loadDisconnectedCommands(inserting.disconnectedCmds)
+    inserting.onLoad(this as any);
+    this.plugins.set(inserting.constructor.name, inserting as any);
+    if (inserting.connectedCmds != null) this.cmdHandler.loadProxyCommands(inserting.connectedCmds);
+    if (inserting.disconnectedCmds != null) this.cmdHandler.loadDisconnectedCommands(inserting.disconnectedCmds);
 
-    return this as any
+    return this as any;
   }
 
-  public unloadPlugin (removing: ProxyServerPlugin<any, any> | string) {
+  public unloadPlugin(removing: ProxyServerPlugin<any, any> | string) {
     if (removing instanceof String) {
-      this.plugins.get(removing as string)?.onUnload(this)
-      this.plugins.delete(removing as string)
+      this.plugins.get(removing as string)?.onUnload(this);
+      this.plugins.delete(removing as string);
     } else {
-      this.plugins.get((removing as ProxyServerPlugin<any, any>).constructor.name)?.onUnload(this)
-      this.plugins.delete((removing as ProxyServerPlugin<any, any>).constructor.name)
+      this.plugins.get((removing as ProxyServerPlugin<any, any>).constructor.name)?.onUnload(this);
+      this.plugins.delete((removing as ProxyServerPlugin<any, any>).constructor.name);
     }
   }
 
-  public hasPlugin (removing: ProxyServerPlugin<any, any> | string) {
+  public hasPlugin(removing: ProxyServerPlugin<any, any> | string) {
     if (removing instanceof String) {
-      return Boolean(this.plugins.get(removing as string))
+      return Boolean(this.plugins.get(removing as string));
     } else {
-      return Boolean(this.plugins.get((removing as ProxyServerPlugin<any, any>).constructor.name))
+      return Boolean(this.plugins.get((removing as ProxyServerPlugin<any, any>).constructor.name));
     }
   }
 
@@ -375,127 +387,142 @@ export class ProxyServer<
    * @param data
    * @returns
    */
-  public storePluginData (key: string, data: any) {
-    return this.pluginStorage.set(key, data)
+  public storeSharedData(key: string, data: any) {
+    return this.pluginStorage.set(key, data);
   }
 
-  public getPluginData<Value extends any>(key: string): Value | undefined {
-    return this.pluginStorage.get(key)
+  public getSharedData<Value extends any>(key: string): Value | undefined {
+    return this.pluginStorage.get(key);
   }
 
-  public start (): Conn {
-    if (this.isProxyConnected()) return this._conn!
+  public start(): Conn {
+    if (this.isProxyConnected()) return this._conn!;
     this.manuallyStopped = false;
     // this.closeConnections("Proxy restarted! Rejoin to re-sync.");
-    this._conn = new Conn(this.bOpts, this.cOpts)
-    this.reconnectAllClients(this._conn)
-    this.emit('starting' as any, this._conn)
-    this.setup()
-    this.emit('started' as any)
-    return this._conn
+    this._conn = new Conn(this.bOpts, this.cOpts);
+    this.reconnectAllClients(this._conn);
+    this.emit("starting" as any, this._conn);
+    this.setup();
+    this.emit("started" as any);
+    return this._conn;
   }
 
-  public stop (): void {
-    if (!this.isProxyConnected()) return
-    this.emit('stopping' as any)
+  public stop(): void {
+    if (!this.isProxyConnected()) return;
+    this.emit("stopping" as any);
     this.manuallyStopped = true;
-    this.disconnectRemote('Proxy manually stopped.')
+    this.disconnectRemote("Proxy manually stopped.");
     // this.closeConnections("Proxy manually stoppped.", true);
-    this.emit('stopped' as any)
+    this.emit("stopped" as any);
   }
 
-  public async restart (ms = 0) {
-    this.stop()
-    await sleep(ms)
-    this.start()
+  public async restart(ms = 0) {
+    this.stop();
+    await sleep(ms);
+    this.start();
   }
 
-  private setup (): void {
+  private setup(): void {
     if (this.remoteBot == null || this.remoteClient == null) {
-      throw Error('Setup called when remote bot does not exist!')
+      throw Error("Setup called when remote bot does not exist!");
     }
 
-    this.emit('proxySetup' as any, this._conn!, this.psOpts)
+    this.emit("proxySetup" as any, this._conn!, this.psOpts);
 
-    const oldEmit = this.remoteBot.emit.bind(this.remoteBot)
+    const oldEmit = this.remoteBot.emit.bind(this.remoteBot);
+
+    const oldClientWrite = this.remoteClient.write.bind(this.remoteClient);
 
     this.remoteBot.emit = <E extends keyof BotEvents>(event: E, ...args: Arguments<BotEvents[E]>) => {
-      this.emit(`botevent:${event}` as any, this.remoteBot!, ...args)
-      return oldEmit(event, ...args)
+      this.emit(`botevent:${event}` as any, this.remoteBot!, ...args);
+      return oldEmit(event, ...args);
+    };
+
+    this.remoteClient.write = (name, params) => {
+      this.logger.log(name, 'remoteBotSend', params)
+      return oldClientWrite(name, params)
     }
 
-    this.emit('optionValidation' as any, this.remoteBot, this.psOpts)
 
-    this.emit('initialBotSetup' as any, this.remoteBot, this.psOpts)
 
-    this.remoteBot.once('spawn', this.beginBotLogic)
-    this.remoteBot.on('kicked', this.remoteClientDisconnect)
-    this.remoteBot.on('end', this.remoteClientDisconnect)
-    this.remoteClient.on('login', () => {
-      this._remoteIsConnected = true
-    })
+    this.emit("optionValidation" as any, this.remoteBot, this.psOpts);
+
+    this.emit("initialBotSetup" as any, this.remoteBot, this.psOpts);
+
+    this.remoteBot.once("spawn", this.beginBotLogic);
+    this.remoteBot.on("kicked", this.remoteClientDisconnect);
+    this.remoteBot.on("end", this.remoteClientDisconnect);
+    this.remoteClient.on("login", () => {
+      this._remoteIsConnected = true;
+    });
+
+    this.remoteClient.on("packet", (data, meta, buffer) => this.logger.log(meta.name, "remoteBotReceive", data));
   }
 
   public beginBotLogic = (): void => {
-    if (this.remoteBot == null) throw Error('Bot logic called when bot does not exist!')
-    this.emit('botStartup' as any, this.remoteBot, this.psOpts)
-  }
+    if (this.remoteBot == null) throw Error("Bot logic called when bot does not exist!");
+    this.emit("botStartup" as any, this.remoteBot, this.psOpts);
+  };
 
   public endBotLogic = (): void => {
-    if (this.remoteBot == null) throw Error('Bot logic called when bot does not exist!')
-    this.emit('botShutdown' as any, this.remoteBot, this.psOpts)
-  }
+    if (this.remoteBot == null) throw Error("Bot logic called when bot does not exist!");
+    this.emit("botShutdown" as any, this.remoteBot, this.psOpts);
+  };
 
   private readonly loginHandler = (actualUser: ServerClient) => {
-    this.emit('playerConnected' as any, actualUser, this.isProxyConnected())
-    actualUser.once('end', () => this.emit('playerDisconnected' as any, actualUser))
+    this.emit("playerConnected" as any, actualUser, this.isProxyConnected());
+    actualUser.once("end", () => this.emit("playerDisconnected" as any, actualUser));
 
-    this.cmdHandler.updateClientCmds(actualUser as unknown as ProxyClient)
-    if (this.isProxyConnected()) this.whileConnectedLoginHandler(actualUser)
-    else this.notConnectedLoginHandler(actualUser)
-  }
+    this.cmdHandler.updateClientCmds(actualUser as unknown as ProxyClient);
+    if (this.isProxyConnected()) this.whileConnectedLoginHandler(actualUser);
+    else this.notConnectedLoginHandler(actualUser);
+  };
 
   private readonly remoteClientDisconnect = async (info: string | Error) => {
-    if (this.remoteBot == null) return // assume we've already exited ( we want to leave early on kicks )
+    if (this.remoteBot == null) return; // assume we've already exited ( we want to leave early on kicks )
 
-    this.endBotLogic()
+    this.endBotLogic();
 
     if (info instanceof Error) {
-      this.emit('remoteError' as any, info)
+      this.emit("remoteError" as any, info);
 
-      if (this.psOpts.disconnectAllOnEnd) { this.closeConnections('Connection reset by server.', true, `Javascript Error: ${info}`) } else {
-        this.broadcastMessage('[WARNING] Bot has errored!')
-        this.broadcastMessage('You are still connected.')
+      if (this.psOpts.disconnectAllOnEnd) {
+        this.closeConnections("Connection reset by server.", true, `Javascript Error: ${info}`);
+      } else {
+        this.broadcastMessage("[WARNING] Bot has errored!");
+        this.broadcastMessage("You are still connected.");
       }
     } else {
-      this.emit('remoteKick' as any, info)
-      if (this.psOpts.disconnectAllOnEnd) { this.closeConnections('Connection reset by server.', true, info) } else {
-        this.broadcastMessage('[WARNING] Bot has disconnected!')
-        this.broadcastMessage('You are still connected.')
+      this.emit("remoteKick" as any, info);
+      if (this.psOpts.disconnectAllOnEnd) {
+        this.closeConnections("Connection reset by server.", true, info);
+      } else {
+        this.broadcastMessage("[WARNING] Bot has disconnected!");
+        this.broadcastMessage("You are still connected.");
       }
     }
 
-    this._remoteIsConnected = false
-    this._conn = null
+    this._remoteIsConnected = false;
+    this._conn = null;
 
     if (this.psOpts.restartOnDisconnect && !this.manuallyStopped) {
-      this.restart(1000)
+      this.restart(1000);
     }
-  }
+  };
 
   private readonly closeConnections = (closeReason: string, closeRemote = false, additional?: string) => {
-    const reason = additional ? closeReason + ' Reason: ' + additional : closeReason
+    const reason = additional ? closeReason + " Reason: " + additional : closeReason;
 
-    this.emit('closingConnections' as any, reason)
+    this.emit("closingConnections" as any, reason);
 
     Object.keys(this._rawServer.clients).forEach((clientId) => {
-      this._rawServer.clients[Number(clientId)].end(reason)
-    })
+      this._rawServer.clients[Number(clientId)].end(reason);
+    });
 
     if (closeRemote) {
-      this.disconnectRemote(closeReason)
+      this.disconnectRemote(closeReason);
     }
-  }
+  };
 
   private readonly disconnectRemote = (reason: string) => {
     if (this._conn != null) {
@@ -508,19 +535,19 @@ export class ProxyServer<
       //   }
       // }
 
-      this._conn.stateData.bot._client.end('[2B2W]: ' + reason)
-      this._conn.pclients.forEach(this._conn.detach.bind(this._conn))
+      this._conn.stateData.bot._client.end("[2B2W]: " + reason);
+      this._conn.pclients.forEach(this._conn.detach.bind(this._conn));
     }
-  }
+  };
 
   private readonly reconnectAllClients = (conn: Conn) => {
-    Object.values(this._rawServer.clients).forEach(c => {
-      this.broadcastMessage('[INFO] Bot has started!')
-      this.broadcastMessage('Reconnect to see the new bot.')
-      this.cmdHandler.decoupleClientCmds(c as unknown as ProxyClient)
-      this.cmdHandler.updateClientCmds(c as unknown as ProxyClient)
-    })
-  }
+    Object.values(this._rawServer.clients).forEach((c) => {
+      this.broadcastMessage("[INFO] Bot has started!");
+      this.broadcastMessage("Reconnect to see the new bot.");
+      this.cmdHandler.decoupleClientCmds(c as unknown as ProxyClient);
+      this.cmdHandler.updateClientCmds(c as unknown as ProxyClient);
+    });
+  };
 
   /**
    * Default login handler. This can/will be overriden by plugins.
@@ -529,105 +556,105 @@ export class ProxyServer<
    */
   private readonly whileConnectedLoginHandler = async (actualUser: ServerClient) => {
     for (const plugin of this.plugins.values()) {
-      const res = await plugin.whileConnectedLoginHandler?.(actualUser)
-      if (res != null) return
+      const res = await plugin.whileConnectedLoginHandler?.(actualUser);
+      if (res != null) return;
     }
 
     if (!this.isUserWhitelisted(actualUser)) {
       const { address, family, port } = {
-        address: 'unknown',
-        family: 'unknown',
-        port: 'unknown',
-        ...actualUser.socket.address()
-      }
-      this.emit('unauthorizedConnection' as any, actualUser);
-      actualUser.end(this.psOpts.security?.kickMessage ?? 'You are not in the whitelist')
-      return
+        address: "unknown",
+        family: "unknown",
+        port: "unknown",
+        ...actualUser.socket.address(),
+      };
+      this.emit("unauthorizedConnection" as any, actualUser);
+      actualUser.end(this.psOpts.security?.kickMessage ?? "You are not in the whitelist");
+      return;
     }
 
-    const allowedToControl = this.lsOpts['online-mode']
+    const allowedToControl = this.lsOpts["online-mode"]
       ? this.remoteClient?.uuid === actualUser.uuid
-      : this.remoteClient?.username === actualUser.username
+      : this.remoteClient?.username === actualUser.username;
 
     if (!allowedToControl) {
-      this.emit('unauthorizedConnection' as any, actualUser);
-      actualUser.end('This user is not allowed to control the bot!')
-      return // early end.
+      this.emit("unauthorizedConnection" as any, actualUser);
+      actualUser.end("This user is not allowed to control the bot!");
+      return; // early end.
     }
 
     // set event for when they end.
-    actualUser.on('end', (reason) => {
-      this.beginBotLogic()
-    })
+    actualUser.on("end", (reason) => {
+      this.beginBotLogic();
+    });
 
-    this.endBotLogic()
-    this._conn!.sendPackets(actualUser as any) // works in original?
-    this._conn!.link(actualUser as any) // again works
-  }
+    this.endBotLogic();
+    this._conn!.sendPackets(actualUser as any); // works in original?
+    this._conn!.link(actualUser as any); // again works
+  };
 
   protected notConnectedLoginHandler = (actualUser: ServerClient) => {
     for (const plugin of this.plugins.values()) {
-      if (plugin.notConnectedLoginHandler?.(actualUser) != null) return
+      if (plugin.notConnectedLoginHandler?.(actualUser) != null) return;
     }
 
-    actualUser.write('login', {
+    actualUser.write("login", {
       entityId: actualUser.id,
-      levelType: 'default',
+      levelType: "default",
       gameMode: 0,
       dimension: 0,
       difficulty: 2,
       maxPlayers: 1,
-      reducedDebugInfo: false
-    })
-    actualUser.write('position', {
+      reducedDebugInfo: false,
+    });
+    actualUser.write("position", {
       x: 0,
       y: 1.62,
       z: 0,
       yaw: 0,
       pitch: 0,
-      flags: 0x00
-    })
-  }
+      flags: 0x00,
+    });
+  };
 
   public isUserWhitelisted = (user: ServerClient): boolean => {
-    if (this.psOpts.security.whitelist == null) return true
+    if (this.psOpts.security.whitelist == null) return true;
     if (this.psOpts.security.whitelist instanceof Array) {
-      return this.psOpts.security.whitelist.find((n) => n.toLowerCase() === user.username.toLowerCase()) !== undefined
-    } else if (typeof this.psOpts.security.whitelist === 'function') {
+      return this.psOpts.security.whitelist.find((n) => n.toLowerCase() === user.username.toLowerCase()) !== undefined;
+    } else if (typeof this.psOpts.security.whitelist === "function") {
       try {
-        return !!this.psOpts.security.whitelist(user.username)
+        return !!this.psOpts.security.whitelist(user.username);
       } catch (e) {
-        console.warn('allowlist callback had error', e)
-        return false
+        console.warn("allowlist callback had error", e);
+        return false;
       }
     }
-    return false
-  }
+    return false;
+  };
 
   // ======================= //
   //     message utils       //
   // ======================= //
 
-  message (
+  message(
     client: Client | ServerClient,
     message: string,
     prefix: boolean = true,
     allowFormatting: boolean = true,
     position: number = 1
   ) {
-    if (!allowFormatting) message = message.replaceAll(/§./, '')
-    if (prefix) message = this.psOpts.display.proxyChatPrefix + message
-    this.sendMessage(client, message, position)
+    if (!allowFormatting) message = message.replaceAll(/§./, "");
+    if (prefix) message = this.psOpts.display.proxyChatPrefix + message;
+    this.sendMessage(client, message, position);
   }
 
-  sendMessage (client: ServerClient | Client, message: string, position: number = 1) {
-    const messageObj = new this.ChatMessage(message)
-    client.write('chat', { message: messageObj.json.toString(), position })
+  sendMessage(client: ServerClient | Client, message: string, position: number = 1) {
+    const messageObj = new this.ChatMessage(message);
+    client.write("chat", { message: messageObj.json.toString(), position });
   }
 
-  broadcastMessage (message: string, prefix: boolean = true, allowFormatting?: boolean, position?: number) {
+  broadcastMessage(message: string, prefix: boolean = true, allowFormatting?: boolean, position?: number) {
     Object.values(this._rawServer.clients).forEach((c) => {
-      this.message(c, message, prefix, allowFormatting, position)
-    })
+      this.message(c, message, prefix, allowFormatting, position);
+    });
   }
 }

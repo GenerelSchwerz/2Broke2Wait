@@ -1,10 +1,3 @@
-import { TwoBAntiAFKOpts, TwoBAntiAFKEvents } from './twoBAntiAFK'
-import { SpectatorServerOpts, SpectatorServerEvents } from './spectator'
-import { IProxyServerOpts } from '../baseServer'
-
-export type AllOpts = TwoBAntiAFKOpts & SpectatorServerOpts // just to be safe, yknow?
-export type AllEvents = TwoBAntiAFKEvents & SpectatorServerEvents// just to be safe, yknow?
-
 export interface BaseWebhookOpts {
   url: string
   icon?: string

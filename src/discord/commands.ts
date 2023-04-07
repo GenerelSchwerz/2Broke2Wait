@@ -32,7 +32,7 @@ export class QueueCommands {
       return await interaction.reply('We are not connected to the server!')
     }
 
-    const queue = mcServer.getPluginData<CombinedPredictor>('queue')
+    const queue = mcServer.getSharedData<CombinedPredictor>('queue')
     if (queue == null) return await interaction.reply('No queue loaded!')
 
     const spot = queue.lastPos
@@ -67,7 +67,7 @@ export class QueueCommands {
       return
     }
 
-    const queue = mcServer.getPluginData<CombinedPredictor>('queue')
+    const queue = mcServer.getSharedData<CombinedPredictor>('queue')
     if (queue == null) return await interaction.reply('No queue loaded!')
 
     let eta
