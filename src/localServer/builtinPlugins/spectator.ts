@@ -189,9 +189,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
 
     if (this.server.conn.pclient == null) {
       this.server.message(client, 'Linking')
-
       this.fakeSpectator?.revertToBotStatus(client);
-      await sleep(50)
       this.server.endBotLogic()
       this.server.conn.link(client as unknown as Client)
     } else {

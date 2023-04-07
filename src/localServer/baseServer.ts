@@ -269,6 +269,10 @@ export class ProxyServer<
   public lsOpts: ServerOptions
   public psOpts: Opts
 
+
+  private manuallyStopped = false;
+
+
   // public manuallyStopped: boolean = false;
   public ChatMessage!: typeof AgnogChMsg
 
@@ -381,7 +385,7 @@ export class ProxyServer<
 
   public start (): Conn {
     if (this.isProxyConnected()) return this._conn!
-
+    this.manuallyStopped = false;
     // this.closeConnections("Proxy restarted! Rejoin to re-sync.");
     this._conn = new Conn(this.bOpts, this.cOpts)
     this.reconnectAllClients(this._conn)
@@ -394,6 +398,7 @@ export class ProxyServer<
   public stop (): void {
     if (!this.isProxyConnected()) return
     this.emit('stopping' as any)
+    this.manuallyStopped = true;
     this.disconnectRemote('Proxy manually stopped.')
     // this.closeConnections("Proxy manually stoppped.", true);
     this.emit('stopped' as any)
@@ -473,7 +478,7 @@ export class ProxyServer<
     this._remoteIsConnected = false
     this._conn = null
 
-    if (this.psOpts.restartOnDisconnect) {
+    if (this.psOpts.restartOnDisconnect && !this.manuallyStopped) {
       this.restart(1000)
     }
   }
