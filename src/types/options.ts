@@ -1,15 +1,8 @@
-import type { BaseWebhookOpts } from '../localServer/builtinPlugins'
+import type { AllOpts, BaseWebhookOpts } from '../localServer/builtinPlugins'
 import type { BotOptions } from 'mineflayer'
 import type { ServerOptions, Client } from 'minecraft-protocol'
+import type { LogConfig } from '../util/logger'
 
-import { TwoBAntiAFKOpts, TwoBAntiAFKEvents } from '../localServer/builtinPlugins/twoBAntiAFK'
-import { SpectatorServerOpts, SpectatorServerEvents } from '../localServer/builtinPlugins/spectator'
-import { LogConfig } from '../util/logger'
-
-
-
-export type AllOpts = TwoBAntiAFKOpts & SpectatorServerOpts // just to be safe, yknow?
-export type AllEvents = TwoBAntiAFKEvents & SpectatorServerEvents// just to be safe, yknow?
 
 
 export interface DiscordBotOptions {
