@@ -15,6 +15,7 @@ type LogCategories =
   | "localServerInfo";
 
 export type LogConfig = {
+  enabled: boolean;
   saveRootDir: string;
   cutoffSize: number;
   alwaysIncrement: boolean;
@@ -33,6 +34,7 @@ type ExtraLogInfo = {
 };
 
 const DefaultLogConfig: LogConfig = {
+  enabled: false,
   saveRootDir: "./logs",
   cutoffSize: 1024,
   alwaysIncrement: false,
@@ -60,8 +62,6 @@ export class Logger {
 
   public config: LogConfig;
 
-  public enabled = false;
-
   constructor(config: Partial<LogConfig> = {}) {
     this.config = merge(DefaultLogConfig, config) as any;
 
@@ -80,11 +80,11 @@ export class Logger {
   }
 
   public enable() {
-    this.enabled = true;
+    this.config.enabled = true;
   }
 
   public disable() {
-    this.enabled = false;
+    this.config.enabled = false;
   }
 
   /**
@@ -121,7 +121,7 @@ export class Logger {
   }
 
   public log = (name: string, category: LogCategories, data: any, extra?: ExtraLogInfo) => {
-    if (!this.enabled) return;
+    if (!this.config.enabled) return;
     if (!this.config.active[category]) return;
 
     if (this.config.filters != null) {

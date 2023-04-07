@@ -4,6 +4,7 @@ import type { ServerOptions, Client } from 'minecraft-protocol'
 
 import { TwoBAntiAFKOpts, TwoBAntiAFKEvents } from '../localServer/builtinPlugins/twoBAntiAFK'
 import { SpectatorServerOpts, SpectatorServerEvents } from '../localServer/builtinPlugins/spectator'
+import { LogConfig } from '../util/logger'
 
 
 
@@ -56,6 +57,7 @@ export interface DiscordBotOptions {
     }
   
     localServer: ServerOptions
-    localServerConfig: AllOpts
+    localServerConfig: AllOpts,
+    logger: LogConfig
   }
   

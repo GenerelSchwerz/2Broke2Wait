@@ -38,27 +38,6 @@ localServer:
 
 # Custom settings for the local server.
 localServerConfig:
-
-
-  logger:
-    saveRootDir: "./logs"
-    cutoffSize: 1024 # in KB, this = 1MB
-    alwaysIncrement: true
-    active:
-      localServerReceive: true
-      localServerSend: true
-      localServerInfo: true
-      remoteBotReceive: true
-      remoteBotSend: true
-    filters:
-      localServerSend:
-        blacklist: ["map*"] # filters all map_chunk packets received
-      remoteBotReceive:
-        blacklist: ["map*"] # filters all map_chunk packets received
-      remoteBotSend:
-        # whitelist: ["position"] # only log position packets
-
-
   disableCommands: false
 
   # Experimental, but does work. (Some commands break)
@@ -151,3 +130,27 @@ discord:
       username: Queue
 
 
+
+
+logger:
+  enabled: true
+  saveRootDir: "./logs"
+  cutoffSize: 1024 # in KB, this = 1MB
+  alwaysIncrement: false # make a new file for each run, helpful for debugging
+
+  active:
+    localServerReceive: true
+    localServerSend: true
+    localServerInfo: true
+    remoteBotReceive: true
+    remoteBotSend: true
+
+  filters:
+    localServerSend:
+      blacklist: ["map*"] # filters all map_chunk packets received
+
+    remoteBotReceive:
+      blacklist: ["map*"] # filters all map_chunk packets received
+
+    # remoteBotSend:
+      # whitelist: ["position"] # only log position packets

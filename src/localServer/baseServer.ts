@@ -198,13 +198,15 @@ export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyS
   private _plugins: Array<ProxyServerPlugin<any, any>>;
 
   private _settings?: Opts;
+  private _otherSettings: OtherProxyOpts = {}
   private readonly _appliedSettings: AppliedSettings = false as any;
   constructor(
     public readonly lsOpts: ServerOptions,
     public readonly bOpts: BotOptions,
-    public readonly other: OtherProxyOpts = {}
+    other: OtherProxyOpts = {}
   ) {
     this._plugins = [];
+    this._otherSettings = other;
   }
 
   public get appliedSettings(): AppliedSettings {
@@ -254,8 +256,13 @@ export class ServerBuilder<Opts extends IProxyServerOpts, Events extends IProxyS
     return this as any;
   }
 
+  public setOtherSettings(other: OtherProxyOpts): this {
+    this._otherSettings = other;
+    return this;
+  }
+
   public build<This extends ServerBuilder<Opts, Events, true>>(this: This) {
-    let srv = new ProxyServer(this.lsOpts, this.settings!, this.bOpts, this.other);
+    let srv = new ProxyServer(this.lsOpts, this.settings!, this.bOpts, this._otherSettings);
     for (const plugin of this.plugins) {
       srv = srv.loadPlugin(plugin);
     }
@@ -326,9 +333,7 @@ export class ProxyServer<
     this.lsOpts = lsOpts;
     this.psOpts = psOpts;
     this._conn = null;
-
     this.logger = new Logger(other?.loggerOpts);
-    this.logger.enable()
     this._rawServer = createServer(lsOpts);
     this.ChatMessage = require("prismarine-chat")(bOpts.version);
 

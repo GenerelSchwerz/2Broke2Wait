@@ -41,6 +41,7 @@ async function setup() {
   const server = new ServerBuilder(serverOptions, bOpts)
     .addPlugins(...plugins)
     .setSettings(checkedConfig.localServerConfig)
+    .setOtherSettings({loggerOpts: checkedConfig.logger})
     .build();
 
   // everything after here is strongly typed.
