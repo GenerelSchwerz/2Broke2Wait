@@ -10,6 +10,7 @@ import { DateTime } from 'ts-luxon';
 type LogCategories =
   | 'remoteBotSend'
   | 'remoteBotReceive'
+  | 'remoteBotEvents'
   | 'localServerSend'
   | 'localServerReceive'
   | 'localServerInfo'
@@ -63,6 +64,7 @@ const DefaultLogConfig: LogConfig = {
 const categories: LogCategories[] = [
   'remoteBotSend',
   'remoteBotReceive',
+  'remoteBotEvents',
   'localServerSend',
   'localServerPlugins',
   'localServerReceive',

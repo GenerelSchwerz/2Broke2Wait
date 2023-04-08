@@ -223,7 +223,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
     this.gameChat = {
       client: new WebhookClient({ url: webhookUrls.gameChat.url }),
-      config: { skipTitle: true },
+      config: { skipTitle: true, skipFooter: true },
       ...webhookUrls.gameChat
     }
 

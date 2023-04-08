@@ -27,7 +27,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: localhost
+    host: 2b2t.org
     port: 25565
     version: 1.12.2
 
@@ -120,7 +120,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GOrLwZ.QD-sVmZqSCeqX6wse5M1D9OENXytsB0n0-Wygw
+    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GySRfK.Ulvw9GpF10F9t1aBtO-foU1Q3lcEP9u6lpS02s
     prefix: "!"
 
   # Discord webhook configuration.
