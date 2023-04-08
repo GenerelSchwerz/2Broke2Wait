@@ -147,50 +147,48 @@ export class ProxyServerPlugin<
     const listeners = this.listenerMap.get(event) ?? []
     if (listeners.includes(listener)) return;
     listeners.push(listener);
+    this.listenerMap.set(event, listeners);
+    this._server.on(event as any, listener as any)
+  }
+
+  public serverOff<Key extends keyof Events>(event: Key, listener: Events[Key] extends Function ? Events[Key] : never) {
+    const listeners = this.listenerMap.get(event) ;
+    if (listeners == null) return;
+
+    this.listenerMap.set(event, listeners.filter(fn => fn !== listener))
+    this._server.off(event as any, listener as any)
   }
 
   public onLoad(server: ProxyServer<Opts, Events>) {
     this._server = server;
 
     // TODO: Generalize this.
-    if (this.onPreStop != null) this._server.on("stopping", this.onPreStop);
-    if (this.onPostStop != null) this._server.on("stopped", this.onPostStop);
-    if (this.onPreStart != null) this._server.on("starting" as any, this.onPreStart);
-    if (this.onPostStart != null) this._server.on("started", this.onPostStart);
-    if (this.onProxySetup != null) this._server.on("proxySetup" as any, this.onProxySetup);
-    if (this.onBotStartup != null) this._server.on("botStartup" as any, this.onBotStartup);
-    if (this.onBotShutdown != null) this._server.on("botShutdown" as any, this.onBotShutdown);
-    if (this.onClosingConnections != null) this._server.on("closingConnections" as any, this.onClosingConnections);
+    
+    
+   
+    if (this.onPreStop != null) this.serverOn('stopping', this.onPreStop as any)
+    if (this.onPostStop != null) this.serverOn('stopped', this.onPostStop as any)
+    if (this.onPreStart != null) this.serverOn("starting", this.onPreStart as any);
+    if (this.onPostStart != null) this.serverOn("started", this.onPostStart as any);
+    if (this.onProxySetup != null) this.serverOn("proxySetup", this.onProxySetup as any);
+    if (this.onBotStartup != null) this.serverOn("botStartup", this.onBotStartup as any);
+    if (this.onBotShutdown != null) this.serverOn("botShutdown", this.onBotShutdown as any);
+    if (this.onClosingConnections != null) this.serverOn("closingConnections", this.onClosingConnections as any);
 
-    if (this.onPlayerConnected != null) this._server.on("playerConnected" as any, this.onPlayerConnected);
-    if (this.onOptionValidation != null) this._server.on("optionValidation" as any, this.onOptionValidation);
-    if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup);
-    if (this.onRemoteError != null) this._server.on("remoteError" as any, this.onRemoteError);
-    if (this.onRemoteKick != null) this._server.on("remoteKick" as any, this.onRemoteKick);
+    if (this.onPlayerConnected != null) this.serverOn("playerConnected", this.onPlayerConnected as any);
+    if (this.onOptionValidation != null) this.serverOn("optionValidation", this.onOptionValidation as any);
+    if (this.onInitialBotSetup != null) this.serverOn("initialBotSetup", this.onInitialBotSetup as any);
+    if (this.onRemoteError != null) this.serverOn("remoteError", this.onRemoteError as any);
+    if (this.onRemoteKick != null) this.serverOn("remoteKick", this.onRemoteKick as any);
 
     for (const [event, listenerList] of this.listenerMap.entries()) {
-      listenerList.forEach(e => this._server.on(event as any, e as any))
+      listenerList.forEach(e => this.serverOn(event as any, e as any))
     }
   }
 
   // This doesn't work since binding. Oh well, we'll never call this.
   public onUnload(server: ProxyServer<Opts, Events>) {
     this._server = server;
-    if (this.onPreStop != null) this._server.off("stopping", this.onPreStop);
-    if (this.onPostStop != null) this._server.off("stopped", this.onPostStop);
-    if (this.onPreStart != null) this._server.off("starting" as any, this.onPreStart);
-    if (this.onPostStart != null) this._server.off("started", this.onPostStart);
-    if (this.onProxySetup != null) this._server.off("proxySetup" as any, this.onProxySetup);
-    if (this.onBotStartup != null) this._server.off("botStartup" as any, this.onBotStartup);
-    if (this.onBotShutdown != null) this._server.off("botShutdown" as any, this.onBotShutdown);
-    if (this.onClosingConnections != null) this._server.off("closingConnections" as any, this.onClosingConnections);
-
-    if (this.onPlayerConnected != null) this._server.off("playerConnected" as any, this.onPlayerConnected);
-    if (this.onOptionValidation != null) this._server.off("optionValidation" as any, this.onOptionValidation);
-    if (this.onInitialBotSetup != null) this._server.off("initialBotSetup" as any, this.onInitialBotSetup);
-    if (this.onRemoteError != null) this._server.off("remoteError" as any, this.onRemoteError);
-    if (this.onRemoteKick != null) this._server.off("remoteKick" as any, this.onRemoteKick);
-
     for (const [event, listenerList] of this.listenerMap.entries()) {
       listenerList.forEach(e => this._server.off(event as any, e as any))
     }
@@ -473,7 +471,7 @@ export class ProxyServer<
     const oldClientWrite = this.remoteClient.write.bind(this.remoteClient);
 
     this.remoteBot.emit = <E extends keyof BotEvents>(event: E, ...args: Arguments<BotEvents[E]>) => {
-      this.emit(`botevent:${event}` as any, this.remoteBot!, ...args);
+      this.emit(`botevent_${event}` as any, this.remoteBot!, ...args);
       return oldEmit(event, ...args);
     };
 

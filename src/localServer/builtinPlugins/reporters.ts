@@ -17,9 +17,9 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
   public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
     super.onLoad(server)
 
-    server.on('enteredQueue', this.onEnteredQueue)
-    server.on('leftQueue', this.onLeftQueue)
-    server.on('queueUpdate', this.onQueueUpdate)
+    this.serverOn('enteredQueue', this.onEnteredQueue)
+    this.serverOn('leftQueue', this.onLeftQueue)
+    this.serverOn('queueUpdate', this.onQueueUpdate)
   }
 
   private getRemoteServerName (): string {
@@ -93,12 +93,12 @@ export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
     super.onLoad(server)
-    server.on('botevent_health', this.botUpdatesMotd)
-    server.on('remoteKick', this.kickedServerMotd)
-    server.on('remoteError', this.errorServerMotd)
-    server.on('enteredQueue', this.queueEnterMotd)
-    server.on('leftQueue', this.inGameServerMotd)
-    server.on('queueUpdate', this.queueUpdateMotd)
+    this.serverOn('botevent_health', this.botUpdatesMotd)
+    this.serverOn('remoteKick', this.kickedServerMotd)
+    this.serverOn('remoteError', this.errorServerMotd)
+    this.serverOn('enteredQueue', this.queueEnterMotd)
+    this.serverOn('leftQueue', this.inGameServerMotd)
+    this.serverOn('queueUpdate', this.queueUpdateMotd)
   }
 
   onPostStart = () => {
@@ -243,10 +243,10 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
     super.onLoad(server)
-    server.on('queueUpdate', this.onQueueUpdate)
-    server.on('enteredQueue', this.onEnteredQueue)
-    server.on('leftQueue', this.onLeftQueue)
-    server.on('botevent_chat', this.onBotChat)
+    this.serverOn('queueUpdate', this.onQueueUpdate)
+    this.serverOn('enteredQueue', this.onEnteredQueue)
+    this.serverOn('leftQueue', this.onLeftQueue)
+    this.serverOn('botevent_chat', this.onBotChat)
   }
 
   public onUnload (server: ProxyServer<AllOpts, AllEvents>): void {

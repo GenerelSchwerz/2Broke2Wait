@@ -12,7 +12,8 @@ type LogCategories =
   | "remoteBotReceive"
   | "localServerSend"
   | "localServerReceive"
-  | "localServerInfo";
+  | "localServerInfo"
+  | "custom" ;
 
 export type LogConfig = {
   enabled: boolean;
@@ -44,6 +45,7 @@ const DefaultLogConfig: LogConfig = {
     localServerInfo: true,
     remoteBotReceive: true,
     remoteBotSend: true,
+    custom: true
   },
   filters: {
     localServerSend: {
@@ -55,7 +57,7 @@ const DefaultLogConfig: LogConfig = {
   },
 };
 
-const categories: LogCategories[] = ["remoteBotSend", "remoteBotReceive", "localServerSend", "localServerReceive", "localServerInfo"];
+const categories: LogCategories[] = ["remoteBotSend", "remoteBotReceive", "localServerSend", "localServerReceive", "localServerInfo", "custom"];
 
 export class Logger {
   private logFileMap: Record<LogCategories, string>;
@@ -144,8 +146,8 @@ export class Logger {
       }
     }
 
-    const logFile = this.logFileMap[category];
 
+    const logFile = this.logFileMap[category];
     const logMessage = `[${getTimestamp()}] [${name}] ${JSON.stringify(data)}\n`;
 
     let stream = fs.createWriteStream(logFile, { flags: "a" });

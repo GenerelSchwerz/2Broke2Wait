@@ -13,7 +13,7 @@ export class GhostPlugin extends ProxyServerPlugin {
         super.onLoad(server);
 
 
-        server.on('botevent_spawn', this.onNewBotSpawn)
+        this.serverOn('botevent_spawn', this.onNewBotSpawn)
 
     }
 

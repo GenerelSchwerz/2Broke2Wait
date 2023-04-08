@@ -65,7 +65,19 @@ async function setup() {
     buildClient(checkedConfig.discord.bot, server);
   }
 
+
   server.start();
+
+  // ==========================
+  //  custom logging example!
+  // ==========================
+
+  // this.serverOn('botevent_move', (bot, pos) => {
+  //   console.log('hey')
+  //   server.logger.log('botMovement', 'custom', pos)
+  // })
+
+ 
 }
 
 setup();
