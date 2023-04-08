@@ -1,6 +1,6 @@
 import { Client, Conn } from "@rob9315/mcproxy";
 import { ServerClient } from "minecraft-protocol";
-import { ProxyServerPlugin } from "./baseServer";
+import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin } from "./baseServer";
 import { CommandMap } from "../util/commandHandler";
 import { goals } from "mineflayer-pathfinder";
 import type { Bot } from "mineflayer";
@@ -32,6 +32,37 @@ class ExamplePlugin extends ProxyServerPlugin {
 //
 //
 
+import type {Entity} from 'prismarine-entity'
+import { WebhookClient } from "discord.js";
+import { sleep } from "../util";
+import { once } from "events";
+export class ProximityPlugin extends ProxyServerPlugin {
+
+  public minDistance = 32;
+  public whClient: WebhookClient;
+
+  constructor(whUrl: string) {
+    super();
+    this.whClient = new WebhookClient({url: whUrl});
+  }
+
+  public onLoad(server: ProxyServer<IProxyServerOpts, IProxyServerEvents>): void {
+      super.onLoad(server);
+      this.serverOn('botevent_entityMoved', this.onEntitySpawn)
+  }
+
+
+  onEntitySpawn = (bot: Bot, entity: Entity) => {
+    if (entity.type === "player") {
+      if (bot.entity.position.distanceTo(entity.position) < this.minDistance) {
+        this.whClient.send(
+          `Player ${entity.username} entered our range of ${this.minDistance} blocks!` 
+        )
+      }
+    }
+  }
+}
+
 /**
  * Gen here again.
  *
@@ -58,15 +89,32 @@ export class GotoPlacePlugin extends ProxyServerPlugin {
       usage: "gotoXZ <x> <z>",
       description: "go from point A to point B, XZ",
       callable: this.gotoXZFunc.bind(this)
+    },
+
+    pathstop: {
+      usage: "pathstop",
+      description: "Stop mineflayer-pathfinder",
+      callable: this.stop.bind(this)
     }
   };
 
-  async gotoFunc(client: Client | ServerClient, x: string, y: string, z: string) {
+
+  async stop(client: Client) {
+      // these both exist due to how these commands are called.
+      const bot = this.server.remoteBot!;
+      const proxy = this.server.conn!;
+      bot.pathfinder.setGoal(null);
+      this.server.message(client, 'Stopped pathfinding!')
+      this.syncClientToBot(client, bot);
+      proxy.link(client);
+
+  }
+
+  async gotoFunc(client: Client, x: string, y: string, z: string) {
 
     // these both exist due to how these commands are called.
     const bot = this.server.remoteBot!;
-    const proxy = this.server.conn!;
-    
+
     if (client !== this.server.controllingPlayer) {
       this.server.message(client, "You cannot cause the bot to go anywhere, you are not controlling it!");
       return;
@@ -76,32 +124,19 @@ export class GotoPlacePlugin extends ProxyServerPlugin {
     const numY = (y === "~") ? bot.entity.position.y : Number(y)
     const numZ = (z === "~") ? bot.entity.position.z : Number(z)
 
-    // unlink client so bot can move
-    proxy.unlink();
-    this.server.message(client, `Moving to: (${numX}, ${numY}, ${numZ})`)
-
-    // attempt to go to goal, just handle error if it fails.
-    try {
-      await bot.pathfinder.goto(new goals.GoalGetToBlock(numX, numY, numZ));
-      this.server.message(client, `Made it!`)
-    } catch (e) {
-      this.server.message(client, `Did not make it...`)
-      console.error(e);
-    } 
     
-    // basic clean up, then we're all good :thumbsup:
-    finally {
-      this.syncClientToBot(client, bot);
-      proxy.link(client);
-    }
+    const goal = new goals.GoalBlock(numX, numY, numZ);
+
+    this.server.message(client, `Moving to: ${numX} ${numY} ${numZ}`)
+
+    await this.travelTo(client, goal);
  
   }
 
-  async gotoXZFunc(client: Client | ServerClient, x: string, z: string, range?: string) {
+  async gotoXZFunc(client: Client, x: string, z: string, range?: string) {
 
     // these both exist due to how these commands are called.
     const bot = this.server.remoteBot!;
-    const proxy = this.server.conn!;
 
     if (client !== this.server.controllingPlayer) {
       this.server.message(client, "You cannot cause the bot to go anywhere, you are not controlling it!");
@@ -112,16 +147,33 @@ export class GotoPlacePlugin extends ProxyServerPlugin {
     const numZ = (z === "~") ? bot.entity.position.z : Number(z)
     const numRange = range ? Number(range) : 3
 
-    // unlink client so bot can move
-    proxy.unlink();
+
     this.server.message(client, `Moving to: (${numX}, ${numZ}) w/ range ${numRange}`)
 
+    // unlink client so bot can move
+    const goal = new goals.GoalNearXZ(numX, numZ, numRange)
+    await this.travelTo(client, goal);
+  }
+
+
+  private async travelTo(client: Client, goal: goals.Goal): Promise<void> {
+
+    // these both exist due to how these commands are called.
+    const bot = this.server.remoteBot!;
+    const proxy = this.server.conn!;
+   
+    proxy.unlink();
+
+    if (bot.pathfinder.isMoving()) {
+      bot.pathfinder.setGoal(null);
+    }
+
     try {
-      await bot.pathfinder.goto(new goals.GoalNearXZ(numX, numZ, numRange));
+      await bot.pathfinder.goto(goal);
       this.server.message(client, `Made it!`)
     } catch (e) {
       this.server.message(client, `Did not make it...`)
-      console.error(e);
+      console.error("hi", e);
     }
 
      // basic clean up, then we're all good :thumbsup:

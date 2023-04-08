@@ -97,6 +97,10 @@ export class ProxyServerPlugin<
   Opts extends IProxyServerOpts = IProxyServerOpts,
   Events extends IProxyServerEvents = IProxyServerEvents
 > {
+
+
+  private _enabled = true;
+
   public declare _server: ProxyServer<Opts, Events>;
   public declare connectedCmds?: CommandMap;
   public declare disconnectedCmds?: CommandMap;
@@ -109,6 +113,14 @@ export class ProxyServerPlugin<
   public get psOpts(): Opts {
     if (this._server == null) throw Error("Proxy options were wanted before proper initialization!");
     return this._server.psOpts;
+  }
+
+  public enable() {
+    this._enabled = true;
+  }
+
+  public disable() {
+    this._enabled = false;
   }
 
   // potential listener methods
@@ -128,8 +140,18 @@ export class ProxyServerPlugin<
   onRemoteKick?: (reason: string) => void;
   onRemoteError?: (error: Error) => void;
 
+
+  private listenerMap: Map<keyof Events, Function[]> = new Map();
+
+  public serverOn<Key extends keyof Events>(event: Key, listener: Events[Key] extends Function ? Events[Key] : never) {
+    const listeners = this.listenerMap.get(event) ?? []
+    if (listeners.includes(listener)) return;
+    listeners.push(listener);
+  }
+
   public onLoad(server: ProxyServer<Opts, Events>) {
     this._server = server;
+
     // TODO: Generalize this.
     if (this.onPreStop != null) this._server.on("stopping", this.onPreStop);
     if (this.onPostStop != null) this._server.on("stopped", this.onPostStop);
@@ -145,6 +167,10 @@ export class ProxyServerPlugin<
     if (this.onInitialBotSetup != null) this._server.on("initialBotSetup" as any, this.onInitialBotSetup);
     if (this.onRemoteError != null) this._server.on("remoteError" as any, this.onRemoteError);
     if (this.onRemoteKick != null) this._server.on("remoteKick" as any, this.onRemoteKick);
+
+    for (const [event, listenerList] of this.listenerMap.entries()) {
+      listenerList.forEach(e => this._server.on(event as any, e as any))
+    }
   }
 
   // This doesn't work since binding. Oh well, we'll never call this.
@@ -164,6 +190,10 @@ export class ProxyServerPlugin<
     if (this.onInitialBotSetup != null) this._server.off("initialBotSetup" as any, this.onInitialBotSetup);
     if (this.onRemoteError != null) this._server.off("remoteError" as any, this.onRemoteError);
     if (this.onRemoteKick != null) this._server.off("remoteKick" as any, this.onRemoteKick);
+
+    for (const [event, listenerList] of this.listenerMap.entries()) {
+      listenerList.forEach(e => this._server.off(event as any, e as any))
+    }
   }
 
   /**
@@ -400,7 +430,7 @@ export class ProxyServer<
     return this.pluginStorage.get(key);
   }
 
-  public runCmd(client: ProxyClient | ServerClient, cmd: string, ...args: string[]) {
+  public runCmd(client: Client, cmd: string, ...args: string[]) {
     this.cmdHandler.manualRun(cmd, client, ...args)
   }
 
@@ -460,7 +490,7 @@ export class ProxyServer<
 
     this.remoteBot.once("spawn", this.beginBotLogic);
     this.remoteBot.on("kicked", this.remoteClientDisconnect);
-    this.remoteBot.on("end", this.remoteClientDisconnect);
+    this.remoteBot.on("error", this.remoteClientDisconnect);
     this.remoteClient.on("login", () => {
       this._remoteIsConnected = true;
     });
@@ -625,7 +655,7 @@ export class ProxyServer<
     });
   };
 
-  public isUserWhitelisted = (user: ServerClient): boolean => {
+  public isUserWhitelisted = (user: Client): boolean => {
     if (this.psOpts.security.whitelist == null) return true;
     if (this.psOpts.security.whitelist instanceof Array) {
       return this.psOpts.security.whitelist.find((n) => n.toLowerCase() === user.username.toLowerCase()) !== undefined;
@@ -645,7 +675,7 @@ export class ProxyServer<
   // ======================= //
 
   message(
-    client: Client | ServerClient,
+    client: Client,
     message: string,
     prefix: boolean = true,
     allowFormatting: boolean = true,

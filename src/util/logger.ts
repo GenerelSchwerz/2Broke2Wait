@@ -55,7 +55,7 @@ const DefaultLogConfig: LogConfig = {
   },
 };
 
-const categories: LogCategories[] = ["remoteBotSend", "remoteBotReceive", "localServerSend", "localServerReceive"];
+const categories: LogCategories[] = ["remoteBotSend", "remoteBotReceive", "localServerSend", "localServerReceive", "localServerInfo"];
 
 export class Logger {
   private logFileMap: Record<LogCategories, string>;

@@ -47,7 +47,7 @@ async function setup() {
   // everything after here is strongly typed.
   // If a plugin does not meet the types provided ^^^, then it will fail.
 
-  server.loadPlugin(new GotoPlacePlugin());
+  // server.loadPlugin(new GotoPlacePlugin());
 
   if (true) {
     server.loadPlugin(new ConsoleReporter());

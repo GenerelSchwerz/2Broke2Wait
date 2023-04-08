@@ -474,23 +474,21 @@ export class GhostHandler {
   public revertPov(client: Client | ServerClient) {
     if (!this.clientsInCamera[client.uuid]) return false;
 
+    this.unregister(client);
+
     this.writeRaw(client, "camera", {
       cameraId: this.bot.entity.id,
     });
-    this.unregister(client);
+
     return true;
   }
 
 
   public revertToBotGamemode(client: ServerClient | Client) {
-    this.writeRaw(client, "position", {
-      ...this.bot.entity.position,
-      yaw: this.bot.entity.yaw,
-      pitch: this.bot.entity.pitch,
-      onGround: this.bot.entity.onGround
-    });
+
 
     const a = packetAbilities(this.bot);
+    if (this.bot.game.gameMode === 'survival') a.data.flags = 0; // hotfix
     const notchGM = gameModeToNotchian(this.bot.game.gameMode);
     this.writeRaw(client, a.name, a.data);
 
@@ -502,6 +500,13 @@ export class GhostHandler {
     this.writeRaw(client, "game_state_change", {
       reason: 3,
       gameMode: notchGM,
+    });
+
+    this.writeRaw(client, "position", {
+      ...this.bot.entity.position,
+      yaw: this.bot.entity.yaw,
+      pitch: this.bot.entity.pitch,
+      onGround: this.bot.entity.onGround
     });
 
     this.writeRaw(client, a.name, a.data);
@@ -563,19 +568,6 @@ export class GhostHandler {
       this.clientsInCamera[client.uuid].cleanup();
     }
     delete this.clientsInCamera[client.uuid];
-  }
-}
-
-
-function gamemodeToNumber(str: GameState["gameMode"]) {
-  if (str === "survival") {
-    return 0;
-  } else if (str === "creative") {
-    return 1;
-  } else if (str === "adventure") {
-    return 2;
-  } else if (str === "spectator") {
-    return 3;
   }
 }
 

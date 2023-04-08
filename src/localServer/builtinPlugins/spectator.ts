@@ -1,12 +1,12 @@
 import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '../baseServer'
 
-import { Client, Conn, PacketMiddleware } from '@rob9315/mcproxy'
-import { ServerClient } from 'minecraft-protocol'
-
+import { Client as ProxyClient, Conn, PacketMiddleware } from '@rob9315/mcproxy'
+import {Client} from 'minecraft-protocol'
 import { sleep } from '../../util/index'
 import { WorldManager, FakePlayer, FakeSpectator } from './spectatorUtils'
 import { CommandMap } from '../../util/commandHandler'
 import { FakeBotEntity, GhostHandler } from './ghostUtils/fakes'
+import { Bot } from 'mineflayer'
 
 export interface SpectatorServerOpts extends IProxyServerOpts {
   linkOnConnect: boolean
@@ -19,9 +19,8 @@ export interface SpectatorServerEvents extends IProxyServerEvents {
 }
 
 export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, SpectatorServerEvents> {
-  public static readonly notControllingBlockedPackets: string[] = []
-  //'entity_metadata', 'abilities', 'position'
-
+  public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
+  
   public worldManager: WorldManager | null = null
   public fakeSpectator: GhostHandler | null = null
   public fakePlayer: FakeBotEntity | null = null
@@ -105,6 +104,11 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     }
   }
 
+  onBotShutdown = (bot: Bot) => {
+    console.log("hey there!")
+    bot.pathfinder.stop();
+  }
+
   // ======================= //
   //     server utils        //
   // ======================= //
@@ -127,10 +131,10 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     while (this.server.remoteBot?.player == null) {
       await sleep(100)
     }
-    this.server.conn?.sendPackets(client)
+    this.server.conn?.sendPackets(client as ProxyClient)
   }
 
-  public override whileConnectedLoginHandler = async (client: ServerClient) => {
+  public override whileConnectedLoginHandler = async (client: Client) => {
     if (this.server.remoteBot == null) return true
     if (this.server.conn == null) return true
     if (!this.server.isUserWhitelisted(client)) {
@@ -149,13 +153,13 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       managedPlayer.loadChunks(this.server.remoteBot.world)
       managedPlayer.awaitPosReference(this.server.remoteBot)
 
-      this.server.conn.attach(client as unknown as Client, {
+      this.server.conn.attach(client as unknown as ProxyClient, {
         toClientMiddleware: [...managedPlayer.getMiddlewareToClient()]
       })
     } else {
-      this.server.conn.attach(client as unknown as Client)
+      this.server.conn.attach(client as unknown as ProxyClient)
     }
-    await this.sendPackets(client as unknown as Client)
+    await this.sendPackets(client)
 
     const connect = this.server.psOpts.linkOnConnect && this.server.conn?.pclient == null
 
@@ -182,7 +186,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     return true
   }
 
-  async link (client: ServerClient | Client) {
+  async link (client: Client) {
     if (this.server.conn == null) return
     if (client === this.server.conn.pclient) {
       this.server.message(client, 'Already in control, cannot link!')
@@ -191,16 +195,17 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
 
     if (this.server.conn.pclient == null) {
       this.server.message(client, 'Linking')
-      this.fakeSpectator?.revertToBotStatus(client);
       this.server.endBotLogic()
-      this.server.conn.link(client as unknown as Client)
+      this.fakeSpectator?.revertToBotStatus(client);
+      await sleep(50) // allow update pos
+      this.server.conn.link(client as unknown as ProxyClient)
     } else {
       const mes = `Cannot link. User §3${this.server.conn.pclient.username}:§r is linked.`
       this.server.message(client, mes)
     }
   }
 
-  unlink (client: Client | ServerClient | null) {
+  unlink (client: Client | null) {
     if (this.server.conn == null) return
     if (client != null) {
       if (client !== this.server.conn.pclient) {
@@ -214,7 +219,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     this.server.beginBotLogic()
   }
 
-  async makeViewFakePlayer (client: ServerClient | Client) {
+  async makeViewFakePlayer (client: Client) {
     if (client === this.server.conn?.pclient) {
       this.server.message(client, 'Cannot get into the view. You are controlling the bot')
       return
@@ -224,7 +229,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     return this.fakeSpectator!.linkToBotPov(client)
   }
 
-  makeViewNormal (client: ServerClient | Client) {
+  makeViewNormal (client: Client) {
     if (client === this.server.conn?.pclient) {
       this.server.message(client, 'Cannot get out off the view. You are controlling the bot')
       return
