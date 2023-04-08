@@ -66,8 +66,8 @@ export type IProxyServerEvents = {
   optionValidation: (bot: Bot) => void;
   initialBotSetup: (bot: Bot) => void;
   proxySetup: (conn: Conn) => void;
-  botStartup: (bot: Bot) => void;
-  botShutdown: (bot: Bot) => void;
+  botAutonomous: (bot: Bot) => void;
+  botControlled: (bot: Bot) => void;
   starting: (conn: Conn) => void;
   started: (conn: Conn) => void;
   stopping: () => void;
@@ -121,8 +121,8 @@ export class ProxyServerPlugin<
   onPostStart?: () => void;
   onPreStop?: () => void;
   onPostStop?: () => void;
-  onBotStartup?: (bot: Bot) => void;
-  onBotShutdown?: (bot: Bot) => void;
+  onBotAutonomous?: (bot: Bot) => void;
+  onBotControlled?: (bot: Bot) => void;
   onProxySetup?: (conn: Conn) => void;
   onOptionValidation?: (bot: Bot) => void;
   onInitialBotSetup?: (bot: Bot) => void;
@@ -193,8 +193,8 @@ export class ProxyServerPlugin<
     if (this.onPreStart != null) this.serverOn("starting", this.onPreStart as any);
     if (this.onPostStart != null) this.serverOn("started", this.onPostStart as any);
     if (this.onProxySetup != null) this.serverOn("proxySetup", this.onProxySetup as any);
-    if (this.onBotStartup != null) this.serverOn("botStartup", this.onBotStartup as any);
-    if (this.onBotShutdown != null) this.serverOn("botShutdown", this.onBotShutdown as any);
+    if (this.onBotAutonomous != null) this.serverOn("botAutonomous", this.onBotAutonomous as any);
+    if (this.onBotControlled != null) this.serverOn("botControlled", this.onBotControlled as any);
     if (this.onClosingConnections != null) this.serverOn("closingConnections", this.onClosingConnections as any);
     if (this.onPlayerConnected != null) this.serverOn("playerConnected", this.onPlayerConnected as any);
     if (this.onOptionValidation != null) this.serverOn("optionValidation", this.onOptionValidation as any);
@@ -535,9 +535,9 @@ export class ProxyServer<
     this.emit("initialBotSetup" as any, this.remoteBot, this.psOpts);
 
     this.remoteBot.once("spawn", this.beginBotLogic);
-    this.remoteBot.on("kicked", this.remoteClientDisconnect);
-    this.remoteBot.on("end", this.remoteClientDisconnect);
-    this.remoteBot.on("error", this.remoteClientDisconnect);
+    this.remoteBot.on("kicked", this.remoteClientDisconnect.bind(this, 'KICKED'));
+    this.remoteBot.on("end", this.remoteClientDisconnect.bind(this, 'END'));
+    this.remoteBot.on("error", this.remoteClientDisconnect.bind(this, 'ERROR'));
 
     this.remoteClient.on("login", () => {
       this._remoteIsConnected = true;
@@ -584,12 +584,12 @@ export class ProxyServer<
 
   public beginBotLogic = (): void => {
     if (this.remoteBot == null) throw Error("Bot logic called when bot does not exist!");
-    this.emit("botStartup" as any, this.remoteBot, this.psOpts);
+    this.emit("botAutonomous" as any, this.remoteBot, this.psOpts);
   };
 
   public endBotLogic = (): void => {
     if (this.remoteBot == null) throw Error("Bot logic called when bot does not exist!");
-    this.emit("botShutdown" as any, this.remoteBot, this.psOpts);
+    this.emit("botControlled" as any, this.remoteBot, this.psOpts);
   };
 
   private readonly loginHandler = (actualUser: ServerClient) => {
@@ -601,32 +601,23 @@ export class ProxyServer<
     else this.notConnectedLoginHandler(actualUser);
   };
 
-  private readonly remoteClientDisconnect = async (info: string | Error) => {
+  private readonly remoteClientDisconnect = async (reason: string, info: string | Error) => {
     if (this.remoteBot == null) return; // assume we've already exited ( we want to leave early on kicks )
 
     this.endBotLogic();
 
-    if (info instanceof Error) {
-      this.emit("remoteError" as any, info);
-      if (this.psOpts.disconnectAllOnEnd) {
-        this.closeConnections("Connection reset by server.", true, `Javascript Error: ${info}`);
-      } else {
-        this.broadcastMessage("[WARNING] Bot has errored!");
-        this.broadcastMessage("You are still connected.");
-      }
+    this.emit("remoteDisconnect" as any, reason, info);
+    if (this.psOpts.disconnectAllOnEnd) {
+      // parse out text content, otherwise raw.
+      try {
+        info = JSON.parse(info as any).text;
+      } catch (e) {}
+        this.closeConnections("Kicked from server.", true, String(info));
     } else {
-      this.emit("remoteKick" as any, info);
-      if (this.psOpts.disconnectAllOnEnd) {
-        // parse out text content, otherwise raw.
-        try {
-          info = JSON.parse(info).text;
-        } catch (e) {}
-        this.closeConnections("Kicked from server.", true, info as string);
-      } else {
-        this.broadcastMessage("[WARNING] Bot has disconnected!");
-        this.broadcastMessage("You are still connected.");
-      }
+      this.broadcastMessage("[WARNING] Bot has disconnected!");
+      this.broadcastMessage("You are still connected.");
     }
+
 
     this._remoteIsConnected = false;
     this._conn = null;

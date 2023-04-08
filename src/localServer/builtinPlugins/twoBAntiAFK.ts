@@ -123,13 +123,13 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
     }
   };
 
-  onBotStartup = (bot: Bot) => {
+  onBotAutonomous = (bot: Bot) => {
     if (this._queue == null) throw Error("Somehow bot is starting without queue being initialized!");
     if (this.psOpts.antiAFK && !this._queue.inQueue) bot.antiafk.start();
     if (this.psOpts.autoEat && !this._queue.inQueue) bot.autoEat.enableAuto();
   };
 
-  onBotShutdown = (bot: Bot) => {
+  onBotControlled = (bot: Bot) => {
     if (this.psOpts.antiAFK) bot.antiafk.forceStop();
     if (this.psOpts.autoEat) bot.autoEat.disableAuto();
   };

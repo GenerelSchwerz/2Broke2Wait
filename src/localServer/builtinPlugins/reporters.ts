@@ -33,11 +33,11 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     console.log('Server stopped!')
   }
 
-  onBotStartup = (bot: Bot) => {
+  onBotAutonomous = (bot: Bot) => {
     console.log('Bot is now moving independently!')
   }
 
-  onBotShutdown = (bot: Bot) => {
+  onBotControlled = (bot: Bot) => {
     console.log('Bot has stopped moving independently!')
   }
 
@@ -100,7 +100,7 @@ export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
   };
 
   disconnectServerMotd = (type: string, info: string | Error) => {
-    this.setServerMotd(`Disconnected from ${this.getRemoteServerName()}! type: ${type}`)
+    this.setServerMotd(`Disconnected from ${this.getRemoteServerName()}!\n[${type}]: ${String(info).substring(0, 48)}`)
   }
 
   queueEnterMotd = () => {
@@ -169,8 +169,8 @@ const NiceEventNames: { [key in keyof CleanEvents]: string } = {
   stopped: 'Server stopped!',
   optionValidation: 'Option configuration checking!',
   initialBotSetup: 'Bot initialization!',
-  botShutdown: 'Bot activity stopped!',
-  botStartup: 'Bot activity started!',
+  botControlled: 'Bot activity stopped!',
+  botAutonomous: 'Bot activity started!',
   playerConnected: 'Player connected!',
   playerDisconnected: 'Player disconnected!',
   proxySetup: 'Setting up proxy!',
