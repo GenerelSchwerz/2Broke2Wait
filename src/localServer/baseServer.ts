@@ -7,8 +7,6 @@ import { ChatMessage as AgnogChMsg } from "prismarine-chat";
 import { sleep } from "../util/index";
 import merge from "ts-deepmerge";
 import { LogConfig, Logger } from "../util/logger";
-import { ListenerType } from "strict-event-emitter-types/types/src";
-
 /**
  * Interface for the ProxyServer options.
  */
@@ -525,26 +523,11 @@ export class ProxyServer<
   }
 
   private setup(): void {
-    if (this.remoteBot == null || this.remoteClient == null) {
+    if (this.remoteBot == null || this.remoteClient == null || this.conn == null) {
       throw Error("Setup called when remote bot does not exist!");
     }
 
     this.emit("proxySetup" as any, this._conn!, this.psOpts);
-
-    const oldEmit = this.remoteBot.emit.bind(this.remoteBot);
-
-    const oldClientWrite = this.remoteClient.write.bind(this.remoteClient);
-
-    // We overwrite emits from bots and clients to log their data.
-    this.remoteBot.emit = <E extends keyof BotEvents>(event: E, ...args: Arguments<BotEvents[E]>) => {
-      this.emit(`botevent_${event}` as any, this.remoteBot!, ...args);
-      return oldEmit(event, ...args);
-    };
-
-    this.remoteClient.write = (name, params) => {
-      this.logger.log(name, "remoteBotSend", params);
-      return oldClientWrite(name, params);
-    };
 
     this.remoteClient.on("packet", (data, meta, buffer) => this.logger.log(meta.name, "remoteBotReceive", data));
 
@@ -559,6 +542,44 @@ export class ProxyServer<
     this.remoteClient.on("login", () => {
       this._remoteIsConnected = true;
     });
+
+    const oldEmit = this.remoteBot.emit.bind(this.remoteBot);
+
+    // We overwrite emits from bots and clients to log their data.
+    this.remoteBot.emit = <E extends keyof BotEvents>(event: E, ...args: Arguments<BotEvents[E]>) => {
+     this.emit(`botevent_${event}` as any, this.remoteBot!, ...args);
+     return oldEmit(event, ...args);
+   };
+ 
+ 
+
+    const oldClientWrite = this.remoteClient.write.bind(this.remoteClient);
+    this.remoteClient.write = (name, params) => {
+      this.logger.log(name, "remoteBotSend", params);
+      return oldClientWrite(name, params);
+    };
+
+    const oldClientWriteChannel = this.remoteClient.writeChannel.bind(this.remoteClient);
+    this.remoteClient.writeChannel = (channel, params) => {
+      this.logger.log(`channel${channel}`, "remoteBotSend", params);
+      return oldClientWriteChannel(channel, params);
+    };
+
+    const oldClientWriteRaw = this.remoteClient.writeRaw.bind(this.remoteClient);
+    this.remoteClient.writeRaw = (buffer) => {
+      this.logger.log(`rawBuffer`, "remoteBotSend", buffer);
+      return oldClientWriteRaw(buffer);
+    };
+
+    this.conn.write = this.remoteClient.write
+    this.conn.writeChannel = this.remoteClient.writeChannel
+    this.conn.writeRaw = this.remoteClient.writeRaw
+    // const oldWriteIf = this.conn.writeIf.bind(this.conn);
+    // this.conn.writeIf = async (name: string, data: any) => {
+    //   console.log("conn write", name)
+    //   this.logger.log(name, "remoteBotSend", data);
+    //   return oldWriteIf(name, data);
+    // } 
   }
 
   public beginBotLogic = (): void => {

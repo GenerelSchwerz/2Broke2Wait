@@ -41,7 +41,9 @@ async function setup() {
   const server = new ServerBuilder(serverOptions, bOpts)
     .addPlugins(...plugins)
     .setSettings(checkedConfig.localServerConfig)
-    .setOtherSettings({debug: true, loggerOpts: checkedConfig.logger})
+    .setOtherSettings({debug: true, loggerOpts: checkedConfig.logger, cOpts: {
+      optimizePacketWrite: false
+    }})
     .build();
 
   // everything after here is strongly typed.

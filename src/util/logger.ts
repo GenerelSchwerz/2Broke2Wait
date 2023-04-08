@@ -156,7 +156,7 @@ export class Logger {
     }
 
     const logFile = this.logFileMap[category];
-    let logMessage = `[${getTimestamp()}] [${name}]`;
+    let logMessage = `[${getTimestamp()}] [${name}] `;
     if (extra?.skipStringify) logMessage += data;
     else logMessage += JSON.stringify(data);
     logMessage += "\n";

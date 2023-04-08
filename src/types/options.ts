@@ -52,5 +52,6 @@ export interface DiscordBotOptions {
     localServer: ServerOptions
     localServerConfig: AllOpts,
     logger: LogConfig
+    debug: boolean
   }
   
