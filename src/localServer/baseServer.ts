@@ -190,7 +190,7 @@ export class ProxyServerPlugin<
   public onUnload(server: ProxyServer<Opts, Events>) {
     this._server = server;
     for (const [event, listenerList] of this.listenerMap.entries()) {
-      listenerList.forEach(e => this._server.off(event as any, e as any))
+      listenerList.forEach(e => this.serverOff(event as any, e as any))
     }
   }
 
