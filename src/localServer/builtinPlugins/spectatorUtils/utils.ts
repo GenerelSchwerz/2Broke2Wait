@@ -14,5 +14,6 @@ export const DefaultProxyOpts: SpectatorServerOpts = {
   disableCommands: false,
   disconnectAllOnEnd: true,
   worldCaching: false,
-  restartOnDisconnect: true
+  restartOnDisconnect: true,
+  reconnectInterval: 5000
 }
