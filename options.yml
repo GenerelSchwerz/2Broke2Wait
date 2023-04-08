@@ -151,6 +151,8 @@ logger:
   alwaysIncrement: false # make a new file for each run, helpful for debugging
 
   active:
+    custom: true
+    localServerPlugins: true
     localServerReceive: true
     localServerSend: true
     localServerInfo: true

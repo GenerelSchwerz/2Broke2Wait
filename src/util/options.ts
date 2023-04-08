@@ -9,7 +9,6 @@ import type { BotOptions } from 'mineflayer'
 import type { ServerOptions, Client } from 'minecraft-protocol'
 import type { Options } from '../types/options'
 
-
 function httpConstruct (
   protocol: 'https' | 'http',
   dest: { host: string, port: number },
@@ -146,7 +145,7 @@ export function botOptsFromConfig (opts: Options): BotOptions {
   if (ret.auth === 'microsoft') {
     delete ret.password // Allows for first-time microsoft sign-in.
   }
-  
+
   if (opts.minecraft.proxy != null && opts.minecraft.proxy.enabled) {
     ret = merge(
       ret,

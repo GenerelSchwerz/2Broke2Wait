@@ -1,7 +1,7 @@
 import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '../baseServer'
 
 import { Client as ProxyClient, Conn, PacketMiddleware } from '@rob9315/mcproxy'
-import {Client} from 'minecraft-protocol'
+import { Client } from 'minecraft-protocol'
 import { sleep } from '../../util/index'
 import { WorldManager, FakePlayer, FakeSpectator } from './spectatorUtils'
 import { CommandMap } from '../../util/commandHandler'
@@ -20,7 +20,7 @@ export interface SpectatorServerEvents extends IProxyServerEvents {
 
 export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, SpectatorServerEvents> {
   public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
-  
+
   public worldManager: WorldManager | null = null
   public fakeSpectator: GhostHandler | null = null
   public fakePlayer: FakeBotEntity | null = null
@@ -80,7 +80,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
           return
         }
 
-        if (this.fakeSpectator?.clientsInCamera[client.uuid]) {
+        if ((this.fakeSpectator?.clientsInCamera[client.uuid]) != null) {
           this.server.message(client, "You are viewing the bot's perspective.")
         }
 
@@ -110,13 +110,13 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
 
   private buildFakeData (conn: Conn) {
     this.fakePlayer = new FakeBotEntity(conn.stateData.bot, {
-      username: "[B] " + conn.stateData.bot.username.substring(0, 12),
+      username: '[B] ' + conn.stateData.bot.username.substring(0, 12),
       // uuid: conn.stateData.bot._client.uuid,
       positionTransformer: conn.positionTransformer
     })
 
     this.fakeSpectator = new GhostHandler(this.fakePlayer)
-    this.fakePlayer.sync();
+    this.fakePlayer.sync()
     conn.stateData.bot.once('end', () => {
       this.fakePlayer?.unsync()
     })
@@ -170,7 +170,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.link(client)
     }
 
-    this.server.runCmd(client, 'phelp');
+    this.server.runCmd(client, 'phelp')
 
     client.once('end', () => {
       if (client.uuid === this.server.conn?.pclient?.uuid) this.server.beginBotLogic()
@@ -191,7 +191,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     if (this.server.conn.pclient == null) {
       this.server.message(client, 'Linking')
       this.server.endBotLogic()
-      this.fakeSpectator?.revertToBotStatus(client);
+      this.fakeSpectator?.revertToBotStatus(client)
       await sleep(50) // allow update pos
       this.server.conn.link(client as unknown as ProxyClient)
     } else {
@@ -221,7 +221,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     }
     if (this.fakeSpectator == null) return false
 
-    return this.fakeSpectator!.linkToBotPov(client)
+    return await this.fakeSpectator.linkToBotPov(client)
   }
 
   makeViewNormal (client: Client) {
@@ -288,7 +288,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       if (conn == null || pclient == null) return
       switch (meta.name) {
         case 'use_entity':
-          if (!this.fakeSpectator) return data;
+          if (this.fakeSpectator == null) return data
           if (this.fakeSpectator.clientsInCamera[pclient.uuid] != null) return data
 
           if (data.target === this.fakeSpectator.linkedFakeBot.entityRef.id) {
