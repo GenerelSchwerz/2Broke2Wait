@@ -4,6 +4,7 @@ import { DateTime, Duration } from 'ts-luxon'
 
 import { hourAndMinToDateTime, pingTime, tentativeStartTime, waitUntilStartingTime } from '../util/remoteInfo'
 import { CombinedPredictor } from '../localServer/predictors'
+import { sleep } from '../util'
 
 @Discord()
 @SlashGroup({ description: 'Queue related commands', name: 'queue' })
@@ -168,7 +169,13 @@ export class LocalServerCommands {
       type: ApplicationCommandOptionType.Number
     })
     minute: number,
-
+    @SlashOption({
+      description: 'Static prediction',
+      name: 'static_predict',
+      required: false,
+      type: ApplicationCommandOptionType.Boolean
+    })
+    staticPredict: boolean = true,
     @SlashOption({
       description: "specific username to start at time. Matches CONFIG'S username.",
       name: 'username',
@@ -211,7 +218,11 @@ export class LocalServerCommands {
       )
     }
 
-    await waitUntilStartingTime(hoursTilStart, minutesTilStart)
+    if (staticPredict) {
+      if (secondsTilStart > 0) await sleep(secondsTilStart * 1000)
+    } else {
+      await waitUntilStartingTime(hoursTilStart, minutesTilStart)
+    }
     mcServer.start()
   }
 }
