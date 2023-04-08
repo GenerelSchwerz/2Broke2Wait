@@ -39,6 +39,11 @@ export interface IProxyServerOpts {
    * Restart whenever remote bot disconnects. Defaults to false.
    */
   restartOnDisconnect?: boolean;
+
+  /**
+   * Millisecnds until next attempt to reconnect.
+   */
+  reconnectInterval: number
 }
 
 /**
@@ -623,7 +628,7 @@ export class ProxyServer<
     this._conn = null;
 
     if (this.psOpts.restartOnDisconnect && !this.manuallyStopped) {
-      this.restart(1000);
+      this.restart(this.psOpts.reconnectInterval);
     }
   };
 

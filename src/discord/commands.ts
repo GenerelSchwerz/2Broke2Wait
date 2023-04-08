@@ -214,7 +214,7 @@ export class GeneralCommands {
     })
     host: string,
     @SlashOption({
-      description: "port value",
+      description: "port value (default 25565)",
       name: "port",
       required: false,
       type: ApplicationCommandOptionType.Number,

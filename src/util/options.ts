@@ -146,7 +146,7 @@ export function botOptsFromConfig (opts: Options): BotOptions {
   if (ret.auth === 'microsoft') {
     delete ret.password // Allows for first-time microsoft sign-in.
   }
-
+  
   if (opts.minecraft.proxy != null && opts.minecraft.proxy.enabled) {
     ret = merge(
       ret,

@@ -16,7 +16,7 @@ minecraft:
 
   # Custom implementation of a SOCKS4/5 proxy.
   proxy:
-    enabled: true
+    enabled: false
     protocol: socks5
     info:
       host: 199.58.185.9
@@ -27,7 +27,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: localhost
+    host: 2b2t.org
     port: 25565
     version: 1.12.2
 
@@ -44,6 +44,11 @@ localServer:
 
 # Custom settings for the local server.
 localServerConfig:
+
+  # milliseconds until next attempt to reconnect
+  reconnectInterval: 5000
+
+  # disable all commands.
   disableCommands: false
 
   # Experimental, but does work. (Some commands break)
@@ -111,7 +116,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GiYjFe.Vry-kEjtIU6tnOhGhVVU9J0RfV0W23Qyb0Nvqo
+    botToken: TA1Nzc4NjAxOTc5OTM4MDA1OQ.GOrLwZ.QD-sVmZqSCeqX6wse5M1D9OENXytsB0n0-Wygw
     prefix: "!"
 
   # Discord webhook configuration.
@@ -134,6 +139,7 @@ discord:
       url: https://canary.discord.com/api/webhooks/1088895149628719277/EWaUJwcART1Nj2n6YF2aDo2CZuKiuNx2dFi09KCVf6OItSEB4z3xvQYevCQ2wPifluNb
       icon: https://cdn.discordapp.com/avatars/984923209944141895/0b548fdc026c37a8bae7ff8b21b12f09.png?size=64
       username: Queue
+      edit: true # edit webhook message after first sent. Defaults to false
 
 
 
