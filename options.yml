@@ -27,7 +27,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: 2b2t.org
+    host: localhost
     port: 25565
     version: 1.12.2
 
@@ -37,7 +37,7 @@ minecraft:
 # All options from there are valid.
 localServer:
   host: 0.0.0.0
-  port: 25566
+  port: 25567
   version: 1.12.2
   online-mode: false
   maxPlayers: 1
@@ -85,6 +85,10 @@ localServerConfig:
     # AntiAFK module settings. Leave this be for now.
     # I will include documentation at a later date.
     modules:
+
+      WalkAroundModule:
+        timeout: 5000
+
       RandomMovementModule:
         enabled: false
 
@@ -116,7 +120,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    botToken: TA1Nzc4NjAxOTc5OTM4MDA1OQ.GOrLwZ.QD-sVmZqSCeqX6wse5M1D9OENXytsB0n0-Wygw
+    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GOrLwZ.QD-sVmZqSCeqX6wse5M1D9OENXytsB0n0-Wygw
     prefix: "!"
 
   # Discord webhook configuration.
@@ -128,6 +132,7 @@ discord:
       url: https://discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B
       icon: https://cdn.discordapp.com/avatars/984923209944141895/0b548fdc026c37a8bae7ff8b21b12f09.png?size=64
       username: Game chat
+      timestamp: true
 
     serverInfo:
       url: https://canary.discord.com/api/webhooks/1088895214233583616/EYCY1yYwSgplczE7Fvu09_hcF1OReVIoEYH53oOwghB_5KRqmGyan9wMGlo9PpjlcfZm
@@ -146,7 +151,7 @@ discord:
 
 logger:
   enabled: true
-  saveRootDir: "./logs"
+  saveRootDir: "./logs1"
   cutoffSize: 1024 # in KB, this = 1MB
   alwaysIncrement: false # make a new file for each run, helpful for debugging
 

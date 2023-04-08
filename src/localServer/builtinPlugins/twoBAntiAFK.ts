@@ -39,10 +39,12 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
     this._queue.on('*', (...args: any[]) => {
       this.serverEmit((this._queue as any).event, ...args)
     })
+    this.share("queue", this._queue);
   }
 
   onPreStop = () => {
     if (this._queue != null) this._queue.end()
+    this.drop('queue')
   }
 
   onOptionValidation = (bot: Bot): void => {

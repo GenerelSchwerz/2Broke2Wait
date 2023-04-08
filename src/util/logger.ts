@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import path from 'path'
 import merge from 'ts-deepmerge';
+import { DateTime } from 'ts-luxon';
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString()
@@ -169,17 +170,15 @@ export class Logger {
 
 /**
  * Get current timestamp
- * @param {boolean} includeTime Whether to include the Date String
+ * @param {boolean} excludeTime Whether to include the Date String
  * @returns {string} Human-readable timestamp
  */
-function getTimestamp (includeTime?: boolean): string {
-  let timestamp: Date | string = new Date()
-  if (includeTime) {
-    timestamp = timestamp.toLocaleDateString()
+function getTimestamp (excludeTime?: boolean): string {
+  let timestamp: DateTime | string = DateTime.local()
+  if (excludeTime) {
+    timestamp = timestamp.toFormat('M-d-yyyy')
   } else {
-    timestamp = timestamp.toLocaleString()
+    timestamp = timestamp.toFormat('M-d-yyyy hh:mm:ss:uu a')
   }
   return timestamp
-    .replace(/\//g, '-') // Replace forward-slash with hyphen
-    .replace(',', '') // Remove comma
 }

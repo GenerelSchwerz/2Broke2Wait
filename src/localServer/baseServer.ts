@@ -258,6 +258,15 @@ export class ProxyServerPlugin<
   }
 
   /**
+   * Drops data from {@link ProxyServer.pluginStorage a shared plugin storage}.
+   * @param key {string} Value to index by to delete stored value.
+   * @returns
+   */
+    public drop (key: string) {
+      return this.server.dropSharedData(key);
+    }
+
+  /**
    * Get data shared from {@link share}
    * @param key {string} Value to index by to retrieve stored value.
    * @returns
@@ -491,6 +500,15 @@ export class ProxyServer<
    */
   public storeSharedData (key: string, data: any) {
     return this.pluginStorage.set(key, data)
+  }
+
+  /**
+   * Drop value indexed by key.
+   * @param key 
+   * @returns 
+   */
+  public dropSharedData(key: string) {
+    return this.pluginStorage.delete(key);
   }
 
   public getSharedData<Value extends any>(key: string): Value | undefined {

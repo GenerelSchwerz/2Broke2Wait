@@ -3,7 +3,7 @@ import { ServerClient } from 'minecraft-protocol'
 import type { Bot } from 'mineflayer'
 import { DateTime, Duration } from 'ts-luxon'
 import { AllEvents, AllOpts, BaseWebhookOpts } from '.'
-import { DiscordWebhookOptions, Options, QueueSetup } from '../../types/options'
+import { DiscordWebhookOptions, GameChatSetup, Options, QueueSetup } from '../../types/options'
 import { ProxyServer, ProxyServerPlugin } from '../baseServer'
 import { CombinedPredictor } from '../predictors/combinedPredictor'
 import { SpectatorServerEvents, SpectatorServerOpts } from './spectator'
@@ -204,7 +204,7 @@ function escapeMarkdown (...texts: string[]): string[] {
 export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
   public queueInfo: WebhookWrapper & QueueSetup
   public serverInfo: WebhookWrapper
-  public gameChat: WebhookWrapper
+  public gameChat: WebhookWrapper & GameChatSetup
 
   constructor (webhookUrls: DiscordWebhookOptions) {
     super()
@@ -218,13 +218,13 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     this.serverInfo = {
       client: new WebhookClient({ url: webhookUrls.serverInfo.url }),
       config: { skipFooter: true },
-      ...webhookUrls.queue
+      ...webhookUrls.serverInfo
     }
 
     this.gameChat = {
       client: new WebhookClient({ url: webhookUrls.gameChat.url }),
       config: { skipTitle: true },
-      ...webhookUrls.queue
+      ...webhookUrls.gameChat
     }
 
     updateWebhook(this.queueInfo)
@@ -257,7 +257,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   onPostStart = async (): Promise<void> => {
     const embed = this.buildServerEmbed('started', this.serverInfo.config)
-    embed.description = `Started at: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n`
+    embed.description = `Started at: ${DateTime.local().toFormat('hh:mm a, MM/dd')}\n`
     await this.serverInfo.client.send({
       embeds: [embed]
     })
@@ -265,7 +265,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   onPostStop = async (): Promise<void> => {
     const embed = this.buildServerEmbed('stopped', this.serverInfo.config)
-    embed.description = `Closed at: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n`
+    embed.description = `Closed at: ${DateTime.local().toFormat('hh:mm a, MM/dd')}\n`
     await this.serverInfo.client.send({
       embeds: [embed]
     })
@@ -275,7 +275,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     const embed = this.buildServerEmbed('Bot disconnected!', this.serverInfo.config)
 
     embed.description =
-      `Time: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n` + `Reason: ${String(info).substring(0, 1000)}`
+      `Time: ${DateTime.local().toFormat('hh:mm a, MM/dd')}\n` + `Reason: ${String(info).substring(0, 1000)}`
 
     await this.serverInfo.client.send({
       embeds: [embed]
@@ -291,6 +291,14 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
     embed.description = escapeMarkdown(message)[0]
 
+    if (this.gameChat.timestamp) {
+      if (embed.footer?.text) {
+        embed.footer.text += `\nSent: ${DateTime.local().toFormat('hh:mm a, MM/dd')}`
+      } else {
+        embed.footer = { text: `Sent: ${DateTime.local().toFormat('hh:mm a, MM/dd')}` }
+      }
+    }
+
     await this.gameChat.client.send({
       embeds: [embed]
     })
@@ -298,7 +306,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   onLeftQueue = async () => {
     const embed = this.buildServerEmbed('leftQueue', this.queueInfo.config)
-    embed.description = `Left queue at ${DateTime.local().toFormat('hh:mm a MM/dd')}`
+    embed.description = `Left queue at ${DateTime.local().toFormat('hh:mm a, MM/dd')}`
     await this.queueInfo.client.send({
       embeds: [embed]
     })
@@ -306,7 +314,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   onEnteredQueue = async () => {
     const embed = this.buildServerEmbed('enteredQueue', this.queueInfo.config)
-    embed.description = `Entered queue at ${DateTime.local().toFormat('hh:mm a MM/dd')}`
+    embed.description = `Entered queue at ${DateTime.local().toFormat('hh:mm a, MM/dd')}`
     await this.queueInfo.client.send({
       embeds: [embed]
     })
@@ -325,7 +333,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
         : Duration.fromMillis(givenEta * 1000 - Date.now()).toFormat("h 'hours and ' m 'minutes'")
 
     embed.description =
-      `Current time: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n` +
+      `Current time: ${DateTime.local().toFormat('hh:mm a, MM/dd')}\n` +
       `Old position: ${oldPos}\n` +
       `New position: ${newPos}\n` +
       `Estimated ETA: ${strETA}\n` +
@@ -381,7 +389,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
     if (this.server.controllingPlayer != null) text += `Connected player: ${this.server.controllingPlayer.username}\n`
     if (queue?.inQueue && eta != null) {
-      text += `Join time: ${DateTime.local().plus(eta).toFormat('hh:mm a MM/dd')}\n`
+      text += `Join time: ${DateTime.local().plus(eta).toFormat('hh:mm a, MM/dd')}\n`
     }
 
     embed.footer = { text }

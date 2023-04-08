@@ -11,13 +11,17 @@ export interface DiscordBotOptions {
 
 export interface DiscordWebhookOptions {
   enabled: boolean
-  gameChat: BaseWebhookOpts
+  gameChat: GameChatSetup
   serverInfo: BaseWebhookOpts
   queue: QueueSetup
 }
 
 export type QueueSetup = BaseWebhookOpts & {
   reportAt: number
+}
+
+export type GameChatSetup =  BaseWebhookOpts  & {
+  timestamp?: boolean
 }
 
 // Minecraft and discord options such as discord bot prefix and minecraft login info
