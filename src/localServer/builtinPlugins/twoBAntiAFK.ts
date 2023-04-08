@@ -56,19 +56,15 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
       bot.loadPlugin(antiAFK);
 
       bot.antiafk.on("moduleCanceled", (mod) =>
-        this.server.logger.log(
-          "AntiAFK!",
-          "localServerInfo",
-          `[ERROR] Canceled AntiAFK module: ${mod.constructor.name}`
-        )
+        this.serverLog("AntiAFK!", `[ERROR] Canceled AntiAFK module: ${mod.constructor.name}`)
       );
 
-      bot.antiafk.on("moduleCompleted", (mod, success, reason) => this.server.logger.log(
-        "AntiAFK!",
-        "localServerInfo",
-        `[INFO] Completed AntiAFK module: ${mod.constructor.name}, to success: ${success}, with reason: ${reason}`
-      ));
-      
+      bot.antiafk.on("moduleCompleted", (mod, success, reason) =>
+        this.serverLog(
+          "AntiAFK!",
+          `[INFO] Completed AntiAFK module: ${mod.constructor.name}, to success: ${success}, with reason: ${reason}`
+        )
+      );
 
       if (DEFAULT_MODULES.WalkAroundModule != null) {
         bot.antiafk.addModules(DEFAULT_MODULES.WalkAroundModule);

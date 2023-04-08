@@ -41,7 +41,7 @@ localServerConfig:
   disableCommands: false
 
   # Experimental, but does work. (Some commands break)
-  disconnectAllOnEnd: true
+  disconnectAllOnEnd: false
   restartOnDisconnect: true
   linkOnConnect: true
 

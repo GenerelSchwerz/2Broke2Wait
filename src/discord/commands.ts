@@ -74,7 +74,7 @@ export class QueueCommands {
     let joiningAt
     if (!Number.isNaN(queue.eta)) {
       eta = Duration.fromMillis(queue.eta * 1000 - Date.now()).toFormat("h 'hours and' m 'minutes'")
-      joiningAt = DateTime.local().plus({ seconds: queue.eta }).toFormat('hh:mm a, MM/dd/yyyy')
+      joiningAt = DateTime.local().plus({ seconds: queue.eta }).toFormat('hh:mm a, MM/dd')
     } else {
       eta = 'Unknown (ETA is NaN)'
     }
@@ -201,13 +201,13 @@ export class LocalServerCommands {
       interaction.reply(
         `To play at ${data.toFormat('MM/dd hh:mm a').toLowerCase()}, ` +
           `the server will start in ${hoursTilStart} hours and ${minutesTilStart} minutes!\n` +
-          `Start time: ${dateStart.toFormat('hh:mm a, MM/dd/yyyy')}`
+          `Start time: ${dateStart.toFormat('hh:mm a, MM/dd')}`
       )
     } else {
       interaction.reply(
         `To play at ${data.toFormat('MM/dd hh:mm a').toLowerCase()}, ` +
           'the server should right now!\n' +
-          `Start time: ${DateTime.local().toFormat('hh:mm a, MM/dd/yyyy')}`
+          `Start time: ${DateTime.local().toFormat('hh:mm a, MM/dd')}`
       )
     }
 

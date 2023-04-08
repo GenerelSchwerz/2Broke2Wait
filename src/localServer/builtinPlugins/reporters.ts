@@ -16,7 +16,6 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
     super.onLoad(server)
-
     this.serverOn('enteredQueue', this.onEnteredQueue)
     this.serverOn('leftQueue', this.onLeftQueue)
     this.serverOn('queueUpdate', this.onQueueUpdate)
@@ -42,12 +41,8 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     console.log('Bot has stopped moving independently!')
   }
 
-  onRemoteError = (error: Error) => {
-    console.error('[ERROR]: Remote disconnected!', error)
-  }
-
-  onRemoteKick = (reason: string) => {
-    console.warn('[KICKED] Remote disconnected!', reason)
+  onRemoteDisconnect = (type: string, info: string | Error) => {
+    console.error(`[${type.toUpperCase()}]: Remote disconnected!`, info)
   }
 
   onPlayerConnected = (client: ServerClient, remoteConnected: boolean) => {
@@ -94,8 +89,7 @@ export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
   public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
     super.onLoad(server)
     this.serverOn('botevent_health', this.botUpdatesMotd)
-    this.serverOn('remoteKick', this.kickedServerMotd)
-    this.serverOn('remoteError', this.errorServerMotd)
+    this.serverOn('remoteDisconnect', this.disconnectServerMotd)
     this.serverOn('enteredQueue', this.queueEnterMotd)
     this.serverOn('leftQueue', this.inGameServerMotd)
     this.serverOn('queueUpdate', this.queueUpdateMotd)
@@ -105,12 +99,8 @@ export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     this.setServerMotd(`Joining ${this.getRemoteServerName()}`)
   };
 
-  kickedServerMotd = (reason: string) => {
-    this.setServerMotd(`Kicked from ${this.getRemoteServerName()}!`)
-  }
-
-  errorServerMotd = (reason: Error) => {
-    this.setServerMotd(`Errored! Disconnected from ${this.getRemoteServerName()}!`)
+  disconnectServerMotd = (type: string, info: string | Error) => {
+    this.setServerMotd(`Disconnected from ${this.getRemoteServerName()}! type: ${type}`)
   }
 
   queueEnterMotd = () => {
@@ -249,17 +239,10 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     this.serverOn('botevent_chat', this.onBotChat)
   }
 
-  public onUnload (server: ProxyServer<AllOpts, AllEvents>): void {
-    super.onUnload(server)
-    server.off('queueUpdate', this.onQueueUpdate)
-    server.off('enteredQueue', this.onEnteredQueue)
-    server.off('leftQueue', this.onLeftQueue)
-    server.off('botevent_chat', this.onBotChat)
-  }
 
   onPostStart = async (): Promise<void> => {
     const embed = this.buildServerEmbed('started', this.serverInfo.config)
-    embed.description = `Started at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n`
+    embed.description = `Started at: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n`
     await this.serverInfo.client.send({
       embeds: [embed]
     })
@@ -267,30 +250,18 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   onPostStop = async (): Promise<void> => {
     const embed = this.buildServerEmbed('stopped', this.serverInfo.config)
-    embed.description = `Closed at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n`
+    embed.description = `Closed at: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n`
     await this.serverInfo.client.send({
       embeds: [embed]
     })
   }
 
-  onRemoteKick = async (reason: string) => {
-    const embed = this.buildServerEmbed('remoteKick', this.serverInfo.config)
-
-    embed.description = 
-      `Bot was kicked at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
-      `Reason: ${reason}`
-      
-    await this.serverInfo.client.send({
-      embeds: [embed]
-    })
-  }
-
-  onRemoteError = async (error: Error) => {
-    const embed = this.buildServerEmbed('remoteError', this.serverInfo.config)
+  onRemoteDisconnect = async (type: string, info: string | Error ) => {
+    const embed = this.buildServerEmbed('Bot disconnected!', this.serverInfo.config)
     
     embed.description = 
-      `Bot errored out at: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
-      `Error: ${Error}`
+      `Time: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n` +
+      `Reason: ${String(info).substring(0, 1000)}`
       
     await this.serverInfo.client.send({
       embeds: [embed]
@@ -313,7 +284,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   onLeftQueue = async () => {
     const embed = this.buildServerEmbed('leftQueue', this.queueInfo.config)
-    embed.description = `Left queue at ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}`
+    embed.description = `Left queue at ${DateTime.local().toFormat('hh:mm a MM/dd')}`
     await this.queueInfo.client.send({
       embeds: [embed]
     })
@@ -321,7 +292,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
 
   onEnteredQueue = async () => {
     const embed = this.buildServerEmbed('enteredQueue', this.queueInfo.config)
-    embed.description = `Entered queue at ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}`
+    embed.description = `Entered queue at ${DateTime.local().toFormat('hh:mm a MM/dd')}`
     await this.queueInfo.client.send({
       embeds: [embed]
     })
@@ -340,7 +311,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
         : Duration.fromMillis(givenEta * 1000 - Date.now()).toFormat("h 'hours and ' m 'minutes'")
 
     embed.description =
-      `Current time: ${DateTime.local().toFormat('hh:mm a MM/dd/yyyy')}\n` +
+      `Current time: ${DateTime.local().toFormat('hh:mm a MM/dd')}\n` +
       `Old position: ${oldPos}\n` +
       `New position: ${newPos}\n` +
       `Estimated ETA: ${strETA}\n` +
@@ -395,7 +366,7 @@ export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
     }
 
     if (this.server.controllingPlayer != null) text += `Connected player: ${this.server.controllingPlayer.username}\n`
-    if (queue?.inQueue && eta != null) { text += `Join time: ${DateTime.local().plus(eta).toFormat('hh:mm a MM/dd/yyyy')}\n` }
+    if (queue?.inQueue && eta != null) { text += `Join time: ${DateTime.local().plus(eta).toFormat('hh:mm a MM/dd')}\n` }
 
     embed.footer = { text }
 

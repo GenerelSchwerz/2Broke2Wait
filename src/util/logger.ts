@@ -2,7 +2,6 @@ import * as fs from "fs";
 import path from "path";
 import merge from "ts-deepmerge";
 
-
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
 };
@@ -13,7 +12,8 @@ type LogCategories =
   | "localServerSend"
   | "localServerReceive"
   | "localServerInfo"
-  | "custom" ;
+  | "localServerPlugins"
+  | "custom";
 
 export type LogConfig = {
   enabled: boolean;
@@ -32,6 +32,7 @@ export type LogConfig = {
 };
 type ExtraLogInfo = {
   shiftToFront?: boolean;
+  skipStringify?: boolean;
 };
 
 const DefaultLogConfig: LogConfig = {
@@ -43,9 +44,10 @@ const DefaultLogConfig: LogConfig = {
     localServerReceive: true,
     localServerSend: true,
     localServerInfo: true,
+    localServerPlugins: true,
     remoteBotReceive: true,
     remoteBotSend: true,
-    custom: true
+    custom: true,
   },
   filters: {
     localServerSend: {
@@ -53,11 +55,19 @@ const DefaultLogConfig: LogConfig = {
     },
     remoteBotReceive: {
       blacklist: ["map*"],
-    }
+    },
   },
 };
 
-const categories: LogCategories[] = ["remoteBotSend", "remoteBotReceive", "localServerSend", "localServerReceive", "localServerInfo", "custom"];
+const categories: LogCategories[] = [
+  "remoteBotSend",
+  "remoteBotReceive",
+  "localServerSend",
+  "localServerPlugins",
+  "localServerReceive",
+  "localServerInfo",
+  "custom",
+];
 
 export class Logger {
   private logFileMap: Record<LogCategories, string>;
@@ -77,7 +87,6 @@ export class Logger {
       let file = this.findExisting(catDir, c, files);
       if (!file || this.config.alwaysIncrement) file = this.createFilename(c, files.length + 1);
       this.logFileMap[c] = path.join(catDir, file);
-      
     }
   }
 
@@ -146,14 +155,16 @@ export class Logger {
       }
     }
 
-
     const logFile = this.logFileMap[category];
-    const logMessage = `[${getTimestamp()}] [${name}] ${JSON.stringify(data)}\n`;
+    let logMessage = `[${getTimestamp()}] [${name}]`;
+    if (extra?.skipStringify) logMessage += data;
+    else logMessage += JSON.stringify(data);
+    logMessage += "\n";
 
     let stream = fs.createWriteStream(logFile, { flags: "a" });
     stream.write(logMessage); // Save raw
     stream.end();
-  }
+  };
 }
 
 /**

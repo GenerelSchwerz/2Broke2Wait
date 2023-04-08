@@ -104,11 +104,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     }
   }
 
-  onBotShutdown = (bot: Bot) => {
-    console.log("hey there!")
-    bot.pathfinder.stop();
-  }
-
   // ======================= //
   //     server utils        //
   // ======================= //
