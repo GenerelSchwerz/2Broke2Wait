@@ -110,8 +110,8 @@ discord:
 
   # Discord bot configuration.
   bot:
-    enabled: false
-    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GDirCY.TyzZvqMIcsD2nIMpifyhEMQI6Dr5zt_YxckIgM
+    enabled: true
+    botToken: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GiYjFe.Vry-kEjtIU6tnOhGhVVU9J0RfV0W23Qyb0Nvqo
     prefix: "!"
 
   # Discord webhook configuration.
