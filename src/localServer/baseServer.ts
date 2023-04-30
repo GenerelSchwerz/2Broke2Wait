@@ -1,6 +1,6 @@
 import { Client, Server, createServer, ServerOptions, ServerClient } from "minecraft-protocol";
 import { BotOptions, Bot, BotEvents } from "mineflayer";
-import { ConnOptions, Conn, Client as ProxyClient } from "@rob9315/mcproxy";
+import { ConnOptions, Conn, Client as ProxyClient } from "@icetank/mcproxy";
 import { Arguments, ListType, TypedEventEmitter, U2I } from "../types/util";
 import { CommandHandler, CommandMap } from "../util/commandHandler";
 import { ChatMessage as AgnogChMsg } from "prismarine-chat";

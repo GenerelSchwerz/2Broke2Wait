@@ -1,4 +1,4 @@
-import { Client, Conn } from '@rob9315/mcproxy'
+import { Client, Conn } from '@icetank/mcproxy'
 import { ServerClient } from 'minecraft-protocol'
 import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin } from './baseServer'
 import { CommandMap } from '../util/commandHandler'
@@ -158,9 +158,10 @@ export class GotoPlacePlugin extends ProxyServerPlugin {
     try {
       await bot.pathfinder.goto(goal)
       this.server.message(client, 'Made it!')
+      this.serverLog('Pathfinder:goto_success')
     } catch (e) {
       this.server.message(client, 'Did not make it...')
-      console.error('hi', e)
+      this.serverLog('Pathfinder:goto_failure', e)
     }
 
     // basic clean up, then we're all good :thumbsup:

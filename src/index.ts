@@ -9,7 +9,6 @@ import {
   MotdReporter
 } from './localServer/builtinPlugins'
 import { ServerBuilder } from './localServer/baseServer'
-import { GotoPlacePlugin } from './localServer/examplePlugin'
 import { buildClient } from './discord'
 
 import type { Options } from './types/options'
@@ -17,7 +16,15 @@ import type { Options } from './types/options'
 const yaml = require('js-yaml')
 
 // ... If no errors were found, return the validated config
-const config = yaml.load(fs.readFileSync('./options.yml', 'utf-8'))
+let config;
+
+try {
+  config = yaml.load(fs.readFileSync('./options.yml', 'utf-8'))
+} catch (e) {
+  const data = fs.readFileSync('./static/defaults/default_config.yml', 'utf-8');
+  fs.writeFileSync('./options.yml', data);
+  config = yaml.load(data);
+}
 
 const checkedConfig: Options = validateOptions(config)
 const bOpts = botOptsFromConfig(checkedConfig)

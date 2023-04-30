@@ -1,4 +1,4 @@
-import { Conn } from '@rob9315/mcproxy'
+import { Conn } from '@icetank/mcproxy'
 import { PacketQueuePredictor } from './packetQueuePredictor'
 import { getWaitTime, hourAndMinToDateTime } from '../../util/remoteInfo'
 import type { Client, PacketMeta } from 'minecraft-protocol'

@@ -6,7 +6,7 @@ import antiAFK, {
 } from '@nxg-org/mineflayer-antiafk'
 import autoEat from '@nxg-org/mineflayer-auto-eat'
 import { MODULE_DEFAULT_SETTINGS, WalkAroundModuleOptions } from '@nxg-org/mineflayer-antiafk/lib/modules/index'
-import { Conn } from '@rob9315/mcproxy'
+import { Conn } from '@icetank/mcproxy'
 import { Bot } from 'mineflayer'
 import { pathfinder } from 'mineflayer-pathfinder'
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../predictors/packetQueuePredictor'

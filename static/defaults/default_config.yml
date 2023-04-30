@@ -11,7 +11,7 @@ minecraft:
   # Documentation: https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md#mineflayercreatebotoptions
   # All options from that are valid.
   account:
-    username: Generel_Schwerz
+    username: #name
     auth: microsoft
 
   # Custom implementation of a SOCKS4/5 proxy.

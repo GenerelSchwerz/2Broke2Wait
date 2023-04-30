@@ -1,6 +1,6 @@
 import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '../baseServer'
 
-import { Client as ProxyClient, Conn, PacketMiddleware } from '@rob9315/mcproxy'
+import { Client as ProxyClient, Conn, PacketMiddleware } from '@icetank/mcproxy'
 import { Client } from 'minecraft-protocol'
 import { sleep } from '../../util/index'
 import { WorldManager, FakePlayer, FakeSpectator } from './spectatorUtils'

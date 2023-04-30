@@ -1,7 +1,7 @@
 import { TypedEventEmitter } from '../types/util'
 import { ProxyServer } from '../localServer/baseServer'
 import { PacketMeta, ServerClient, Client } from 'minecraft-protocol'
-import { Client as ProxyClient, PacketMiddleware } from '@rob9315/mcproxy'
+import { Client as ProxyClient, PacketMiddleware } from '@icetank/mcproxy'
 import { sleep } from './index'
 import type { Vec3 } from 'vec3'
 

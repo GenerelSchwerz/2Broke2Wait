@@ -1,5 +1,5 @@
-import { IPositionTransformer, packetAbilities } from '@rob9315/mcproxy'
-import { Client, PacketMeta, ServerClient } from 'minecraft-protocol'
+import { IPositionTransformer, packetAbilities } from '@icetank/mcproxy'
+import { Client, PacketMeta } from 'minecraft-protocol'
 import { GameState, Bot } from 'mineflayer'
 import type { Entity } from 'prismarine-entity'
 import { performance } from 'perf_hooks'
@@ -48,6 +48,20 @@ class FakeEntity {
   onGround: boolean
   mainHand?: NotchItem
   offHand?: NotchItem
+
+  /**
+   * rounded float (yaw) to integer within mc's limits.
+   */
+  public get intYaw() {
+    return -(Math.floor(((this.yaw / Math.PI) * 128 + 255) % 256) - 127)
+  }
+
+  /**
+   * rounded float (pitch) to integer within mc's limits.
+   */
+  public get intPitch() {
+    return -Math.floor(((this.pitch / Math.PI) * 128) % 256)
+  }
 
   constructor (id: number, pos: Vec3, yaw: number, pitch: number, onGround = true) {
     this.id = id
@@ -105,7 +119,7 @@ const DefaultPlayerOpts: FakeBotEntityOpts = {
   skinLookup: false
 }
 
-type AllowedClient = Client | ServerClient
+type AllowedClient = Client
 type OmitX<ToRemove extends number, Args extends any[], Remain extends any[] = []> = ToRemove extends Remain['length']
   ? Args
   : Args extends []
@@ -117,13 +131,13 @@ type OmitX<ToRemove extends number, Args extends any[], Remain extends any[] = [
 export class FakeBotEntity {
   public static id = 9999
 
-  private _destroyed = false
+  private _synced = false
 
   public readonly opts: FakeBotEntityOpts
   public readonly entityRef: FakeEntity
 
   public readonly linkedBot: Bot
-  public readonly linkedClients: Map<string, ServerClient> = new Map()
+  public readonly linkedClients: Map<string, Client> = new Map()
 
   protected PrisItem: typeof ItemType
 
@@ -131,8 +145,8 @@ export class FakeBotEntity {
     return this.linkedBot.entity
   }
 
-  public get destroyed () {
-    return this._destroyed
+  public get synced () {
+    return this._synced
   }
 
   public get positionTransformer () {
@@ -160,7 +174,7 @@ export class FakeBotEntity {
     }
   }
 
-  public doForAllClients = <Func extends (client: ServerClient, ...args: any[]) => any>(
+  public doForAllClients = <Func extends (client: Client, ...args: any[]) => any>(
     func: Func,
     ...args: OmitX<1, Parameters<Func>>
   ) => {
@@ -175,21 +189,20 @@ export class FakeBotEntity {
     this.writeAll('entity_teleport', {
       entityId: this.entityRef.id,
       ...this.entityRef.knownPosition,
-      yaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127), // convert to int.
-      pitch: -Math.floor(((this.entityRef.pitch / Math.PI) * 128) % 256),
+      yaw: this.entityRef.intYaw,
+      pitch: this.entityRef.intPitch,
       onGround: this.entityRef.onGround
     })
     this.writeAll('entity_look', {
       entityId: this.entityRef.id,
-      yaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127),
-      pitch: -Math.floor(((this.entityRef.pitch / Math.PI) * 128) % 256),
+      yaw: this.entityRef.intYaw,
+      pitch: this.entityRef.intPitch,
       onGround: this.entityRef.onGround
     })
 
     this.writeAll('entity_head_rotation', {
       entityId: this.entityRef.id,
-      // headYaw: this.entityRef.yaw,
-      headYaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127)
+      headYaw: this.entityRef.intYaw
     })
   }
 
@@ -206,7 +219,7 @@ export class FakeBotEntity {
     this.doForAllClients(this.updateEquipmentFor)
   }
 
-  public updateEquipmentFor = (client: ServerClient) => {
+  public updateEquipmentFor = (client: Client) => {
     const mainHand = this.linkedBot.heldItem != null ? this.PrisItem.toNotch(this.linkedBot.heldItem) : NoneItemData
     const offHand = this.linkedBot.inventory.slots[45]
       ? this.PrisItem.toNotch(this.linkedBot.inventory.slots[45])
@@ -252,11 +265,10 @@ export class FakeBotEntity {
     this.doForAllClients(this.writeDestroyEntity)
   }
 
-  listenerWorldJoin = () => {
-    this.doForAllClients(this.writePlayerEntity)
-  }
+  listenerWorldJoin = () => this.doForAllClients(this.writePlayerEntity)
+  
 
-  async writePlayerInfo (client: ServerClient) {
+  async writePlayerInfo (client: Client) {
     let properties = []
     if (this.opts.skinLookup) {
       let response
@@ -292,7 +304,7 @@ export class FakeBotEntity {
     })
   }
 
-  private readonly writePlayerEntity = (client: ServerClient) => {
+  private readonly writePlayerEntity = (client: Client) => {
     this.writeRaw(client, 'named_entity_spawn', {
       entityId: this.entityRef.id,
       playerUUID: this.opts.uuid,
@@ -319,17 +331,17 @@ export class FakeBotEntity {
 
     this.writeRaw(client, 'entity_head_rotation', {
       entityId: this.entityRef.id,
-      headYaw: -(Math.floor(((this.entityRef.yaw / Math.PI) * 128 + 255) % 256) - 127)
+      headYaw: this.entityRef.intYaw
     })
   }
 
-  private writeDestroyEntity (client: ServerClient) {
+  private writeDestroyEntity (client: Client) {
     this.writeRaw(client, 'entity_destroy', {
       entityIds: [this.entityRef.id]
     })
   }
 
-  private deSpawn (client: ServerClient) {
+  private deSpawn (client: Client) {
     this.writeDestroyEntity(client)
     this.writeRaw(client, 'player_info', {
       action: 4,
@@ -337,17 +349,17 @@ export class FakeBotEntity {
     })
   }
 
-  public spawn (client: ServerClient) {
+  public spawn (client: Client) {
     this.writePlayerInfo(client).then(() => this.writePlayerEntity(client)).catch(console.error)
   }
 
   public subscribe (client: AllowedClient) {
-    this.linkedClients.set(client.uuid, client as ServerClient)
-    this.spawn(client as ServerClient)
+    this.linkedClients.set(client.uuid, client as Client)
+    this.spawn(client as Client)
   }
 
   public unsubscribe (client: AllowedClient) {
-    this.deSpawn(client as ServerClient)
+    this.deSpawn(client as Client)
     this.linkedClients.delete(client.uuid)
   }
 
@@ -358,7 +370,7 @@ export class FakeBotEntity {
     this.linkedBot.inventory.on('updateSlot', this.onItemChange)
     this.linkedBot._client.on('mcproxy:heldItemSlotUpdate', this.onItemChange)
     this.linkedBot.on('respawn', this.listenerWorldLeave)
-    this._destroyed = false
+    this._synced = true
   }
 
   public unsync () {
@@ -367,7 +379,7 @@ export class FakeBotEntity {
     this.linkedBot.inventory.off('updateSlot', this.onItemChange)
     this.linkedBot._client.off('mcproxy:heldItemSlotUpdate', this.onItemChange)
     this.linkedBot.off('respawn', this.listenerWorldLeave)
-    this._destroyed = true
+    this._synced = false
   }
 }
 
@@ -416,7 +428,7 @@ export class GhostHandler {
 
   public opts: GhostHandlerOpts
 
-  public get bot () {
+  public get linkedBot () {
     return this.linkedFakeBot.linkedBot
   }
 
@@ -431,11 +443,11 @@ export class GhostHandler {
 
   writeRaw = writeRaw
 
-  public tpToFakePlayer (client: ServerClient | Client) {
+  public tpToFakePlayer (client: Client) {
     this.writeRaw(client, 'position', this.linkedFakeBot.entityRef.getPositionData())
   }
 
-  public tpToOtherClient (client: ServerClient, username: string) {
+  public tpToOtherClient (client: Client, username: string) {
     let target
     for (const clientUser in this.clientsInCamera) {
       if (username === clientUser) {
@@ -447,7 +459,7 @@ export class GhostHandler {
     this.writeRaw(client, 'position', target.getPositionData())
   }
 
-  public makeSpectator (client: ServerClient | Client) {
+  public makeSpectator (client: Client) {
     this.writeRaw(client, 'player_info', {
       action: 1,
       data: [{ UUID: client.uuid, gamemode: 3 }]
@@ -465,22 +477,22 @@ export class GhostHandler {
     this.linkedFakeBot.subscribe(client)
   }
 
-  public revertPov (client: Client | ServerClient) {
+  public revertPov (client: Client) {
     if (!this.clientsInCamera[client.uuid]) return false
 
     this.unregister(client)
 
     this.writeRaw(client, 'camera', {
-      cameraId: this.bot.entity.id
+      cameraId: this.linkedBot.entity.id
     })
 
     return true
   }
 
-  public revertToBotGamemode (client: ServerClient | Client) {
-    const a = packetAbilities(this.bot)
-    if (this.bot.game.gameMode === 'survival') a.data.flags = 0 // hotfix
-    const notchGM = gameModeToNotchian(this.bot.game.gameMode)
+  public revertToBotGamemode (client: Client) {
+    const a = packetAbilities(this.linkedBot)
+    if (this.linkedBot.game.gameMode === 'survival') a.data.flags = 0 // hotfix
+    const notchGM = gameModeToNotchian(this.linkedBot.game.gameMode)
     this.writeRaw(client, a.name, a.data)
 
     this.writeRaw(client, 'player_info', {
@@ -494,22 +506,22 @@ export class GhostHandler {
     })
 
     this.writeRaw(client, 'position', {
-      ...this.bot.entity.position,
-      yaw: this.bot.entity.yaw,
-      pitch: this.bot.entity.pitch,
-      onGround: this.bot.entity.onGround
+      ...this.linkedBot.entity.position,
+      yaw: this.linkedBot.entity.yaw,
+      pitch: this.linkedBot.entity.pitch,
+      onGround: this.linkedBot.entity.onGround
     })
 
     this.writeRaw(client, a.name, a.data)
   }
 
-  public revertToBotStatus (client: Client | ServerClient) {
+  public revertToBotStatus (client: Client) {
     this.linkedFakeBot.unsubscribe(client)
     this.revertPov(client)
     this.revertToBotGamemode(client)
   }
 
-  public async linkToBotPov (client: Client | ServerClient) {
+  public async linkToBotPov (client: Client) {
     this.makeSpectator(client)
 
     await sleep(50) // allow bot to spawn on client end.
@@ -532,25 +544,25 @@ export class GhostHandler {
     updatePos()
     const onMove = () => updatePos()
     const cleanup = () => {
-      this.bot.removeListener('move', onMove)
-      this.bot.removeListener('end', cleanup)
+      this.linkedBot.removeListener('move', onMove)
+      this.linkedBot.removeListener('end', cleanup)
       client.removeListener('end', cleanup)
     }
-    this.bot.on('move', onMove)
-    this.bot.once('end', cleanup)
+    this.linkedBot.on('move', onMove)
+    this.linkedBot.once('end', cleanup)
     client.once('end', cleanup)
     this.register(client, cleanup)
     return true
   }
 
-  register (client: Client | ServerClient, cleanup: () => void = () => {}) {
+  register (client: Client, cleanup: () => void = () => {}) {
     if (this.clientsInCamera[client.uuid]) {
       this.clientsInCamera[client.uuid].cleanup()
     }
     this.clientsInCamera[client.uuid] = new GhostInfo(client, cleanup)
   }
 
-  unregister (client: ServerClient | Client) {
+  unregister (client: Client) {
     if (this.clientsInCamera[client.uuid]) {
       this.clientsInCamera[client.uuid].cleanup()
     }
@@ -562,7 +574,7 @@ function writeRaw (
   this: {
     positionTransformer?: IPositionTransformer
   },
-  client: ServerClient | Client,
+  client: Client,
   name: string,
   data: any
 ) {

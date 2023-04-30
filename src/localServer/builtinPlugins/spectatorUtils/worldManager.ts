@@ -1,4 +1,4 @@
-import { chunkColumnToPacketsWithOffset, IPositionTransformer, PacketMiddleware } from '@rob9315/mcproxy'
+import { chunkColumnToPacketsWithOffset, IPositionTransformer, PacketMiddleware } from '@icetank/mcproxy'
 import * as fs from 'fs'
 import { Client } from 'minecraft-protocol'
 import * as path from 'path'

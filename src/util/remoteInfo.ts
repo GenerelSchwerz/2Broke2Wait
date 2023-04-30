@@ -121,6 +121,7 @@ export async function tentativeStartTime (
     return NaN
   }
 }
+  
 
 /**
  * Halts program until certain time.

@@ -188,6 +188,17 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
+"@icetank/mcproxy@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@icetank/mcproxy/-/mcproxy-1.0.2.tgz#aa6013381edcefd818c72853abe7e3918e69a32e"
+  integrity sha512-0kLL2Z9yRBsy2j1ucKIZG5fPyhuYnb9VmTneXHRuRl7plOA+Iywt9Msal3haOLlOukk90LsNPmAr37L4NAldCQ==
+  dependencies:
+    minecraft-data "^3.0.0"
+    minecraft-protocol "^1.32.0"
+    mineflayer "^4.1.0"
+    prismarine-item "^1.11.5"
+    smart-buffer "^4.2.0"
+
 "@jridgewell/gen-mapping@^0.3.0":
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/@jridgewell/gen-mapping/-/gen-mapping-0.3.2.tgz#c1aedc61e853f2bb9f5dfe6d4442d3b565b253b9"
@@ -241,10 +252,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@nxg-org/mineflayer-antiafk@^1.4.17":
-  version "1.4.17"
-  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-antiafk/-/mineflayer-antiafk-1.4.17.tgz#9b45015941a4d29aff6f7b0325ce672b95600781"
-  integrity sha512-hkGkYjR2IqbkIn+U/E6a8Df/xXkiJR9RMv28Lfvd6L2hEzlzP8GvCnKdx+m1IqP5dna6JU5IVX5ev0XZDwIllA==
+"@nxg-org/mineflayer-antiafk@^1.4.18":
+  version "1.4.18"
+  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-antiafk/-/mineflayer-antiafk-1.4.18.tgz#e471028eb071e579c82d477cd8f63bb136a2fb9c"
+  integrity sha512-cTzdgjgaxL4l/6N0M5H4Op/uXKohp3TG/Gys5pkKhS9Q6F/VTjyO66LHSQq5qTpg6+uLn/FYifVs9und/8Frcw==
   dependencies:
     "@nxg-org/mineflayer-util-plugin" "^1.6.0"
     strict-event-emitter-types "^2.0.0"
@@ -260,16 +271,6 @@
   version "1.7.11"
   resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-util-plugin/-/mineflayer-util-plugin-1.7.11.tgz#ae8270c75d6cea9debd66b9dee1c982044d09b93"
   integrity sha512-OUw2dLZhZpe4JM2k0RD2wgqz+1BP6qxhlCKmKgdgJCs07F5RiLzyqrGMOlGodPwvmhehmWIDKqdvkDhBi83CsQ==
-
-"@rob9315/mcproxy@IceTank/mcproxy-1.git#position-spoofing":
-  version "1.0.0"
-  resolved "https://codeload.github.com/IceTank/mcproxy-1/tar.gz/4dd28daef7bb8ec99089f776244da6f49d4844c7"
-  dependencies:
-    minecraft-data "^3.0.0"
-    minecraft-protocol "^1.32.0"
-    mineflayer "^4.1.0"
-    prismarine-item "^1.11.5"
-    smart-buffer "^4.2.0"
 
 "@sapphire/async-queue@^1.5.0":
   version "1.5.0"

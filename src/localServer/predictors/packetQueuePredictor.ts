@@ -1,4 +1,4 @@
-import { Conn } from '@rob9315/mcproxy'
+import { Conn } from '@icetank/mcproxy'
 import { ConstructorOptions, EventEmitter2 } from 'eventemitter2'
 import { Client } from 'minecraft-protocol'
 import { StrictEventEmitter } from 'strict-event-emitter-types'
