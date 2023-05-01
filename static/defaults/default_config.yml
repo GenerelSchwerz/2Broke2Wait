@@ -142,6 +142,7 @@ discord:
 logger:
   enabled: false
 
+  # filters for specific events/packets
   filters: 
   localServerSend: 
     blacklist: ['map*']
