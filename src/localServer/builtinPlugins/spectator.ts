@@ -3,7 +3,7 @@ import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '../base
 import { Client as ProxyClient, Conn, PacketMiddleware } from '@icetank/mcproxy'
 import { Client } from 'minecraft-protocol'
 import { sleep } from '../../util/index'
-import { WorldManager, FakePlayer, FakeSpectator } from './spectatorUtils'
+import { FakePlayer, FakeSpectator, WorldManager } from './spectatorUtils'
 import { CommandMap } from '../../util/commandHandler'
 import { FakeBotEntity, GhostHandler } from './ghostUtils/fakes'
 import { Bot } from 'mineflayer'
@@ -42,14 +42,14 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     },
 
     stopbot: {
-      description: 'Stops the bot\'s remote control',
+      description: "Stops the bot's remote control",
       callable: (client) => {
         if (this.server.isPlayerControlling()) return this.server.message(client, 'Bot is not running.')
         this.server.endBotLogic()
       }
     },
     startbot: {
-      description: 'Starts the bot\'s remote control',
+      description: "Starts the bot's remote control",
       callable: (client) => {
         if (!this.server.isPlayerControlling()) return this.server.message(client, 'Bot is already in control.')
         this.server.beginBotLogic()
@@ -57,7 +57,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     },
 
     view: {
-      description: 'Link the spectating player\'s perspective',
+      description: "Link the spectating player's perspective",
       callable: async (client) => {
         const res0 = await this.makeViewFakePlayer(client)
         if (res0) this.server.message(client, 'Connecting to view. Type /unview to exit')
@@ -110,9 +110,9 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
 
   private buildFakeData (conn: Conn) {
     this.fakePlayer = new FakeBotEntity(conn.stateData.bot, {
-      username: '[B] ' + conn.stateData.bot.username.substring(0, 12),
+      username: '[B] ' + conn.stateData.bot.username.substring(0, 12)
       // uuid: conn.stateData.bot._client.uuid,
-      positionTransformer: conn.positionTransformer
+      // positionTransformer: conn.positionTransformer
     })
 
     this.fakeSpectator = new GhostHandler(this.fakePlayer)
@@ -211,7 +211,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.server.message(client, 'Unlinking')
     }
     this.server.conn.unlink()
-    this.server.conn.stateData.bot.physicsEnabled = true
+    // this.server.conn.stateData.bot.physicsEnabled = true
     this.server.beginBotLogic()
   }
 

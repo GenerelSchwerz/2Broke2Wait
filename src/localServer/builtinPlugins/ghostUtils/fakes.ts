@@ -1,4 +1,4 @@
-import { IPositionTransformer, packetAbilities } from '@icetank/mcproxy'
+import { packetAbilities } from '@icetank/mcproxy'
 import { Client, PacketMeta } from 'minecraft-protocol'
 import { GameState, Bot } from 'mineflayer'
 import type { Entity } from 'prismarine-entity'
@@ -7,6 +7,8 @@ import type { Item as ItemType, NotchItem } from 'prismarine-item'
 import merge from 'ts-deepmerge'
 import { Vec3 } from 'vec3'
 import { sleep } from '../../../util'
+
+type IPositionTransformer = any
 
 const itemLoader = require('prismarine-item/index.js') // ncc compat, get default.
 const fetch = require('node-fetch')

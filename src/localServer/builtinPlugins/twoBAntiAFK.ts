@@ -3,145 +3,144 @@ import antiAFK, {
   AllPassiveSettings,
   DEFAULT_MODULES,
   DEFAULT_PASSIVES,
-  unloadDefaultModules,
-} from "@nxg-org/mineflayer-antiafk";
-import autoEat from "@nxg-org/mineflayer-auto-eat";
+  unloadDefaultModules
+} from '@nxg-org/mineflayer-antiafk'
+import {loader as autoEat} from '@nxg-org/mineflayer-auto-eat'
 import {
   MODULE_DEFAULT_SETTINGS,
   PathfinderWalkOpts,
   BoxWalk,
   BoxWalkOpts,
-  SwingArm,
-} from "@nxg-org/mineflayer-antiafk/lib/modules";
-import { Conn } from "@icetank/mcproxy";
-import { Bot } from "mineflayer";
-import { pathfinder } from "mineflayer-pathfinder";
-import { PacketQueuePredictor, PacketQueuePredictorEvents } from "../predictors/packetQueuePredictor";
-import { CombinedPredictor } from "../predictors/combinedPredictor";
-import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin } from "../baseServer";
-import merge from "ts-deepmerge";
+  SwingArm
+} from '@nxg-org/mineflayer-antiafk/lib/modules'
+import { Conn } from '@icetank/mcproxy'
+import { Bot } from 'mineflayer'
+import { pathfinder } from 'mineflayer-pathfinder'
+import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../predictors/packetQueuePredictor'
+import { CombinedPredictor } from '../predictors/combinedPredictor'
+import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin } from '../baseServer'
+import merge from 'ts-deepmerge'
 
 export interface TwoBAntiAFKOpts extends IProxyServerOpts {
   antiAFK: {
-    enabled: boolean;
-    modules: Partial<AllModuleSettings>;
-    passives: Partial<AllPassiveSettings>;
-  };
-  autoEat: boolean;
+    enabled: boolean
+    modules: Partial<AllModuleSettings>
+    passives: Partial<AllPassiveSettings>
+  }
+  autoEat: boolean
 }
 
 export interface TwoBAntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {}
 
 export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAntiAFKEvents> {
-  name = "AntiAFK";
+  name = 'AntiAFK'
 
-  private _queue?: PacketQueuePredictor<any, any>;
-  public get queue() {
-    return this._queue;
+  private _queue?: PacketQueuePredictor<any, any>
+  public get queue () {
+    return this._queue
   }
 
   onPreStart = (conn: Conn) => {
-    this._queue = new CombinedPredictor(conn);
-    this._queue.begin();
-    this._queue.on("*", (...args: any[]) => {
-      this.serverEmit((this._queue as any).event, ...args);
-    });
-    this.share("queue", this._queue);
-  };
+    this._queue = new CombinedPredictor(conn)
+    this._queue.begin()
+    this._queue.on('*', (...args: any[]) => {
+      this.serverEmit((this._queue as any).event, ...args)
+    })
+    this.share('queue', this._queue)
+  }
 
   onPreStop = () => {
-    if (this._queue != null) this._queue.end();
-    this.drop("queue");
-  };
+    if (this._queue != null) this._queue.end()
+    this.drop('queue')
+  }
 
   onInitialBotSetup = (bot: Bot) => {
     if (this.psOpts.antiAFK.enabled) {
-      bot.loadPlugin(pathfinder);
-      bot.loadPlugin(antiAFK);
-      unloadDefaultModules(bot);
+      bot.loadPlugin(pathfinder)
+      bot.loadPlugin(antiAFK)
+      unloadDefaultModules(bot)
 
-      bot.antiafk.on("moduleCanceled", (mod) =>
-        this.serverLog("AntiAFK!", `[ERROR] Canceled AntiAFK module: ${mod.constructor.name}`)
-      );
+      bot.antiafk.on('moduleCanceled', (mod) =>
+        this.serverLog('AntiAFK!', `[ERROR] Canceled AntiAFK module: ${mod.constructor.name}`)
+      )
 
-      bot.antiafk.on("moduleCompleted", (mod, success, reason) =>
+      bot.antiafk.on('moduleCompleted', (mod, success, reason) =>
         this.serverLog(
-          "AntiAFK!",
+          'AntiAFK!',
           `[INFO] Completed AntiAFK module: ${mod.constructor.name}, to success: ${success}, with reason: ${reason}`
         )
-      );
+      )
 
       if (DEFAULT_MODULES.BlockBreak != null && this.psOpts.antiAFK.modules.PathfinderWalk != null) {
-        if (this.server.bOpts.host?.includes("2b2t")) {
-          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.PathfinderWalk, PathfinderWalkOpts.TwoBTwoT(bot));
+        if (this.server.bOpts.host?.includes('2b2t')) {
+          bot.antiafk.setOptionsForModule(DEFAULT_MODULES.PathfinderWalk, PathfinderWalkOpts.TwoBTwoT(bot))
         }
 
-        bot.antiafk.addModules(DEFAULT_MODULES.PathfinderWalk);
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.PathfinderWalk, this.psOpts.antiAFK.modules.PathfinderWalk);
+        bot.antiafk.addModules(DEFAULT_MODULES.PathfinderWalk)
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.PathfinderWalk, this.psOpts.antiAFK.modules.PathfinderWalk)
       }
 
       if (DEFAULT_MODULES.BlockBreak != null && this.psOpts.antiAFK.modules.BlockBreak != null) {
-        bot.antiafk.addModules(DEFAULT_MODULES.BlockBreak);
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreak, this.psOpts.antiAFK.modules.BlockBreak);
+        bot.antiafk.addModules(DEFAULT_MODULES.BlockBreak)
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.BlockBreak, this.psOpts.antiAFK.modules.BlockBreak)
       }
 
       if (this.psOpts.antiAFK.modules.RandomMovement != null) {
-        bot.antiafk.addModules(DEFAULT_MODULES.RandomMovement);
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovement, this.psOpts.antiAFK.modules.RandomMovement);
+        bot.antiafk.addModules(DEFAULT_MODULES.RandomMovement)
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.RandomMovement, this.psOpts.antiAFK.modules.RandomMovement)
       }
 
       if (this.psOpts.antiAFK.modules.LookAround != null) {
-        bot.antiafk.addModules(DEFAULT_MODULES.LookAround);
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAround, this.psOpts.antiAFK.modules.LookAround);
+        bot.antiafk.addModules(DEFAULT_MODULES.LookAround)
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.LookAround, this.psOpts.antiAFK.modules.LookAround)
       }
 
       if (this.psOpts.antiAFK.modules.ChatBot != null) {
-        bot.antiafk.addModules(DEFAULT_MODULES.ChatBot);
-        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBot, this.psOpts.antiAFK.modules.ChatBot);
+        bot.antiafk.addModules(DEFAULT_MODULES.ChatBot)
+        bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBot, this.psOpts.antiAFK.modules.ChatBot)
       }
 
       if (this.psOpts.antiAFK.modules.BoxWalk != null) {
-        bot.antiafk.addModules(BoxWalk);
-        bot.antiafk.setOptionsForModule(BoxWalk, this.psOpts.antiAFK.modules.BoxWalk);
+        bot.antiafk.addModules(BoxWalk)
+        bot.antiafk.setOptionsForModule(BoxWalk, this.psOpts.antiAFK.modules.BoxWalk)
       }
 
       if (this.psOpts.antiAFK.modules.SwingArm != null) {
-        bot.antiafk.addModules(SwingArm);
-        bot.antiafk.setOptionsForModule(BoxWalk, this.psOpts.antiAFK.modules.SwingArm);
+        bot.antiafk.addModules(SwingArm)
+        bot.antiafk.setOptionsForModule(BoxWalk, this.psOpts.antiAFK.modules.SwingArm)
       }
 
       // passives
       if (this.psOpts.antiAFK.passives.KillAura != null) {
-        bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAura, this.psOpts.antiAFK.passives.KillAura);
+        bot.antiafk.setOptionsForPassive(DEFAULT_PASSIVES.KillAura, this.psOpts.antiAFK.passives.KillAura)
       }
     }
 
     if (this.psOpts.autoEat) {
-      bot.loadPlugin(autoEat);
+      bot.loadPlugin(autoEat)
 
-      bot.autoEat.setOptions({
-        eatUntilFull: true,
-        eatingTimeout: 3000,
-        minHealth: 14,
-        minHunger: 15,
-        returnToLastItem: true,
-        useOffHand: false,
-        bannedFood: ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye"],
-      });
+      // bot.autoEat.setOptions({
+      //   eatUntilFull: true,
+      //   eatingTimeout: 3000,
+      //   minHealth: 14,
+      //   minHunger: 15,
+      //   returnToLastItem: true,
+      //   useOffHand: false,
+      //   bannedFood: ['rotten_flesh', 'pufferfish', 'chorus_fruit', 'poisonous_potato', 'spider_eye']
+      // })
     }
-  };
+  }
 
   onBotAutonomous = (bot: Bot) => {
-    if (this._queue == null) throw Error("Somehow bot is starting without queue being initialized!");
-    if (this.psOpts.antiAFK && !this._queue.inQueue) bot.antiafk.start();
-    if (this.psOpts.autoEat && !this._queue.inQueue) bot.autoEat.enableAuto();
-  };
+    if (this._queue == null) throw Error('Somehow bot is starting without queue being initialized!')
+    if (this.psOpts.antiAFK && !this._queue.inQueue) bot.antiafk.start()
+    if (this.psOpts.autoEat && !this._queue.inQueue) bot.autoEat.enableAuto()
+  }
 
   onBotControlled = (bot: Bot) => {
-    if (this.psOpts.antiAFK) bot.antiafk.forceStop();
+    if (this.psOpts.antiAFK) bot.antiafk.forceStop()
     if (this.psOpts.autoEat) {
-      bot.autoEat.disableAuto();
-      bot.autoEat.cancelEat();
+      bot.autoEat.disableAuto()
     }
-  };
+  }
 }

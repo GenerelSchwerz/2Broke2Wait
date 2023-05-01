@@ -134,7 +134,7 @@ export class Logger {
     return filename
   }
 
-  public log(name: string, category: LogCategories, data: any, extra?: ExtraLogInfo) {
+  public log (name: string, category: LogCategories, data: any, extra?: ExtraLogInfo) {
     if (!this.config.enabled) return
     if (!this.config.active[category]) return
 

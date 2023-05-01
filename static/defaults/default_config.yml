@@ -93,7 +93,7 @@ localServerConfig:
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.
     passives:
-      KillAuraPassive:
+      KillAura:
         playerWhitelist: []
         reach: 4
         multi: false
