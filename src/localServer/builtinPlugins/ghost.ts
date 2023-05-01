@@ -12,7 +12,7 @@ export class GhostPlugin extends ProxyServerPlugin {
 
   onNewBotSpawn = (bot: Bot) => {
     const newFake = new FakeBotEntity(bot)
-    const ghostHandler = new GhostHandler(newFake);
+    const ghostHandler = new GhostHandler(newFake)
     const oldFake = this.getShared<FakeBotEntity>('fakeBotEntity')
     if ((oldFake != null) && oldFake.synced) {
       oldFake.unsync()

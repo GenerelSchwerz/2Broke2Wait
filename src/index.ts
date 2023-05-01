@@ -16,14 +16,14 @@ import type { Options } from './types/options'
 const yaml = require('js-yaml')
 
 // ... If no errors were found, return the validated config
-let config;
+let config
 
 try {
   config = yaml.load(fs.readFileSync('./options.yml', 'utf-8'))
 } catch (e) {
-  const data = fs.readFileSync('./static/defaults/default_config.yml', 'utf-8');
-  fs.writeFileSync('./options.yml', data);
-  config = yaml.load(data);
+  const data = fs.readFileSync('./static/defaults/default_config.yml', 'utf-8')
+  fs.writeFileSync('./options.yml', data)
+  config = yaml.load(data)
 }
 
 const checkedConfig: Options = validateOptions(config)

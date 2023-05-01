@@ -72,6 +72,7 @@ localServerConfig:
     logPlayerJoinLeave: false
 
 
+
   # AntiAFK options.
   antiAFK:
 
@@ -80,15 +81,14 @@ localServerConfig:
     # AntiAFK module settings. Leave this be for now.
     # I will include documentation at a later date.
     modules:
-
-      WalkAroundModule:
-        timeout: 5000
-
-      RandomMovementModule:
-        enabled: false
-
-      ChatBotModule:
-        enabled: false
+      SwingArm:
+        enabled: true
+      
+      BoxWalk:
+        enabled: true
+        distance: 16
+        travelTime: 5000
+        waitTime: 30000
 
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.

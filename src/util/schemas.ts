@@ -134,7 +134,7 @@ export const configSchema = joi.object({
         .description('Advanced: options for proxies'),
       remoteServer: joi
         .object({
-          host: joi.string().hostname().default('2b2t.org').description('Address of the server to connect the bot to'),
+          host: joi.string().default('2b2t.org').description('Address of the server to connect the bot to'),
           port: joi.number().port().default(25565).description('Port of the server to connect to'),
           version: joi
             .string()

@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import path from 'path'
-import merge from 'ts-deepmerge';
+import merge from 'ts-deepmerge'
 import { DateTime } from 'ts-luxon';
 
 (BigInt.prototype as any).toJSON = function () {
@@ -134,7 +134,7 @@ export class Logger {
     return filename
   }
 
-  public log = (name: string, category: LogCategories, data: any, extra?: ExtraLogInfo) => {
+  public log(name: string, category: LogCategories, data: any, extra?: ExtraLogInfo) {
     if (!this.config.enabled) return
     if (!this.config.active[category]) return
 

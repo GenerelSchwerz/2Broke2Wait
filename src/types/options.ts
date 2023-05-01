@@ -20,7 +20,7 @@ export type QueueSetup = BaseWebhookOpts & {
   reportAt: number
 }
 
-export type GameChatSetup =  BaseWebhookOpts  & {
+export type GameChatSetup = BaseWebhookOpts & {
   timestamp?: boolean
 }
 

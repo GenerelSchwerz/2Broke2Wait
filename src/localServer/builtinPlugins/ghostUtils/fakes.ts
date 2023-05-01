@@ -52,14 +52,14 @@ class FakeEntity {
   /**
    * rounded float (yaw) to integer within mc's limits.
    */
-  public get intYaw() {
+  public get intYaw () {
     return -(Math.floor(((this.yaw / Math.PI) * 128 + 255) % 256) - 127)
   }
 
   /**
    * rounded float (pitch) to integer within mc's limits.
    */
-  public get intPitch() {
+  public get intPitch () {
     return -Math.floor(((this.pitch / Math.PI) * 128) % 256)
   }
 
@@ -266,7 +266,6 @@ export class FakeBotEntity {
   }
 
   listenerWorldJoin = () => this.doForAllClients(this.writePlayerEntity)
-  
 
   async writePlayerInfo (client: Client) {
     let properties = []
@@ -354,12 +353,12 @@ export class FakeBotEntity {
   }
 
   public subscribe (client: AllowedClient) {
-    this.linkedClients.set(client.uuid, client as Client)
-    this.spawn(client as Client)
+    this.linkedClients.set(client.uuid, client)
+    this.spawn(client)
   }
 
   public unsubscribe (client: AllowedClient) {
-    this.deSpawn(client as Client)
+    this.deSpawn(client)
     this.linkedClients.delete(client.uuid)
   }
 

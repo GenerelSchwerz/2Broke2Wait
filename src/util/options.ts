@@ -155,7 +155,7 @@ export function botOptsFromConfig (opts: Options): BotOptions {
   return ret
 }
 
-async function getIcon (iconInfo?: string) {
+async function getIcon (iconInfo?: string): Promise<string> {
   if (iconInfo) {
     if (iconInfo.startsWith('http://') || iconInfo.startsWith('https://')) {
       return 'data:image/png;base64,' + (await getImgBuf(iconInfo)).toString('base64')

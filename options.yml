@@ -1,5 +1,5 @@
 # Global setting for all debugging.
-debug: false
+debug: true
 
 
 
@@ -26,7 +26,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: 2b2t.org
+    host: localhost
     port: 25565
     version: 1.12.2
 
@@ -36,7 +36,7 @@ minecraft:
 # All options from there are valid.
 localServer:
   host: 0.0.0.0
-  port: 25565
+  port: 25566
   version: 1.12.2
   online-mode: false
   maxPlayers: 1
@@ -80,15 +80,14 @@ localServerConfig:
     # AntiAFK module settings. Leave this be for now.
     # I will include documentation at a later date.
     modules:
-
-      WalkAroundModule:
-        timeout: 5000
-
-      RandomMovementModule:
-        enabled: false
-
-      ChatBotModule:
-        enabled: false
+      SwingArm:
+        enabled: true
+      
+      BoxWalk:
+        enabled: true
+        distance: 16
+        travelTime: 5000
+        waitTime: 30000
 
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.
@@ -140,4 +139,14 @@ discord:
 
 
 logger:
-  enabled: false
+  enabled: true
+
+  filters: 
+    localServerSend: 
+      blacklist: ['map*']
+    
+    remoteBotReceive: 
+      blacklist: ['map*']
+  
+  
+
