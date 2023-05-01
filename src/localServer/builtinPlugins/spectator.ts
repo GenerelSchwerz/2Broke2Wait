@@ -211,6 +211,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.server.message(client, 'Unlinking')
     }
     this.server.conn.unlink()
+    this.server.conn.stateData.bot.physicsEnabled = true
     this.server.beginBotLogic()
   }
 

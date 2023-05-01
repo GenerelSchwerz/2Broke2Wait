@@ -141,3 +141,12 @@ discord:
 
 logger:
   enabled: false
+
+  filters: 
+  localServerSend: 
+    blacklist: ['map*']
+  
+  remoteBotReceive: 
+    blacklist: ['map*']
+  
+  
