@@ -12,14 +12,14 @@ export function validateOptions<T extends object> (options: any): T {
     if (validationErrors.details.length === 1) {
       console.log(
         '\x1b[36m',
-        'Stopped proxy, encountered an error in config.json (you must fix it): \n'
+        'Stopped proxy, encountered an error in options.yml (you must fix it): \n'
       )
     } else {
       console.log(
         '\x1b[36m',
         'Stopped proxy, encountered ' +
             validationErrors.details.length +
-            ' errors in config.json (you must fix them): \n'
+            ' errors in options.yml (you must fix them): \n'
       )
     }
     for (let i = 0; i < validationErrors.details.length; i++) {

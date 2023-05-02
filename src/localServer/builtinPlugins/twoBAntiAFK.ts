@@ -19,7 +19,6 @@ import { pathfinder } from 'mineflayer-pathfinder'
 import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../predictors/packetQueuePredictor'
 import { CombinedPredictor } from '../predictors/combinedPredictor'
 import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin } from '../baseServer'
-import merge from 'ts-deepmerge'
 
 export interface TwoBAntiAFKOpts extends IProxyServerOpts {
   antiAFK: {
@@ -100,6 +99,7 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
         bot.antiafk.setOptionsForModule(DEFAULT_MODULES.ChatBot, this.psOpts.antiAFK.modules.ChatBot)
       }
 
+    
       if (this.psOpts.antiAFK.modules.BoxWalk != null) {
         bot.antiafk.addModules(BoxWalk)
         bot.antiafk.setOptionsForModule(BoxWalk, this.psOpts.antiAFK.modules.BoxWalk)
@@ -107,7 +107,7 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
 
       if (this.psOpts.antiAFK.modules.SwingArm != null) {
         bot.antiafk.addModules(SwingArm)
-        bot.antiafk.setOptionsForModule(BoxWalk, this.psOpts.antiAFK.modules.SwingArm)
+        bot.antiafk.setOptionsForModule(SwingArm, this.psOpts.antiAFK.modules.SwingArm)
       }
 
       // passives
@@ -139,8 +139,6 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
 
   onBotControlled = (bot: Bot) => {
     if (this.psOpts.antiAFK) bot.antiafk.forceStop()
-    if (this.psOpts.autoEat) {
-      bot.autoEat.disableAuto()
-    }
+    if (this.psOpts.autoEat) bot.autoEat.disableAuto()
   }
 }

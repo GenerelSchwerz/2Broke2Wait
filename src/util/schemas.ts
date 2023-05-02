@@ -37,7 +37,7 @@ const proxySchema = joi.object({
 // Config Schema
 // =============
 
-// Schema used to validate config.json
+// Schema used to validate options.yml
 export const configSchema = joi.object({
   discord: joi
     .object({
