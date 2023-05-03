@@ -19,6 +19,7 @@ export interface SpectatorServerEvents {
 }
 
 export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, {}, SpectatorServerEvents> {
+
   public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
 
   public worldManager: WorldManager | null = null

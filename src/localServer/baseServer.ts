@@ -92,28 +92,28 @@ export type Test<Events> = {
 // TODO: Separate plugins into "emitters" and "listeners"
 // "emitters" provide custom events, "listeners" do not (can listen to custom though)
 // for use in server builder to lock typings further.
-export class ProxyServerPlugin<
-  Opts = {},
+export abstract class ProxyServerPlugin<
+  O = {},
   L = {},
   E = {},
   ListensTo extends IProxyServerEvents = IProxyServerEvents & L,
-  AvailableOpts extends IProxyServerOpts = IProxyServerOpts & Opts,
-  AvailableEvents extends IProxyServerEvents = IProxyServerEvents & E
+  Opts extends IProxyServerOpts = IProxyServerOpts & O,
+  Events extends IProxyServerEvents = IProxyServerEvents & E
 
   // ListensTo extends IProxyServerEvents = IProxyServerEvents,
 > {
   private _enabled = true;
 
-  public declare _server: ProxyServer<AvailableOpts, AvailableEvents>;
+  public declare _server: ProxyServer<Opts, Events>;
   public declare connectedCmds?: CommandMap;
   public declare disconnectedCmds?: CommandMap;
 
-  public get server(): ProxyServer<AvailableOpts, AvailableEvents> {
+  public get server(): ProxyServer<Opts, Events> {
     if (this._server == null) throw Error("Server was wanted before proper initialization!");
     return this._server;
   }
 
-  public get psOpts(): AvailableOpts {
+  public get psOpts(): Opts {
     if (this._server == null) throw Error("Proxy options were wanted before proper initialization!");
     return this._server.psOpts;
   }
@@ -200,7 +200,7 @@ export class ProxyServerPlugin<
    * Function that is called whenever the server is ready to load plugins
    * @param server
    */
-  public onLoad(server: ProxyServer<AvailableOpts, AvailableEvents>) {
+  public onLoad(server: ProxyServer<Opts, Events>) {
     this._server = server;
 
     // TODO: Generalize this.
@@ -225,7 +225,7 @@ export class ProxyServerPlugin<
    * However, code-wise it is possible to unload plugins.
    * @param server
    */
-  public onUnload(server: ProxyServer<AvailableOpts, AvailableEvents>) {
+  public onUnload(server: ProxyServer<Opts, Events>) {
     this._server = server;
     for (const [event, listenerList] of this.listenerMap.entries()) {
       listenerList.forEach((e) => this.serverOff(event as any, e as any));
@@ -237,7 +237,7 @@ export class ProxyServerPlugin<
    * @param event
    * @param args
    */
-  public serverEmit<E extends keyof AvailableEvents>(event: E, ...args: Arguments<AvailableEvents[E]>) {
+  public serverEmit<E extends keyof Events>(event: E, ...args: Arguments<Events[E]>) {
     this.server.emit(event, ...args);
   }
 
@@ -256,7 +256,7 @@ export class ProxyServerPlugin<
    * NOTE: Technically not type-safe. (could provide "undefined" to otherwise required input)
    * @param opts
    */
-  public setServerOpts(opts: Partial<AvailableOpts>) {
+  public setServerOpts(opts: Partial<Opts>) {
     this.server.psOpts = merge(opts, this.psOpts) as any;
   }
 
@@ -336,14 +336,14 @@ export class ServerBuilder<Opts extends IProxyServerOpts, Emits extends IProxySe
     return this as any;
   }
 
-  public addPluginStatic<O, E>(
-    this: ServerBuilder<Opts, Emits, false>,
-    plugin: typeof ProxyServerPlugin<O, any, E>
-  ): ServerBuilder<Opts & O, Emits & E, AppliedSettings> {
-    const build = new plugin();
-    this.plugins.push(build);
-    return this as any;
-  }
+  // public addPluginStatic<O, E>(
+  //   this: ServerBuilder<Opts, Emits, false>,
+  //   plugin: typeof ProxyServerPlugin<O, any, E>
+  // ): ServerBuilder<Opts & O, Emits & E, AppliedSettings> {
+  //   const build = new plugin();
+  //   this.plugins.push(build);
+  //   return this as any;
+  // }
 
   public setSettings(settings: Opts): ServerBuilder<Opts, Emits, true> {
     this._settings = settings;
@@ -469,10 +469,10 @@ export class ProxyServer<
 
   // TODO: Broken typings.
   // Use the publicly exposed builder instead.
-  public loadPlugin<FoundOpts, FoundEvents>(
-    inserting: Opts extends FoundOpts
-      ? Events extends FoundEvents
-        ? ProxyServerPlugin<FoundOpts, FoundEvents>
+  public loadPlugin<O, L>(
+    inserting: Opts extends O
+      ? Events extends L
+        ? ProxyServerPlugin<O, L>
         : never
       : never
   ): ProxyServer<Opts, Events> {

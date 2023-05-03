@@ -9,12 +9,12 @@ import { CombinedPredictor } from '../predictors/combinedPredictor'
 import { TwoBAntiAFKEvents } from './twoBAntiAFK'
 
 
-export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents, {}> {
+export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
   constructor (public debug = false) {
     super()
   }
 
-  public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
+  public onLoad (server: ProxyServer<{}, TwoBAntiAFKEvents>): void {
     super.onLoad(server)
     this.serverOn('enteredQueue', this.onEnteredQueue)
     this.serverOn('leftQueue', this.onLeftQueue)
@@ -81,12 +81,12 @@ export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents, {}
   }
 }
 
-export class MotdReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents, {}> {
+export class MotdReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
   constructor (public readonly opts: Options['localServerConfig']['display']) {
     super()
   }
 
-  public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
+  public onLoad (server: ProxyServer<{}, TwoBAntiAFKEvents>): void {
     super.onLoad(server)
     this.serverOn('botevent_health', this.botUpdatesMotd)
     this.serverOn('remoteDisconnect', this.disconnectServerMotd)
@@ -238,7 +238,7 @@ export class WebhookReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
     }
   }
 
-  public onLoad (server: ProxyServer<AllOpts, AllEvents>): void {
+  public onLoad (server: ProxyServer<{}, TwoBAntiAFKEvents>): void {
     super.onLoad(server)
     this.serverOn('queueUpdate', this.onQueueUpdate)
     this.serverOn('enteredQueue', this.onEnteredQueue)

@@ -1,84 +1,81 @@
-import * as fs from 'fs'
-import { validateOptions } from './util/config'
-import { botOptsFromConfig, serverOptsFromConfig } from './util/options'
+import * as fs from "fs";
+import { validateOptions } from "./util/config";
+import { botOptsFromConfig, serverOptsFromConfig } from "./util/options";
 import {
   ConsoleReporter,
   SpectatorServerPlugin,
   TwoBAntiAFKPlugin,
   WebhookReporter,
-  MotdReporter
-} from './localServer/builtinPlugins'
-import { ServerBuilder } from './localServer/baseServer'
-import { buildClient } from './discord'
+  MotdReporter,
+} from "./localServer/builtinPlugins";
+import { ServerBuilder } from "./localServer/baseServer";
+import { buildClient } from "./discord";
 
-import type { Options } from './types/options'
+import type { Options } from "./types/options";
+import { GotoPlacePlugin } from "./localServer/examplePlugin";
 
-const yaml = require('js-yaml')
+const yaml = require("js-yaml");
 
 // ... If no errors were found, return the validated config
-let config
+let config;
 
 try {
-  config = yaml.load(fs.readFileSync('./options.yml', 'utf-8'))
+  config = yaml.load(fs.readFileSync("./options.yml", "utf-8"));
 } catch (e) {
-  const data = fs.readFileSync('./static/defaults/default_config.yml', 'utf-8')
-  fs.writeFileSync('./options.yml', data)
-  config = yaml.load(data)
+  const data = fs.readFileSync("./static/defaults/default_config.yml", "utf-8");
+  fs.writeFileSync("./options.yml", data);
+  config = yaml.load(data);
 }
 
-const checkedConfig: Options = validateOptions(config)
-const bOpts = botOptsFromConfig(checkedConfig)
+const checkedConfig: Options = validateOptions(config);
+const bOpts = botOptsFromConfig(checkedConfig);
 
 const helpMsg =
-  '-------------------------------\n' +
-  'start    -> starts the server\n' +
-  'stop     -> stops the server\n' +
-  'restart  -> restarts the server\n' +
-  'status   -> displays info of service\n' +
-  'help     -> shows this message\n'
+  "-------------------------------\n" +
+  "start    -> starts the server\n" +
+  "stop     -> stops the server\n" +
+  "restart  -> restarts the server\n" +
+  "status   -> displays info of service\n" +
+  "help     -> shows this message\n";
 
-async function setup () {
-  const serverOptions = await serverOptsFromConfig(checkedConfig)
+async function setup() {
+  const serverOptions = await serverOptsFromConfig(checkedConfig);
 
-  // for typing reasons, just make an array. I'll explain in due time.
-  const plugins = []
-  plugins.push(new SpectatorServerPlugin())
-  plugins.push(new TwoBAntiAFKPlugin())
 
   const server = new ServerBuilder(serverOptions, bOpts)
-    .addPlugins(...plugins)
+
+    // add plugins that provide events here!
+    .addPlugin(new SpectatorServerPlugin())
+    .addPlugin(new TwoBAntiAFKPlugin())
+
+    // apply settings only after all plugins have been loaded!
     .setSettings(checkedConfig.localServerConfig)
     .setOtherSettings({
-      debug: true,
+      debug: checkedConfig.debug,
       loggerOpts: checkedConfig.logger,
-      cOpts: {
-        optimizePacketWrite: false
-      }
     })
-    .build()
+    .build();
 
-  // everything after here is strongly typed.
-  // If a plugin does not meet the types provided ^^^, then it will fail.
 
-  // server.loadPlugin(new GotoPlacePlugin());
-
+  // all other plugins must be listener-only to be strongly typed.
+  // This is to prevent improperly built servers.
   if (true) {
-    server.loadPlugin(new ConsoleReporter())
+    server.loadPlugin(new ConsoleReporter());
   }
 
   if (true) {
-    server.loadPlugin(new MotdReporter(checkedConfig.localServerConfig.display))
+    server.loadPlugin(new MotdReporter(checkedConfig.localServerConfig.display));
   }
 
   if (checkedConfig.discord.webhooks?.enabled) {
-    server.loadPlugin(new WebhookReporter(checkedConfig.discord.webhooks))
+    server.loadPlugin(new WebhookReporter(checkedConfig.discord.webhooks));
   }
 
   if (checkedConfig.discord.bot?.enabled) {
-    buildClient(checkedConfig.discord.bot, server)
+    buildClient(checkedConfig.discord.bot, server);
   }
 
-  server.start()
+  server.start();
 
   // ==========================
   //  custom logging example!
@@ -90,4 +87,4 @@ async function setup () {
   // })
 }
 
-setup()
+setup();

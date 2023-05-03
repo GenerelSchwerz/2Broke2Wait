@@ -66,9 +66,6 @@ export class ProximityPlugin extends ProxyServerPlugin {
 }
 
 
-interface Test {
-  shit: () => void;
-}
 
 /**
  * Gen here again.
@@ -82,7 +79,7 @@ interface Test {
  *  This is purposefully simple so it can be easy to follow.
  *
  */
-export class GotoPlacePlugin extends ProxyServerPlugin<{}, Test> {
+export class GotoPlacePlugin extends ProxyServerPlugin<{}, {}> {
   connectedCmds: CommandMap = {
     goto: {
       usage: 'goto <x> <y> <z>',
@@ -101,6 +98,10 @@ export class GotoPlacePlugin extends ProxyServerPlugin<{}, Test> {
       description: 'Stop mineflayer-pathfinder',
       callable: this.stop.bind(this)
     }
+  }
+
+  constructor(public readonly opts: string) {
+    super();
   }
 
   public onLoad(server: ProxyServer<IProxyServerOpts,IProxyServerEvents>): void {

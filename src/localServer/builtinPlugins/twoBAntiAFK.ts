@@ -43,7 +43,7 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, {}, Tw
     this._queue = new CombinedPredictor(conn)
     this._queue.begin()
     this._queue.on('*', (...args: any[]) => {
-      this.serverEmit((this._queue as any).event, ...args)
+      this.serverEmit((this._queue as any).event, ...args);
     })
     this.share('queue', this._queue)
   }
