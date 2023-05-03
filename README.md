@@ -10,10 +10,11 @@ There are multiple ways to install this version of 2Broke2Wait
 
 ### Native install (NodeJS)
 
-1. Download Node16.
+1. Download Node16. (This is mandatory)
 2. Download our repository. _Top right, green button, click that. Then "download zip"._
-3. run "npm run build"
-4. run "npm run start"
+3. run "npm i" or any other package manager to install packages.
+4. run "npm run build"
+5. run "npm run start"
 
 ### Executable install (Binary)
 
