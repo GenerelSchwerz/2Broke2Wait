@@ -342,7 +342,7 @@ export class FakeBotEntity {
     })
   }
 
-  private deSpawn (client: Client) {
+  private despawn (client: Client) {
     this.writeDestroyEntity(client)
     this.writeRaw(client, 'player_info', {
       action: 4,
@@ -360,7 +360,7 @@ export class FakeBotEntity {
   }
 
   public unsubscribe (client: AllowedClient) {
-    this.deSpawn(client)
+    this.despawn(client)
     this.linkedClients.delete(client.uuid)
   }
 
@@ -523,14 +523,15 @@ export class GhostHandler {
   }
 
   public async linkToBotPov (client: Client) {
-    this.makeSpectator(client)
-
-    await sleep(50) // allow bot to spawn on client end.
 
     if (this.clientsInCamera[client.uuid]) {
       console.warn('Already in the camera', client.username)
       this.unregister(client)
     }
+
+    this.makeSpectator(client)
+
+    await sleep(50) // allow bot to spawn on client end.
 
     this.writeRaw(client, 'camera', {
       cameraId: this.linkedFakeBot.entityRef.id

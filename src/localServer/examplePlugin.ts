@@ -2,8 +2,8 @@ import { Client, Conn } from '@icetank/mcproxy'
 import { ServerClient } from 'minecraft-protocol'
 import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin } from './baseServer'
 import { CommandMap } from '../util/commandHandler'
-import { goals } from 'mineflayer-pathfinder'
-import type { Bot } from 'mineflayer'
+import { PartiallyComputedPath, goals } from 'mineflayer-pathfinder'
+import type { BossBar, Bot, DisplaySlot, Effect, Instrument, Particle, Player, ScoreBoard, Team } from 'mineflayer'
 
 /**
  * Usage:
@@ -23,6 +23,10 @@ import type { Entity } from 'prismarine-entity'
 import { WebhookClient } from 'discord.js'
 import { sleep } from '../util'
 import { once } from 'events'
+import { Block } from 'prismarine-block'
+import { ChatMessage } from 'prismarine-chat'
+import { Window } from 'prismarine-windows'
+import { Vec3 } from 'vec3'
 
 /**
  * Gen here.
@@ -45,7 +49,7 @@ export class ProximityPlugin extends ProxyServerPlugin {
     this.whClient = new WebhookClient({ url: whUrl })
   }
 
-  public onLoad (server: ProxyServer<IProxyServerOpts, IProxyServerEvents>): void {
+  public onLoad (server: ProxyServer): void {
     super.onLoad(server)
     this.serverOn('botevent_entityMoved', this.onEntitySpawn)
   }
@@ -61,6 +65,11 @@ export class ProximityPlugin extends ProxyServerPlugin {
   }
 }
 
+
+interface Test {
+  shit: () => void;
+}
+
 /**
  * Gen here again.
  *
@@ -73,7 +82,7 @@ export class ProximityPlugin extends ProxyServerPlugin {
  *  This is purposefully simple so it can be easy to follow.
  *
  */
-export class GotoPlacePlugin extends ProxyServerPlugin {
+export class GotoPlacePlugin extends ProxyServerPlugin<{}, Test> {
   connectedCmds: CommandMap = {
     goto: {
       usage: 'goto <x> <y> <z>',
@@ -92,6 +101,10 @@ export class GotoPlacePlugin extends ProxyServerPlugin {
       description: 'Stop mineflayer-pathfinder',
       callable: this.stop.bind(this)
     }
+  }
+
+  public onLoad(server: ProxyServer<IProxyServerOpts,IProxyServerEvents>): void {
+      
   }
 
   async stop (client: Client) {

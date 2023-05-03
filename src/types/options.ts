@@ -2,6 +2,7 @@ import type { AllOpts, BaseWebhookOpts } from '../localServer/builtinPlugins'
 import type { BotOptions } from 'mineflayer'
 import type { ServerOptions, Client } from 'minecraft-protocol'
 import type { LogConfig } from '../util/logger'
+import { IProxyServerOpts } from '../localServer/baseServer'
 
 export interface DiscordBotOptions {
   enabled: boolean
@@ -51,7 +52,7 @@ export interface Options {
   }
 
   localServer: ServerOptions
-  localServerConfig: AllOpts
+  localServerConfig: AllOpts & IProxyServerOpts
   logger: LogConfig
   debug: boolean
 }

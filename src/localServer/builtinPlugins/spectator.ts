@@ -8,17 +8,17 @@ import { CommandMap } from '../../util/commandHandler'
 import { FakeBotEntity, GhostHandler } from './ghostUtils/fakes'
 import { Bot } from 'mineflayer'
 
-export interface SpectatorServerOpts extends IProxyServerOpts {
+export interface SpectatorServerOpts {
   linkOnConnect: boolean
   worldCaching: boolean
 }
 
-export interface SpectatorServerEvents extends IProxyServerEvents {
+export interface SpectatorServerEvents {
   clientChatRaw: (pclient: Client, message: string) => void
   clientChat: (pclient: Client, message: string) => void
 }
 
-export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, SpectatorServerEvents> {
+export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts, {}, SpectatorServerEvents> {
   public static readonly notControllingBlockedPackets: string[] = ['entity_metadata', 'abilities', 'position']
 
   public worldManager: WorldManager | null = null
@@ -211,7 +211,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
       this.server.message(client, 'Unlinking')
     }
     this.server.conn.unlink()
-    // this.server.conn.stateData.bot.physicsEnabled = true
     this.server.beginBotLogic()
   }
 

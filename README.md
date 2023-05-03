@@ -26,7 +26,7 @@ There are multiple ways to install this version of 2Broke2Wait
 
 ## Configuration:
 
-Everything to configure is available under `options.json`.
+Everything to configure is available under `options.yml`.
 Simply edit that, the names are self-evident.
 
 There are also hardcoded options deeper within the files, I will soon update those to be read from the configuration file.

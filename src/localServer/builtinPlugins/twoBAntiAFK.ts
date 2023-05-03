@@ -20,7 +20,7 @@ import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../predictors/
 import { CombinedPredictor } from '../predictors/combinedPredictor'
 import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin } from '../baseServer'
 
-export interface TwoBAntiAFKOpts extends IProxyServerOpts {
+export interface TwoBAntiAFKOpts {
   antiAFK: {
     enabled: boolean
     modules: Partial<AllModuleSettings>
@@ -29,9 +29,9 @@ export interface TwoBAntiAFKOpts extends IProxyServerOpts {
   autoEat: boolean
 }
 
-export interface TwoBAntiAFKEvents extends IProxyServerEvents, PacketQueuePredictorEvents {}
+export interface TwoBAntiAFKEvents extends PacketQueuePredictorEvents {}
 
-export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAntiAFKEvents> {
+export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, {}, TwoBAntiAFKEvents> {
   name = 'AntiAFK'
 
   private _queue?: PacketQueuePredictor<any, any>
@@ -118,16 +118,6 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, TwoBAn
 
     if (this.psOpts.autoEat) {
       bot.loadPlugin(autoEat)
-
-      // bot.autoEat.setOptions({
-      //   eatUntilFull: true,
-      //   eatingTimeout: 3000,
-      //   minHealth: 14,
-      //   minHunger: 15,
-      //   returnToLastItem: true,
-      //   useOffHand: false,
-      //   bannedFood: ['rotten_flesh', 'pufferfish', 'chorus_fruit', 'poisonous_potato', 'spider_eye']
-      // })
     }
   }
 

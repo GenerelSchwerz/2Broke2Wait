@@ -6,10 +6,10 @@ import { AllEvents, AllOpts, BaseWebhookOpts } from '.'
 import { DiscordWebhookOptions, GameChatSetup, Options, QueueSetup } from '../../types/options'
 import { ProxyServer, ProxyServerPlugin } from '../baseServer'
 import { CombinedPredictor } from '../predictors/combinedPredictor'
-import { SpectatorServerEvents, SpectatorServerOpts } from './spectator'
-import { TwoBAntiAFKEvents, TwoBAntiAFKOpts } from './twoBAntiAFK'
+import { TwoBAntiAFKEvents } from './twoBAntiAFK'
 
-export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
+
+export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents, {}> {
   constructor (public debug = false) {
     super()
   }
@@ -81,7 +81,7 @@ export class ConsoleReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
   }
 }
 
-export class MotdReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
+export class MotdReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents, {}> {
   constructor (public readonly opts: Options['localServerConfig']['display']) {
     super()
   }
@@ -201,7 +201,7 @@ function escapeMarkdown (...texts: string[]): string[] {
   return texts
 }
 
-export class WebhookReporter extends ProxyServerPlugin<AllOpts, AllEvents> {
+export class WebhookReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
   public queueInfo?: WebhookWrapper & QueueSetup
   public serverInfo?: WebhookWrapper
   public gameChat?: WebhookWrapper & GameChatSetup
