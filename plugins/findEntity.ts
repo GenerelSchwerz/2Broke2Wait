@@ -1,20 +1,13 @@
 import { Client } from "@icetank/mcproxy";
 import { ProxyServerPlugin } from "@nxg-org/mineflayer-mitm-proxy";
-import { CommandMap } from "@nxg-org/mineflayer-mitm-proxy";
+import { CommandMap, CmdPerm } from "@nxg-org/mineflayer-mitm-proxy";
 
 class NearestEntity extends ProxyServerPlugin {
   connectedCmds: CommandMap = {
     findEntity: {
       usage: "findEntity <entity username/name>",
       description: "Finds the nearest entity that matches naming",
-      callable: this.findNearestEntity.bind(this),
-    },
-  };
-
-  disconnectedCmds: CommandMap = {
-    findEntity: {
-      usage: "findEntity <entity username/name>",
-      description: "Finds the nearest entity that matches naming",
+      allowedIf: CmdPerm.LINKED,
       callable: this.findNearestEntity.bind(this),
     },
   };

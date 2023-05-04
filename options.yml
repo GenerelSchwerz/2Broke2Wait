@@ -58,7 +58,7 @@ localServerConfig:
   # Experimental, but does work. (Some commands break)
   disconnectAllOnEnd: true
   restartOnDisconnect: true
-  linkOnConnect: true
+  linkOnConnect: false
 
 
   motdPrefix: "§6"

@@ -1,4 +1,4 @@
-const { ProxyServerPlugin } = require('@nxg-org/mineflayer-mitm-proxy')
+const { ProxyServerPlugin, CmdPerm } = require('@nxg-org/mineflayer-mitm-proxy')
 const { goals, pathfinder } = require('mineflayer-pathfinder')
 
 /**
@@ -18,13 +18,15 @@ class GotoPlacePlugin extends ProxyServerPlugin {
     goto: {
       usage: 'goto <x> <y> <z>',
       description: 'go from point A to point B',
-      callable: this.gotoFunc.bind(this)
+      callable: this.gotoFunc.bind(this),
+      allowedIf: CmdPerm.LINKED
     },
 
     gotoXZ: {
       usage: 'gotoXZ <x> <z>',
       description: 'go from point A to point B, XZ',
-      callable: this.gotoXZFunc.bind(this)
+      callable: this.gotoXZFunc.bind(this),
+      allowedIf: CmdPerm.LINKED
     },
 
     pathstop: {

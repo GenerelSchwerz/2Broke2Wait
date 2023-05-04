@@ -39,14 +39,6 @@ try {
 const checkedConfig: Options = validateOptions(config);
 const bOpts = botOptsFromConfig(checkedConfig);
 
-const helpMsg =
-  "-------------------------------\n" +
-  "start    -> starts the server\n" +
-  "stop     -> stops the server\n" +
-  "restart  -> restarts the server\n" +
-  "status   -> displays info of service\n" +
-  "help     -> shows this message\n";
-
 async function setup() {
   const serverOptions = await serverOptsFromConfig(checkedConfig);
 
@@ -111,8 +103,7 @@ async function setup() {
   //  custom logging example!
   // ==========================
 
-  // this.serverOn('botevent_move', (bot, pos) => {
-  //   console.log('hey')
+  // server.on('botevent_move', (bot, pos) => {
   //   server.logger.log('botMovement', 'custom', pos)
   // })
 }
