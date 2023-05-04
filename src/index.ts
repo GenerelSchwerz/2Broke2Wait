@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import path from 'path'
 import { validateOptions } from "./util/config";
 import { botOptsFromConfig, serverOptsFromConfig } from "./util/options";
 import {
@@ -11,6 +12,7 @@ import {
 import { ServerBuilder } from "@nxg-org/mineflayer-mitm-proxy";
 import { buildClient } from "./discord";
 import type { Options } from "./types/options";
+import { RestartPlugin, SecurityPlugin } from "./localServer/builtinPlugins/security";
 
 const yaml = require("js-yaml");
 
@@ -43,9 +45,13 @@ async function setup() {
   const server = new ServerBuilder(serverOptions, bOpts)
 
     // add plugins that provide events here!
+   
+    .addPlugin(new SecurityPlugin())
+    .addPlugin(new RestartPlugin())
     .addPlugin(new SpectatorServerPlugin())
     .addPlugin(new TwoBAntiAFKPlugin())
-
+    .addPlugin(new MotdReporter())
+    
     // apply settings only after all plugins have been loaded!
     .setSettings(checkedConfig.localServerConfig)
     .setOtherSettings({
@@ -58,11 +64,8 @@ async function setup() {
   // all other plugins must be listener-only to be strongly typed.
   // This is to prevent improperly built servers.
   if (true) {
-    server.loadPlugin(new ConsoleReporter());
-  }
-
-  if (true) {
-    server.loadPlugin(new MotdReporter(checkedConfig.localServerConfig.display));
+    server.loadPlugin(new MotdReporter())
+    server.loadPlugin(new ConsoleReporter())
   }
 
   if (checkedConfig.discord.webhooks?.enabled) {
@@ -72,6 +75,25 @@ async function setup() {
   if (checkedConfig.discord.bot?.enabled) {
     buildClient(checkedConfig.discord.bot, server);
   }
+
+
+  const f = path.join(__dirname, '../plugins')
+  fs.readdirSync(f).forEach(async file => {
+    const file1 = path.join(f, file);
+    const filetype = file1.split('.')[file1.split('.').length-1]
+   
+    switch (filetype) {
+      case "js":
+        const data0 = await require(file1);
+        server.loadPlugin(data0)
+        break
+      case "ts": 
+        const data1 = await import(file1);
+        server.loadPlugin(data1)
+        break
+
+    }    
+  });
 
   server.start();
 

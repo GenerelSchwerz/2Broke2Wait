@@ -26,7 +26,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: 2b2t.org
+    host: localhost
     port: 25565
     version: 1.12.2
 
@@ -44,6 +44,11 @@ localServer:
 # Custom settings for the local server.
 localServerConfig:
 
+
+  whitelist: null
+  kickMessage: Not whitelisted, leave.
+
+
   # milliseconds until next attempt to reconnect
   reconnectInterval: 10000
 
@@ -51,26 +56,17 @@ localServerConfig:
   disableCommands: false
 
   # Experimental, but does work. (Some commands break)
-  disconnectAllOnEnd: false
+  disconnectAllOnEnd: true
   restartOnDisconnect: true
   linkOnConnect: true
 
-  # Security: who is allowed to join. Null for anyone.
-  security:
-    allowList: null
-    kickMessage: Default kick message
 
-  display:
-    motdPrefix: "§6"
-    proxyChatPrefix: "§6>>P§r "
+  motdPrefix: "§6"
+  proxyChatPrefix: "§6>>P§r "
 
-    # Has to be 64x64 and a png.
-    # Can be a file path or a URL.
-    favicon: ./static/assets/2b2w-small.png
-
-  spectator:
-    logPlayerJoinLeave: false
-
+  # Has to be 64x64 and a png.
+  # Can be a file path or a URL.
+  favicon: ./static/assets/2b2w-small.png
 
   # AntiAFK options.
   antiAFK:
@@ -87,7 +83,7 @@ localServerConfig:
         enabled: true
         distance: 16
         travelTime: 5000
-        waitTime: 30000
+        waitTime: 0000
 
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.

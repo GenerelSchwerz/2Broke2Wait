@@ -133,16 +133,6 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
   public override whileConnectedLoginHandler = async (client: Client) => {
     if (this.server.remoteBot == null) return true
     if (this.server.conn == null) return true
-    if (!this.server.isUserWhitelisted(client)) {
-      const { address, family, port } = {
-        address: 'unknown',
-        family: 'unknown',
-        port: 'unknown',
-        ...client.socket.address()
-      }
-      client.end(this.server.psOpts.security?.kickMessage ?? 'You are not in the whitelist')
-      return true
-    }
 
     if (this.worldManager != null) {
       const managedPlayer = this.worldManager.newManagedPlayer(client, this.server.remoteBot.entity.position)

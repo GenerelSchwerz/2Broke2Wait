@@ -189,6 +189,7 @@ export const configSchema = joi.object({
       whitelist: joi
         .array()
         .items(usernameSchema)
+        .allow(null)
         .optional()
         .description('Playernames of accounts that are allowed to connect to the proxy')
     })

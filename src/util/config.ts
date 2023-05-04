@@ -34,7 +34,7 @@ export function validateOptions<T extends object> (options: any): T {
     }
 
     // note: process.exit(<INVALID CONFIG CODE>)
-    throw new Error("Couldn't validate options.json")
+    throw new Error("Couldn't validate options.yml")
   }
 
   return validationResult.value
