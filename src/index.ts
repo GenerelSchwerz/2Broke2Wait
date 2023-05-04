@@ -89,8 +89,8 @@ async function setup() {
         server.loadPlugin(data0)
         break
       case "ts": 
-        const data1 = await import(file1);
-        server.loadPlugin(data1)
+        const data1 = await require(file1);
+        server.loadPlugin(data1.default)
         break
 
     }    
