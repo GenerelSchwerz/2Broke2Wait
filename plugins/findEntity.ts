@@ -4,11 +4,19 @@ import { CommandMap } from "@nxg-org/mineflayer-mitm-proxy";
 
 class NearestEntity extends ProxyServerPlugin {
   connectedCmds: CommandMap = {
-    find: this.findNearestEntity.bind(this),
+    findEntity: {
+      usage: "findEntity <entity username/name>",
+      description: "Finds the nearest entity that matches naming",
+      callable: this.findNearestEntity.bind(this),
+    },
   };
 
   disconnectedCmds: CommandMap = {
-    find: this.findNearestEntity.bind(this),
+    findEntity: {
+      usage: "findEntity <entity username/name>",
+      description: "Finds the nearest entity that matches naming",
+      callable: this.findNearestEntity.bind(this),
+    },
   };
 
   findNearestEntity(client: Client, name: string) {
@@ -23,8 +31,8 @@ class NearestEntity extends ProxyServerPlugin {
 
     if (e == null) this.server.message(client, `Could not find entity with identifier: ${name}`);
     else {
-        const dist = bot.entity.position.distanceTo(e.position);
-        this.server.message(client, `entity ${name} is ${dist.toFixed(2)} blocks away from us.`);
+      const dist = bot.entity.position.distanceTo(e.position);
+      this.server.message(client, `entity ${name} is ${dist.toFixed(2)} blocks away from us.`);
     }
   }
 }

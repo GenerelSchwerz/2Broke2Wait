@@ -14,6 +14,14 @@ import { buildClient } from "./discord";
 import type { Options } from "./types/options";
 import { RestartPlugin, SecurityPlugin } from "./localServer/builtinPlugins/security";
 
+
+if (process.version.split('v')[1].split('.')[0] != '16') {
+  console.log('Your version of node is incorrect. This program only functions on Node16.')
+  console.log(`Your node version is: ${process.version}`)
+  console.log('This is an issue with node-minecraft-protocol, so annoy them. Not me.')
+  process.exit(1);
+}
+
 const yaml = require("js-yaml");
 
 // ... If no errors were found, return the validated config
@@ -26,6 +34,7 @@ try {
   fs.writeFileSync("./options.yml", data);
   config = yaml.load(data);
 }
+
 
 const checkedConfig: Options = validateOptions(config);
 const bOpts = botOptsFromConfig(checkedConfig);
