@@ -4,7 +4,12 @@ import type { Bot } from 'mineflayer'
 import { FakeBotEntity, GhostHandler } from './ghostUtils/fakes'
 
 export class GhostPlugin extends ProxyServerPlugin {
-  public onLoad (server: ProxyServer<IProxyServerOpts, IProxyServerEvents>): void {
+
+
+  public ghostHandler?: GhostHandler;
+
+
+  public onLoad (server: ProxyServer): void {
     super.onLoad(server)
 
     this.serverOn('botevent_spawn', this.onNewBotSpawn)
@@ -12,7 +17,7 @@ export class GhostPlugin extends ProxyServerPlugin {
 
   onNewBotSpawn = (bot: Bot) => {
     const newFake = new FakeBotEntity(bot)
-    const ghostHandler = new GhostHandler(newFake)
+    this.ghostHandler = new GhostHandler(newFake)
     const oldFake = this.getShared<FakeBotEntity>('fakeBotEntity')
     if ((oldFake != null) && oldFake.synced) {
       oldFake.unsync()

@@ -3,6 +3,7 @@
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "target": "ES2022",
+    "declaration": true,
     "sourceMap": true,
     "outDir": "./lib",
     "noImplicitAny": true,

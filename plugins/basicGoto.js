@@ -1,5 +1,8 @@
-const { ProxyServerPlugin, CmdPerm } = require('@nxg-org/mineflayer-mitm-proxy')
-const { goals, pathfinder } = require('mineflayer-pathfinder')
+const { ProxyServerPlugin, CmdPerm } = require("@nxg-org/mineflayer-mitm-proxy");
+const { goals, pathfinder } = require("mineflayer-pathfinder");
+
+const { SpectatorServerPlugin } = require("../lib/localServer/builtinPlugins/spectator");
+const { sleep } = require("../lib/util");
 
 /**
  * Gen here again.
@@ -16,116 +19,122 @@ const { goals, pathfinder } = require('mineflayer-pathfinder')
 class GotoPlacePlugin extends ProxyServerPlugin {
   connectedCmds = {
     goto: {
-      usage: 'goto <x> <y> <z>',
-      description: 'go from point A to point B',
+      usage: "goto <x> <y> <z>",
+      description: "go from point A to point B",
       callable: this.gotoFunc.bind(this),
-      allowedIf: CmdPerm.LINKED
     },
 
     gotoXZ: {
-      usage: 'gotoXZ <x> <z>',
-      description: 'go from point A to point B, XZ',
+      usage: "gotoXZ <x> <z>",
+      description: "go from point A to point B, XZ",
       callable: this.gotoXZFunc.bind(this),
-      allowedIf: CmdPerm.LINKED
     },
 
     pathstop: {
-      usage: 'pathstop',
-      description: 'Stop mineflayer-pathfinder',
-      callable: this.stop.bind(this)
-    }
-  }
-  
+      usage: "pathstop",
+      description: "Stop mineflayer-pathfinder",
+      callable: this.stop.bind(this),
+    },
+  };
+
   onInitialBotSetup = (bot) => {
     bot.loadPlugin(pathfinder);
-  }
+  };
 
-  async stop (client) {
-    // these both exist due to how these commands are called.
-    const bot = this.server.remoteBot
-    const proxy = this.server.conn
-
-    bot.pathfinder.setGoal(null)
-    this.server.message(client, 'Stopped pathfinding!')
-    this.syncClientToBot(client, bot)
-    proxy.link(client)
-  }
-
-  async gotoFunc (client, x, y, z) {
-    // these both exist due to how these commands are called.
-    const bot = this.server.remoteBot
-
-    if (client !== this.server.controllingPlayer) {
-      this.server.message(client, 'You cannot cause the bot to go anywhere, you are not controlling it!')
-      return
+  link(client) {
+    const spectator = this.server.getPlugin(SpectatorServerPlugin);
+    if (spectator) spectator.link(client);
+    else {
+      this.server.conn.link(client);
+      client.write("position", {
+        ...bot.entity.position,
+        yaw: bot.entity.yaw,
+        pitch: bot.entity.pitch,
+        onGround: bot.entity.onGround,
+      });
     }
-
-    const numX = (x === '~') ? bot.entity.position.x : Number(x)
-    const numY = (y === '~') ? bot.entity.position.y : Number(y)
-    const numZ = (z === '~') ? bot.entity.position.z : Number(z)
-
-    const goal = new goals.GoalBlock(numX, numY, numZ)
-
-    this.server.message(client, `Moving to: ${numX} ${numY} ${numZ}`)
-
-    await this.travelTo(client, goal)
   }
 
-  async gotoXZFunc (client, x, z, range) {
+  unlink(client) {
+    const spectator = this.server.getPlugin(SpectatorServerPlugin);
+    if (spectator) spectator.unlink(client);
+    else this.server.conn.unlink();
+  }
+
+  async stop(client) {
     // these both exist due to how these commands are called.
-    const bot = this.server.remoteBot
+    const bot = this.server.remoteBot;
+    bot.pathfinder.setGoal(null);
+    this.server.message(client, "Stopped pathfinding!");
+    if (this.server.inControl(client)) this.link(client);
+  }
 
-    if (client !== this.server.controllingPlayer) {
-      this.server.message(client, 'You cannot cause the bot to go anywhere, you are not controlling it!')
-      return
-    }
+  async gotoFunc(client, x, y, z) {
+    // these both exist due to how these commands are called.
+    const bot = this.server.remoteBot;
 
-    const numX = (x === '~') ? bot.entity.position.x : Number(x)
-    const numZ = (z === '~') ? bot.entity.position.z : Number(z)
-    const numRange = range ? Number(range) : 3
+    // if (client !== this.server.controllingPlayer) {
+    //   this.server.message(client, "You cannot cause the bot to go anywhere, you are not controlling it!");
+    //   return;
+    // }
 
-    this.server.message(client, `Moving to: (${numX}, ${numZ}) w/ range ${numRange}`)
+    const numX = x === "~" ? bot.entity.position.x : Number(x);
+    const numY = y === "~" ? bot.entity.position.y : Number(y);
+    const numZ = z === "~" ? bot.entity.position.z : Number(z);
+
+    const goal = new goals.GoalBlock(numX, numY, numZ);
+
+    this.server.message(client, `Moving to: ${numX} ${numY} ${numZ}`);
+
+    await this.travelTo(client, goal);
+  }
+
+  async gotoXZFunc(client, x, z, range) {
+    // these both exist due to how these commands are called.
+    const bot = this.server.remoteBot;
+
+    // if (client !== this.server.controllingPlayer) {
+    //   this.server.message(client, "You cannot cause the bot to go anywhere, you are not controlling it!");
+    //   return;
+    // }
+
+    const numX = x === "~" ? bot.entity.position.x : Number(x);
+    const numZ = z === "~" ? bot.entity.position.z : Number(z);
+    const numRange = range ? Number(range) : 3;
+
+    this.server.message(client, `Moving to: (${numX}, ${numZ}) w/ range ${numRange}`);
 
     // unlink client so bot can move
-    const goal = new goals.GoalNearXZ(numX, numZ, numRange)
-    await this.travelTo(client, goal)
+    const goal = new goals.GoalNearXZ(numX, numZ, numRange);
+    await this.travelTo(client, goal);
   }
 
-  async travelTo (client, goal) {
+  async travelTo(client, goal) {
     // these both exist due to how these commands are called.
-    const bot = this.server.remoteBot
-    const proxy = this.server.conn
+    const bot = this.server.remoteBot;
+    const isLinked = this.server.controllingPlayer === client;
 
-    proxy.unlink()
+    if (isLinked) this.unlink(client);
 
     if (bot.pathfinder.isMoving()) {
-      bot.pathfinder.setGoal(null)
+      bot.pathfinder.stop();
+      await sleep(200);
     }
+
+    this.server.endBotLogic();
 
     try {
-      await bot.pathfinder.goto(goal)
-      this.server.message(client, 'Made it!')
-      this.serverLog('Pathfinder:goto_success')
+      await bot.pathfinder.goto(goal);
+      this.server.message(client, "Made it!");
+      this.serverLog("Pathfinder:goto_success");
     } catch (e) {
-      this.server.message(client, 'Did not make it...')
-      this.serverLog('Pathfinder:goto_failure', e)
+      this.server.message(client, "Did not make it...");
+      this.serverLog("Pathfinder:goto_failure", e);
+      console.log(e)
+    } finally {
+      if (isLinked) this.link(client);
+      else this.server.beginBotLogic();
     }
-
-    // basic clean up, then we're all good :thumbsup:
-    finally {
-      this.syncClientToBot(client, bot)
-      proxy.link(client)
-    }
-  }
-
-  // sync client back to bot's position
-  syncClientToBot (client, bot) {
-    client.write('position', {
-      ...bot.entity.position,
-      yaw: bot.entity.yaw,
-      pitch: bot.entity.pitch,
-      onGround: bot.entity.onGround
-    })
   }
 }
 
