@@ -3,7 +3,7 @@ import { IntentsBitField } from 'discord.js'
 
 import './commands'
 import type { Options } from '../types/options'
-import { ProxyServer } from '../localServer/baseServer'
+import { ProxyServer } from '@nxg-org/mineflayer-mitm-proxy'
 import { AllEvents, AllOpts } from '../localServer/builtinPlugins'
 
 declare module 'discordx' {

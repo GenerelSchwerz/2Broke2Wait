@@ -1,4 +1,4 @@
-import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '../baseServer'
+import { IProxyServerEvents, IProxyServerOpts, ProxyServerPlugin } from '@nxg-org/mineflayer-mitm-proxy'
 
 import { Client as ProxyClient, Conn, PacketMiddleware } from '@icetank/mcproxy'
 import { Client } from 'minecraft-protocol'

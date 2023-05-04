@@ -1,6 +1,6 @@
 import { Client, Conn } from '@icetank/mcproxy'
 import { ServerClient } from 'minecraft-protocol'
-import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin } from './baseServer'
+import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin } from '@nxg-org/mineflayer-mitm-proxy'
 import { CommandMap } from '../util/commandHandler'
 import { PartiallyComputedPath, goals } from 'mineflayer-pathfinder'
 import type { BossBar, Bot, DisplaySlot, Effect, Instrument, Particle, Player, ScoreBoard, Team } from 'mineflayer'

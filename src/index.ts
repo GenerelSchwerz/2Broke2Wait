@@ -8,11 +8,9 @@ import {
   WebhookReporter,
   MotdReporter,
 } from "./localServer/builtinPlugins";
-import { ServerBuilder } from "./localServer/baseServer";
+import { ServerBuilder } from "@nxg-org/mineflayer-mitm-proxy";
 import { buildClient } from "./discord";
-
 import type { Options } from "./types/options";
-import { GotoPlacePlugin } from "./localServer/examplePlugin";
 
 const yaml = require("js-yaml");
 

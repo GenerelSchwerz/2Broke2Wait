@@ -1,5 +1,5 @@
 import { ServerClient } from 'minecraft-protocol'
-import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin } from '../baseServer'
+import { IProxyServerEvents, IProxyServerOpts, ProxyServer, ProxyServerPlugin } from '@nxg-org/mineflayer-mitm-proxy'
 import type { Bot } from 'mineflayer'
 import { FakeBotEntity, GhostHandler } from './ghostUtils/fakes'
 

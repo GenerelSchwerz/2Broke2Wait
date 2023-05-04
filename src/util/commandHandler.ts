@@ -1,5 +1,5 @@
 import { TypedEventEmitter } from '../types/util'
-import { ProxyServer } from '../localServer/baseServer'
+import { ProxyServer } from '@nxg-org/mineflayer-mitm-proxy'
 import { PacketMeta, ServerClient, Client } from 'minecraft-protocol'
 import { Client as ProxyClient, PacketMiddleware } from '@icetank/mcproxy'
 import { sleep } from './index'
