@@ -17,6 +17,13 @@ const { sleep } = require("../lib/util");
  *
  */
 class GotoPlacePlugin extends ProxyServerPlugin {
+
+  // rough patch
+  opts = {
+    pathfindSyncView: false,
+    resumeAutonomousActivity: false
+  }
+
   connectedCmds = {
     goto: {
       usage: "goto <x> <y> <z>",
@@ -35,30 +42,52 @@ class GotoPlacePlugin extends ProxyServerPlugin {
       description: "Stop mineflayer-pathfinder",
       callable: this.stop.bind(this),
     },
+
+    "pathfind:viewSync": {
+      description: "Sync camera to moving bot",
+      callable: this.setViewSync.bind(this)
+    },
+
+    "pathfind:resumeBotAuto": {
+      description: "Resume bot autonomy after pathfind",
+      callable: this.setResumeBot.bind(this)
+    }
   };
 
   onInitialBotSetup = (bot) => {
     bot.loadPlugin(pathfinder);
   };
 
-  link(client) {
-    const spectator = this.server.getPlugin(SpectatorServerPlugin);
-    if (spectator) spectator.link(client);
-    else {
-      this.server.conn.link(client);
-      client.write("position", {
-        ...bot.entity.position,
-        yaw: bot.entity.yaw,
-        pitch: bot.entity.pitch,
-        onGround: bot.entity.onGround,
-      });
+  setViewSync(client, val) {
+    switch (val.toLowerCase()) {
+      case "true":
+        this.opts.pathfindSyncView = true
+        this.server.message(client, `Pathfinding viewpoint has been set to true`)
+        break
+      case "false":
+        this.opts.pathfindSyncView = false
+        this.server.message(client, `Pathfinding viewpoint has been set to false`)
+        break
+      default:
+        this.server.message(client, `Invalid entry \"${val}\". Needs to be true or false.`);
+        break
     }
   }
 
-  unlink(client) {
-    const spectator = this.server.getPlugin(SpectatorServerPlugin);
-    if (spectator) spectator.unlink(client);
-    else this.server.conn.unlink();
+  setResumeBot(client, val) {
+    switch (val.toLowerCase()) {
+      case "true":
+        this.opts.resumeAutonomousActivity = true
+        this.server.message(client, `Resume bot activity after pathfinding has been set to true`)
+        break
+      case "false":
+        this.opts.resumeAutonomousActivity = false
+        this.server.message(client, `Resume bot activity after pathfinding has been set to false`)
+        break
+      default:
+        this.server.message(client, `Invalid entry \"${val}\". Needs to be true or false.`);
+        break
+    }
   }
 
   async stop(client) {
@@ -66,17 +95,11 @@ class GotoPlacePlugin extends ProxyServerPlugin {
     const bot = this.server.remoteBot;
     bot.pathfinder.setGoal(null);
     this.server.message(client, "Stopped pathfinding!");
-    if (this.server.inControl(client)) this.link(client);
   }
 
   async gotoFunc(client, x, y, z) {
     // these both exist due to how these commands are called.
     const bot = this.server.remoteBot;
-
-    // if (client !== this.server.controllingPlayer) {
-    //   this.server.message(client, "You cannot cause the bot to go anywhere, you are not controlling it!");
-    //   return;
-    // }
 
     const numX = x === "~" ? bot.entity.position.x : Number(x);
     const numY = y === "~" ? bot.entity.position.y : Number(y);
@@ -112,16 +135,16 @@ class GotoPlacePlugin extends ProxyServerPlugin {
   async travelTo(client, goal) {
     // these both exist due to how these commands are called.
     const bot = this.server.remoteBot;
-    const isLinked = this.server.controllingPlayer === client;
+    const isLinked = this.server.inControl(client);
 
     if (isLinked) this.unlink(client);
+
+    this.server.endBotLogic();
 
     if (bot.pathfinder.isMoving()) {
       bot.pathfinder.stop();
       await sleep(200);
     }
-
-    this.server.endBotLogic();
 
     try {
       await bot.pathfinder.goto(goal);
@@ -130,11 +153,33 @@ class GotoPlacePlugin extends ProxyServerPlugin {
     } catch (e) {
       this.server.message(client, "Did not make it...");
       this.serverLog("Pathfinder:goto_failure", e);
-      console.log(e)
     } finally {
       if (isLinked) this.link(client);
-      else this.server.beginBotLogic();
+      else if (this.opts.resumeAutonomousActivity) this.server.beginBotLogic();
     }
+  }
+
+  link(client) {
+    const spectator = this.server.getPlugin(SpectatorServerPlugin);
+    if (spectator) spectator.link(client);
+    else {
+      this.server.conn.link(client);
+      client.write("position", {
+        ...bot.entity.position,
+        yaw: bot.entity.yaw,
+        pitch: bot.entity.pitch,
+        onGround: bot.entity.onGround,
+      });
+    }
+  }
+
+  unlink(client, syncview = this.opts.pathfindSyncView) {
+    const spectator = this.server.getPlugin(SpectatorServerPlugin);
+    if (spectator) {
+      spectator.unlink(client);
+      if (syncview) spectator.makeViewFakePlayer(client);
+    }
+    else this.server.conn.unlink();
   }
 }
 

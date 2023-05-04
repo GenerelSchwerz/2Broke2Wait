@@ -28,7 +28,7 @@ export class RestartPlugin extends ProxyServerPlugin<RestartOpts, {}> {
       this.server.broadcastMessage("You are still connected.");
     }
 
-    if (this.psOpts.restartOnDisconnect && reason != "END") {
+    if (this.psOpts.restartOnDisconnect && reason != "") {
       this.server.restart(this.psOpts.reconnectInterval);
     }
   };

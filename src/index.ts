@@ -13,6 +13,7 @@ import { ServerBuilder } from "@nxg-org/mineflayer-mitm-proxy";
 import { buildClient } from "./discord";
 import type { Options } from "./types/options";
 import { RestartPlugin, SecurityPlugin } from "./localServer/builtinPlugins/security";
+import { sleep } from "./util";
 
 
 if (process.version.split('v')[1].split('.')[0] != '16') {
@@ -96,6 +97,9 @@ async function setup() {
 
     }    
   });
+
+
+  await sleep(1000);
 
   server.start();
 

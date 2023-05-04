@@ -92,7 +92,7 @@ localServerConfig:
         playerWhitelist: []
         reach: 4
         multi: false
-        enabled: true
+        enabled: false
 
   # Auto eat toggle     
   autoEat: true
