@@ -4,7 +4,7 @@ This project is made to skip the queue of 2b2t.
 
 Heavy work in progress.
 
-## Install:
+## Install
 
 There are multiple ways to install this version of 2Broke2Wait
 
@@ -24,14 +24,14 @@ There are multiple ways to install this version of 2Broke2Wait
 4. Click the one that matches your operating system
 
 
-## Configuration:
+## Configuration
 
 Everything to configure is available under `options.yml`.
 Simply edit that, the names are self-evident.
 
 There are also hardcoded options deeper within the files, I will soon update those to be read from the configuration file.
 
-## Usage:
+## Usage
 
 Currently supports CLI, a discord bot for commands, and discord webhooks for info.
 
@@ -44,6 +44,12 @@ Currently supports CLI, a discord bot for commands, and discord webhooks for inf
     Webhooks:
     - Webhooks do not have commands, they only provide info.
 
+
+## Advanced Usage
+External plugins are now supported! Feel free to develop your own plugins and insert them into `./plugins`.
+Plugin templates are available [here](https://github.com/nxg-org/mineflayer-mitm-proxy). There is also an example already in the plugins folder!
+
+
 ### Roadmap:
 
     1. Predict Queue time.
@@ -52,6 +58,6 @@ Currently supports CLI, a discord bot for commands, and discord webhooks for inf
       - Interface is rough, will update when more people start using it
 
 ### Known Issues:
-
-1. Program's strong event structure is ugly
+    1. Joining too quickly causes the bot to disconnect.
+      This is an issue caused by mcproxy, not this project.
 

@@ -77,6 +77,7 @@ async function setup() {
   }
 
 
+  // Added support for external plugins.
   const f = path.join(__dirname, '../plugins')
   fs.readdirSync(f).forEach(async file => {
     const file1 = path.join(f, file);
