@@ -51,6 +51,15 @@ class SwordPVPPlugin extends ProxyServerPlugin {
     bot.autoEat.setOpts({offhand: true}) 
 
     const listener = () => {
+
+      // if (this.wantedTarget == null) {
+      //   bot.off("physicsTick", listener);
+      //   this.stop(client);
+      //   bot.autoEat.setOpts({offhand: oldOffhand})
+      //   this.server.beginBotLogic();
+      //   return
+      // }
+      
       const e = bot.nearestEntity((e) => e.username?.includes(this.wantedTarget) || e.name?.includes(this.wantedTarget));
       if (e == null) {
         this.server.message(client, `Could not find entity with identifier: ${this.wantedTarget}`);
@@ -88,20 +97,20 @@ class SwordPVPPlugin extends ProxyServerPlugin {
     };
 
     bot.on("physicsTick", listener);
-    console.log(bot.listenerCount("physicsTick"))
   }
 
   async attack(client, ident) {
+    this.wantedTarget = ident;
     this.server.message(client, `Attacking entity: ${ident}`);
     this.unlink(client, true);
-    this.wantedTarget = ident;
     if (!this.server.remoteBot.swordpvp.target) this.setupAttack(client);
   }
 
   async stop(client) {
+    this.wantedTarget = null;
     this.server.remoteBot.swordpvp.stop();
+    this.link(client)
     this.server.message(client, `Stopping sword pvp!`);
-    this.link(client);
   }
 
   link(client) {

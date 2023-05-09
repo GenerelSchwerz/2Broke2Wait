@@ -1,4 +1,4 @@
-const { ProxyServerPlugin, CmdPerm } = require("@nxg-org/mineflayer-mitm-proxy");
+const { ProxyServerPlugin } = require("@nxg-org/mineflayer-mitm-proxy");
 const { goals, pathfinder } = require("mineflayer-pathfinder");
 
 const { SpectatorServerPlugin } = require("../lib/localServer/builtinPlugins/spectator");
@@ -20,8 +20,8 @@ class GotoPlacePlugin extends ProxyServerPlugin {
 
   // rough patch
   opts = {
-    pathfindSyncView: false,
-    resumeAutonomousActivity: false
+    pathfindSyncView: true,
+    resumeAutonomousActivity: true
   }
 
   connectedCmds = {

@@ -118,6 +118,10 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, {}, Tw
 
     if (this.psOpts.autoEat) {
       bot.loadPlugin(autoEat)
+
+      bot.autoEat.setOpts({
+        strictErrors: false // errors will be printed instead of throwing for the bot.s
+      })
     }
   }
 
