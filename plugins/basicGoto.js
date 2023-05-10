@@ -42,12 +42,7 @@ class GotoPlacePlugin extends ProxyServerPlugin {
       description: "Stop mineflayer-pathfinder",
       callable: this.stop.bind(this),
     },
-
-    "pathfind:viewSync": {
-      description: "Sync camera to moving bot",
-      callable: this.setViewSync.bind(this)
-    },
-
+    
     "pathfind:resumeBotAuto": {
       description: "Resume bot autonomy after pathfind",
       callable: this.setResumeBot.bind(this)
@@ -57,22 +52,6 @@ class GotoPlacePlugin extends ProxyServerPlugin {
   onInitialBotSetup = (bot) => {
     bot.loadPlugin(pathfinder);
   };
-
-  setViewSync(client, val) {
-    switch (val.toLowerCase()) {
-      case "true":
-        this.opts.pathfindSyncView = true
-        this.server.message(client, `Pathfinding viewpoint has been set to true`)
-        break
-      case "false":
-        this.opts.pathfindSyncView = false
-        this.server.message(client, `Pathfinding viewpoint has been set to false`)
-        break
-      default:
-        this.server.message(client, `Invalid entry \"${val}\". Needs to be true or false.`);
-        break
-    }
-  }
 
   setResumeBot(client, val) {
     switch (val.toLowerCase()) {
