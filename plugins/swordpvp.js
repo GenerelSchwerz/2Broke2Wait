@@ -112,28 +112,6 @@ class SwordPVPPlugin extends ProxyServerPlugin {
     this.link(client)
     this.server.message(client, `Stopping sword pvp!`);
   }
-
-  link(client) {
-    const spectator = this.server.getPlugin(SpectatorServerPlugin);
-    if (spectator) spectator.link(client);
-    else {
-      this.server.conn.link(client);
-      client.write("position", {
-        ...bot.entity.position,
-        yaw: bot.entity.yaw,
-        pitch: bot.entity.pitch,
-        onGround: bot.entity.onGround,
-      });
-    }
-  }
-
-  unlink(client, syncview = this.opts.pathfindSyncView) {
-    const spectator = this.server.getPlugin(SpectatorServerPlugin);
-    if (spectator) {
-      spectator.unlink(client);
-      if (syncview) spectator.makeViewFakePlayer(client);
-    } else this.server.conn.unlink();
-  }
 }
 
 module.exports = new SwordPVPPlugin();

@@ -119,7 +119,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     this.fakePlayer = new FakeBotEntity(conn.stateData.bot, {
       username: "[B] " + conn.stateData.bot.username.substring(0, 12),
       // uuid: conn.stateData.bot._client.uuid,
-      // positionTransformer: conn.positionTransformer
+      positionTransformer: conn.positionTransformer
     });
 
     this.fakeSpectator = new GhostHandler(this.fakePlayer);
@@ -176,39 +176,29 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     return true;
   };
 
-  async link(client: Client) {
-    if (this.server.conn == null) return;
-    if (client === this.server.conn.pclient) {
+  async onLinking(client: Client) {
+    if (client === this.server.controllingPlayer) {
       this.server.message(client, "Already in control, cannot link!");
       return;
     }
 
-    if (this.server.conn.pclient == null) {
+    if (this.server.controllingPlayer == null) {
       this.server.message(client, "Linking");
-      this.server.endBotLogic();
       this.fakeSpectator?.revertToBotStatus(client);
-      await sleep(50); // allow update pos
-
-      this.server.conn.link(client as unknown as ProxyClient)
-
     } else {
-      const mes = `Cannot link. User §3${this.server.conn.pclient.username}:§r is linked.`;
+      const mes = `Cannot link. User §3${this.server.controllingPlayer.username}:§r is linked.`;
       this.server.message(client, mes);
     }
   }
 
-  unlink(client?: Client) {
-    if (this.server.conn == null) return;
-    if (client != null) {
-      if (client !== this.server.conn.pclient) {
-        this.server.message(client, "Cannot unlink as not in control!");
-        return;
-      }
-      this.fakeSpectator?.makeSpectator(client);
-      this.server.message(client, "Unlinking");
+  onUnlinking(client: Client): void {
+    if (client == null) return;
+    if (client !== this.server.controllingPlayer) {
+      this.server.message(client, "Cannot unlink as not in control!");
+      return;
     }
-    this.server.conn.unlink();
-    this.server.beginBotLogic();
+    this.fakeSpectator?.makeSpectator(client);
+    this.server.message(client, "Unlinking");
   }
 
   async makeViewFakePlayer(client: Client) {
