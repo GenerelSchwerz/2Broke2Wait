@@ -22,21 +22,25 @@ class SwordPVPPlugin extends ProxyServerPlugin {
   }
   
   connectedCmds = {
-    "swordpvp:attack": {
-      usage: "attack <entity username/name>",
-      description: "Attack entity with identifier",
-      callable: this.attack.bind(this),
-    },
 
-    "swordpvp:stop": {
-      description: "stop attacking",
-      callable: this.stop.bind(this),
-    },
-
-    "swordpvp:range": {
-      description: "set attack range",
-      callable: this.setRange.bind(this),
-    },
+    swordpvp: {
+      attack: {
+        usage: "<entity username/name>",
+        description: "Attack entity with identifier",
+        callable: this.attack.bind(this),
+      },
+  
+      stop: {
+        description: "stop attacking",
+        callable: this.stop.bind(this),
+      },
+  
+      range: {
+        description: "set attack range",
+        callable: this.setRange.bind(this),
+      },
+    }
+  
   };
 
   wantedTarget = null;

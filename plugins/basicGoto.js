@@ -25,28 +25,30 @@ class GotoPlacePlugin extends ProxyServerPlugin {
   }
 
   connectedCmds = {
-    goto: {
-      usage: "goto <x> <y> <z>",
-      description: "go from point A to point B",
-      callable: this.gotoFunc.bind(this),
-    },
-
-    gotoXZ: {
-      usage: "gotoXZ <x> <z>",
-      description: "go from point A to point B, XZ",
-      callable: this.gotoXZFunc.bind(this),
-    },
-
-    pathstop: {
-      usage: "pathstop",
-      description: "Stop mineflayer-pathfinder",
-      callable: this.stop.bind(this),
-    },
-    
-    "pathfind:resumeBotAuto": {
-      description: "Resume bot autonomy after pathfind",
-      callable: this.setResumeBot.bind(this)
+    pathfinder: {
+      goto: {
+        usage: "<x> <y> <z>",
+        description: "go from point A to point B",
+        callable: this.gotoFunc.bind(this),
+      },
+  
+      gotoXZ: {
+        usage: "<x> <z>",
+        description: "go from point A to point B, XZ",
+        callable: this.gotoXZFunc.bind(this),
+      },
+  
+      stop: {
+        description: "Stop mineflayer-pathfinder",
+        callable: this.stop.bind(this),
+      },
+  
+      resumeBotAuto: {
+        description: "Resume bot autonomy after pathfind",
+        callable: this.setResumeBot.bind(this)
+      }
     }
+    
   };
 
   onInitialBotSetup = (bot) => {
