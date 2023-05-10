@@ -1,12 +1,6 @@
-const { ProxyServerPlugin, CmdPerm } = require("@nxg-org/mineflayer-mitm-proxy");
-const { goals, pathfinder } = require("mineflayer-pathfinder");
+const { ProxyServerPlugin } = require("@nxg-org/mineflayer-mitm-proxy");
+const { pathfinder } = require("mineflayer-pathfinder");
 const { default: customPVP } = require("@nxg-org/mineflayer-custom-pvp");
-
-const { SpectatorServerPlugin } = require("../lib/localServer/builtinPlugins/spectator");
-const { TwoBAntiAFKPlugin } = require("../lib/localServer/builtinPlugins/twoBAntiAFK");
-const { sleep } = require("../lib/util");
-
-const { once } = require("events");
 
 /**
  * Gen here again.
@@ -21,6 +15,12 @@ const { once } = require("events");
  *
  */
 class SwordPVPPlugin extends ProxyServerPlugin {
+  
+  // rough patch
+  opts = {
+    attackRange: 32
+  }
+  
   connectedCmds = {
     "swordpvp:attack": {
       usage: "attack <entity username/name>",
@@ -32,6 +32,11 @@ class SwordPVPPlugin extends ProxyServerPlugin {
       description: "stop attacking",
       callable: this.stop.bind(this),
     },
+
+    "swordpvp:range": {
+      description: "set attack range",
+      callable: this.setRange.bind(this),
+    },
   };
 
   wantedTarget = null;
@@ -41,26 +46,28 @@ class SwordPVPPlugin extends ProxyServerPlugin {
     bot.loadPlugin(customPVP);
   };
 
+  setRange(client, rnge) {
+    const range = Number(rnge)
+    if (Number.isNaN(range)) return this.server.message(client, "Range is not a number!")
+    this.opts.attackRange = range;
+    this.server.message(client, `Range has been set to: ${range} blocks!`)
+  }
+
   setupAttack(client) {
     const bot = this.server.remoteBot;
 
     this.server.endBotLogic();
-
     bot.autoEat.enableAuto();
+
     const oldOffhand = bot.autoEat.opts.offhand;
     bot.autoEat.setOpts({offhand: true}) 
 
     const listener = () => {
-
-      // if (this.wantedTarget == null) {
-      //   bot.off("physicsTick", listener);
-      //   this.stop(client);
-      //   bot.autoEat.setOpts({offhand: oldOffhand})
-      //   this.server.beginBotLogic();
-      //   return
-      // }
-      
-      const e = bot.nearestEntity((e) => e.username?.includes(this.wantedTarget) || e.name?.includes(this.wantedTarget));
+      const e = bot.nearestEntity(
+        e => (e.username?.includes(this.wantedTarget) || 
+        e.name?.includes(this.wantedTarget)) &&
+        e.position.distanceTo(bot.entity.position) < this.opts.attackRange
+      );
       if (e == null) {
         this.server.message(client, `Could not find entity with identifier: ${this.wantedTarget}`);
         bot.off("physicsTick", listener);
@@ -100,16 +107,30 @@ class SwordPVPPlugin extends ProxyServerPlugin {
   }
 
   async attack(client, ident) {
+
     this.wantedTarget = ident;
+
+    const e = this.server.remoteBot.nearestEntity(
+        (e) => e.username?.includes(ident) || e.name?.includes(ident));
+
+    if (e == null) 
+      return this.server.message(client, `Could not find entity with identifier: ${this.wantedTarget}`);
+
+    const dist = e.position.distanceTo(this.server.remoteBot.entity.position);
+    if (dist > this.opts.attackRange) 
+      return this.server.message(client, `Entity "${this.wantedTarget}" is too far away! ${dist.toFixed(2)} blocks away.`);
+
+
     this.server.message(client, `Attacking entity: ${ident}`);
-    this.unlink(client, true);
+    this.unlink(client);
     if (!this.server.remoteBot.swordpvp.target) this.setupAttack(client);
   }
 
   async stop(client) {
     this.wantedTarget = null;
+    const attacking = this.server.remoteBot.swordpvp.target;
     this.server.remoteBot.swordpvp.stop();
-    this.link(client)
+    if (attacking) this.link(client)
     this.server.message(client, `Stopping sword pvp!`);
   }
 }

@@ -3,7 +3,7 @@ import { IProxyServerOpts, ProxyServerPlugin } from "@nxg-org/mineflayer-mitm-pr
 
 export interface SecurityOpts {
   kickMessage?: string;
-  whitelist:  string[] | ((user: string) => boolean) | null;
+  whitelist: string[] | ((user: string) => boolean) | null;
 }
 
 export interface RestartOpts {
@@ -16,7 +16,7 @@ export interface SecurityEvents {
 }
 
 export class RestartPlugin extends ProxyServerPlugin<RestartOpts, {}> {
-  onRemoteDisconnect = (reason: string, info: string | Error) => {
+  onRemoteDisconnect(reason: string, info: string | Error) {
     if (this.psOpts.disconnectAllOnEnd) {
       // parse out text content, otherwise raw.
       try {
@@ -28,32 +28,36 @@ export class RestartPlugin extends ProxyServerPlugin<RestartOpts, {}> {
       this.server.broadcastMessage("You are still connected.");
     }
 
-    if (this.psOpts.restartOnDisconnect && reason != "") {
+    if (this.psOpts.restartOnDisconnect && reason != "END") {
       this.server.restart(this.psOpts.reconnectInterval);
     }
   };
 }
 
 export class SecurityPlugin extends ProxyServerPlugin<SecurityOpts, {}, SecurityEvents> {
-  onPlayerConnected = (actualUser: ServerClient, remoteConnected: boolean) => {
+  
+  onPlayerConnected(actualUser: ServerClient, remoteConnected: boolean) {
     if (!this.isUserWhitelisted(actualUser)) {
       this.serverEmit("unauthorizedConnection", actualUser);
       actualUser.end(this.psOpts.kickMessage ?? "You are not in the whitelist");
       return true;
     }
 
-    const allowedToControl = this.server.lsOpts["online-mode"]
-      ? this.server.remoteClient?.uuid === actualUser.uuid
-      : this.server.remoteClient?.username === actualUser.username;
+    if (this.server.isProxyConnected()) {
+      const allowedToControl = this.server.lsOpts["online-mode"]
+        ? this.server.remoteClient?.uuid === actualUser.uuid
+        : this.server.remoteClient?.username === actualUser.username;
 
-    if (!allowedToControl) {
-      this.serverEmit("unauthorizedConnection", actualUser);
-      actualUser.end("This user is not allowed to control the bot!");
-      return true;
+      if (!allowedToControl) {
+        this.serverEmit("unauthorizedConnection", actualUser);
+        actualUser.end("This user is not allowed to control the bot!");
+        return true;
+      }
     }
+    return true;
   };
 
-  public isUserWhitelisted = (user: Client): boolean => {
+  public isUserWhitelisted(user: Client) {
     if (this.psOpts.whitelist == null) return true;
     if (this.psOpts.whitelist instanceof Array) {
       return this.psOpts.whitelist.find((n) => n.toLowerCase() === user.username.toLowerCase()) !== undefined;

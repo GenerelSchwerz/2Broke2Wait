@@ -168,9 +168,11 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     this.server.runCmd(client, "phelp");
 
     client.once("end", () => {
-      if (client.uuid === this.server.conn?.pclient?.uuid) this.server.beginBotLogic();
+      if (this.server.conn !== null) {
+        if (client === this.server.controllingPlayer) this.server.beginBotLogic();
+        this.unlink(client);
+      }
       this.fakeSpectator?.unregister(client);
-      this.unlink(client);
     });
 
     return true;

@@ -116,11 +116,6 @@ class GotoPlacePlugin extends ProxyServerPlugin {
     // these both exist due to how these commands are called.
     const bot = this.server.remoteBot;
 
-    // if (client !== this.server.controllingPlayer) {
-    //   this.server.message(client, "You cannot cause the bot to go anywhere, you are not controlling it!");
-    //   return;
-    // }
-
     const numX = x === "~" ? bot.entity.position.x : Number(x);
     const numZ = z === "~" ? bot.entity.position.z : Number(z);
     const numRange = range ? Number(range) : 3;
@@ -138,13 +133,6 @@ class GotoPlacePlugin extends ProxyServerPlugin {
     const isLinked = this.server.inControl(client);
 
     if (isLinked) this.unlink(client);
-
-    this.server.endBotLogic();
-
-    if (bot.pathfinder.isMoving()) {
-      bot.pathfinder.stop();
-      await sleep(200);
-    }
 
     try {
       await bot.pathfinder.goto(goal);

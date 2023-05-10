@@ -135,7 +135,7 @@ discord:
 
 
 logger:
-  enabled: false
+  enabled: true
 
   filters: 
     localServerSend: 
