@@ -118,7 +118,7 @@ interface FakeBotEntityOpts {
 const DefaultPlayerOpts: FakeBotEntityOpts = {
   username: 'GhostPlayer',
   uuid: 'a01e3843-e521-3998-958a-f459800e4d11',
-  skinLookup: false
+  skinLookup: true
 }
 
 type AllowedClient = Client
@@ -269,23 +269,42 @@ export class FakeBotEntity {
 
   listenerWorldJoin = () => this.doForAllClients(this.writePlayerEntity)
 
+
+  async getPlayerUuid(): Promise<string | null> {
+    try {
+    const resp = await fetch(`https://api.minecraftservices.com/minecraft/profile/lookup/name/${this.linkedBot.username}`)
+    if (resp.status !== 200) {
+      console.warn(`Request for ${this.linkedBot.username} failed!`);
+      return null;
+    }
+
+    const data = await resp.json();
+    if (!data.id) {
+      console.warn(`UUID for ${this.linkedBot.username} is not present in lookup!`)
+      return null;
+    }
+    return data.id;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+  }
+
   async writePlayerInfo (client: Client) {
     let properties = []
     if (this.opts.skinLookup) {
+      const uuid = await this.getPlayerUuid();
+      if (uuid == null) return;
       let response
       try {
-        response = await fetch(
-          `https://sessionserver.mojang.com/session/minecraft/profile/${this.opts.uuid}?unsigned=false`
-        )
-        if (response.status !== 204) {
+        response = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}?unsigned=false`)
+        if (response.status === 204) console.warn('Offline mode, no skin for', uuid);
+        else {
           const p = await response.json()
           properties = p?.properties ?? []
-          if (properties?.length !== 1) {
-            console.warn('Skin lookup failed for', this.opts.uuid)
-          }
-        } else {
-          console.warn('Offline mode, no skin for', this.opts.uuid)
+          if (properties?.length !== 1) console.warn('Skin lookup failed for', uuid)
         }
+        
       } catch (err) {
         console.error('Skin lookup failed', err, response)
       }
