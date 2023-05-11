@@ -549,7 +549,6 @@ export class GhostHandler {
       cameraId: this.linkedFakeBot.entityRef.id,
     });
     const updatePos = () => {
-      console.log("called", this.linkedFakeBot.entityRef.knownPosition)
       this.writeRaw(client, "position", {
         ...this.linkedFakeBot.entityRef.knownPosition,
         yaw: 180 - (this.linkedFakeBot.entityRef.yaw * 180) / Math.PI,
