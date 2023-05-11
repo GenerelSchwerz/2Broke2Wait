@@ -10,7 +10,7 @@
   "scripts": {
     "build": "npx tsc",
     "fix": "npx prettier . -w",
-    "test": "ts-node --esm -T ./src/index.ts",
+    "ts-start": "ts-node --esm -T ./src/index.ts",
     "start": "node ./lib/index.js",
     "package": "npm run build && npx pkg ."
   },
@@ -29,6 +29,7 @@
     "@nxg-org/mineflayer-custom-pvp": "^1.7.2",
     "@nxg-org/mineflayer-mitm-proxy": "^0.4.3",
     "@types/node": "^18.15.10",
+    "detect-ts-node": "^1.0.5",
     "discord.js": "^14.7.1",
     "discordx": "^11.5.2",
     "eventemitter2": "^6.4.9",

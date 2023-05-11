@@ -21,7 +21,6 @@ export class CombinedPredictor extends PacketQueuePredictor<Client, 'packet'> {
   }
 
   protected listener = (data: any, packetMeta: PacketMeta) => {
-    // console.log(packetMeta.name)
     switch (packetMeta.name) {
       case 'difficulty':
         this.difficultyPacketHandler(data)

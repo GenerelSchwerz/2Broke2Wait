@@ -38,8 +38,6 @@ export async function buildClient (
     client.executeInteraction(interaction)
   })
 
-  console.log(token, prefix)
-
   await client.login(token)
   return client
 }

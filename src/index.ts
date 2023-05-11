@@ -15,6 +15,8 @@ import type { Options } from "./types/options";
 import { RestartPlugin, SecurityPlugin } from "./localServer/security";
 import { sleep } from "./util";
 
+import detectTSNode from "detect-ts-node";
+ 
 
 if (process.version.split('v')[1].split('.')[0] != '16') {
   console.log('Your version of node is incorrect. This program only functions on Node16.')
@@ -22,6 +24,8 @@ if (process.version.split('v')[1].split('.')[0] != '16') {
   console.log('This is an issue with node-minecraft-protocol, so annoy them. Not me.')
   process.exit(1);
 }
+
+
 
 const yaml = require("js-yaml");
 
@@ -41,7 +45,6 @@ const checkedConfig: Options = validateOptions(config);
 const bOpts = botOptsFromConfig(checkedConfig);
 
 
-console.log(checkedConfig, checkedConfig.discord.bot)
 async function setup() {
   const serverOptions = await serverOptsFromConfig(checkedConfig);
 
@@ -86,13 +89,17 @@ async function setup() {
   fs.readdirSync(f).forEach(async file => {
     const file1 = path.join(f, file);
     const filetype = file1.split('.')[file1.split('.').length-1]
-   
+
     switch (filetype) {
       case "js":
         const data0 = await require(file1);
         server.loadPlugin(data0)
         break
       case "ts": 
+        if (!detectTSNode) throw Error(
+          'Typescript plugin loaded at runtime when running with JavaScript!\n' + 
+          'To load typescript plugins, run this program with "npm run ts-start"'
+          )
         const data1 = await require(file1);
         server.loadPlugin(data1.default)
         break
