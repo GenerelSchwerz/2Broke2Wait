@@ -11,7 +11,7 @@ minecraft:
   # Documentation: https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md#mineflayercreatebotoptions
   # All options from that are valid.
   account:
-    username: # name
+    username: 
     auth: microsoft
 
   # Custom implementation of a SOCKS4/5 proxy.
@@ -36,7 +36,7 @@ minecraft:
 # All options from there are valid.
 localServer:
   host: 0.0.0.0
-  port: 25565
+  port: 25566
   version: 1.12.2
   online-mode: false
   maxPlayers: 1
@@ -58,7 +58,7 @@ localServerConfig:
   # Experimental, but does work. (Some commands break)
   disconnectAllOnEnd: true
   restartOnDisconnect: true
-  linkOnConnect: false
+  linkOnConnect: true
 
 
   motdPrefix: "§6"
@@ -83,7 +83,7 @@ localServerConfig:
         enabled: true
         distance: 16
         travelTime: 5000
-        waitTime: 0000
+        waitTime: 30000 # wait 30 seconds before turning/walking
 
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.
@@ -92,10 +92,16 @@ localServerConfig:
         playerWhitelist: []
         reach: 4
         multi: false
-        enabled: true
+        enabled: false
 
   # Auto eat toggle     
   autoEat: true
+
+
+
+
+
+
 
 
 # Discord logging settings.
@@ -105,31 +111,60 @@ discord:
   bot:
     enabled: false
     # token: 
-    # prefix: 
+    # prefix: "!"
 
 
   # Discord webhook configuration.
   # Usage: https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
   webhooks:
-    enabled: true
+    enabled: false
 
-    gameChat:
-      url: "" # empty url = specific webhook disabled
-      icon: ""
-      username: Game chat
-      timestamp: true
+    eventConfig:
+      started:  
+        skipFooter: false
+        skipTitle: false
+        deleteEvents: ["stopped", "leftQueue"]
 
-    serverInfo:
-      url: ""
-      icon: ""
-      username: Server info
+      stopped:
+        skipFooter: false
+        skipTitle: false
+        deleteEvents: ["started", "enteredQueue", "queueUpdate"]
 
-    queue:
-      reportAt: 500
-      url: ""
-      icon: ""
-      username: Queue
-      edit: true # edit webhook message after first sent. Defaults to false
+      leftQueue:
+        skipFooter: false
+        skipTitle: false
+      
+      enteredQueue:
+        skipFooter: false
+        skipTitle: false
+
+      queueUpdate:
+        skipFooter: false
+        skipTitle: false
+        reportAt: 500
+        edit: true # edit webhook message after first sent. Defaults to false
+
+      botevent_chat:
+        skipFooter: false
+        skipTitle: false
+        timestamp: true
+
+
+    # Webhooks have been overhauled.
+    # List as many webhooks as you'd like and list the events that go to that webhook below.
+    webhooks: [
+      # {
+        # url: ,
+        # wantedEvents: ["botevent_chat"],
+        # icon: ,
+        # username: Game chat,
+     # },
+    ]
+ 
+       
+
+
+ 
 
 
 

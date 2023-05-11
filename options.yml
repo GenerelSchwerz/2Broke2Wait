@@ -110,7 +110,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GJ5mgM.U-XlB9kJm5VnrX5kuPAd4JltM5aeNYKXa-KXPM
+    token: 
     prefix: "!"
 
 
@@ -118,8 +118,6 @@ discord:
   # Usage: https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
   webhooks:
     enabled: true
-
-
 
     eventConfig:
       started:  
@@ -131,7 +129,6 @@ discord:
         skipFooter: false
         skipTitle: false
         deleteEvents: ["started", "enteredQueue", "queueUpdate"]
-
 
       leftQueue:
         skipFooter: false
@@ -153,26 +150,35 @@ discord:
         timestamp: true
 
 
-
-    whConfig:
-      gameChat:
-        url: "https://canary.discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B" # empty url = specific webhook disabled
+    # Webhooks have been overhauled.
+    # List as many webhooks as you'd like and list the events that go to that webhook below.
+    webhooks: [
+      {
+        url: "https://canary.discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B",
         #icon: ""
-        username: Game chat
+        username: Game chat,
         wantedEvents: ["botevent_chat"]
-
-
-      serverInfo:
-        url: "https://canary.discord.com/api/webhooks/1088895214233583616/EYCY1yYwSgplczE7Fvu09_hcF1OReVIoEYH53oOwghB_5KRqmGyan9wMGlo9PpjlcfZm"
-        # icon: ""
-        username: Server info
+      },
+      {
+        url: "https://canary.discord.com/api/webhooks/1088895214233583616/EYCY1yYwSgplczE7Fvu09_hcF1OReVIoEYH53oOwghB_5KRqmGyan9wMGlo9PpjlcfZm",
+        # icon: "",
+        username: Server info,
         wantedEvents: ["started", "stopped"]
-
-      queue:
-        url: "https://canary.discord.com/api/webhooks/1088895149628719277/EWaUJwcART1Nj2n6YF2aDo2CZuKiuNx2dFi09KCVf6OItSEB4z3xvQYevCQ2wPifluNb"
-        # icon: ""
-        username: Queue
+      },
+      {
+        url: "https://canary.discord.com/api/webhooks/1088895149628719277/EWaUJwcART1Nj2n6YF2aDo2CZuKiuNx2dFi09KCVf6OItSEB4z3xvQYevCQ2wPifluNb",
+        # icon: "",
+        username: Queue,
         wantedEvents: ["queueUpdate", "leftQueue", "enteredQueue"]
+
+      }
+
+    ]
+ 
+       
+
+
+ 
 
 
 

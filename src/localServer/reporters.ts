@@ -220,11 +220,10 @@ type WhTypes = "queue" | "serverInfo" | "gameChat";
 
 type RelaxedRecord<K extends string | number | symbol, T> = { [P in K]?: T };
 type EventConfig = RelaxedRecord<keyof AllEvents, EventOpts>;
-type WhConfig = Record<WhTypes, WhWrap>;
 
 export type WhPluginOpts = {
   eventConfig: EventConfig;
-  whConfig: WhConfig;
+  webhooks: WhWrap[];
 };
 
 export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
@@ -236,8 +235,7 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
 
   onLoad(server: ProxyServer) {
     super.onLoad(server);
-    console.log(this.opts);
-    const whList = Object.values(this.opts.whConfig);
+    const whList = this.opts.webhooks;
     for (const [key, val] of Object.entries(this.opts.eventConfig)) {
       const k = key as keyof AllEvents;
       this.eventMsgs[k] = [];
@@ -275,6 +273,8 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
         return this.serverOn("enteredQueue", setup(this.enterQueueReporter));
       case "botevent_chat":
         return this.serverOn("botevent_chat", setup(this.botChatReporter));
+      default:
+        console.warn(`[WARN] Event "${eventName}" is currently not supported for webhooks!`)
     }
   };
 
