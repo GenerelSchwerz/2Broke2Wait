@@ -62,8 +62,8 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     view: {
       description: "Link the spectating player's perspective",
       allowedIf: CmdPerm.UNLINKED,
-      callable: async (client) => {
-        const res0 = await this.makeViewFakePlayer(client);
+      callable: (client) => {
+        const res0 = this.makeViewFakePlayer(client);
         if (res0) this.server.message(client, "Connecting to view. Type /unview to exit");
       },
      
@@ -204,14 +204,14 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     this.server.message(client, "Unlinking");
   }
 
-  async makeViewFakePlayer(client: Client) {
+  makeViewFakePlayer(client: Client) {
     if (client === this.server.conn?.pclient) {
       this.server.message(client, "Cannot get into the view. You are controlling the bot");
       return;
     }
     if (this.fakeSpectator == null) return false;
 
-    return await this.fakeSpectator.linkToBotPov(client);
+    return this.fakeSpectator.linkToBotPov(client);
   }
 
   makeViewNormal(client: Client) {

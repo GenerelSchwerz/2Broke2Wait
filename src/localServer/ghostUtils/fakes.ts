@@ -1,12 +1,10 @@
 import { IPositionTransformer, packetAbilities } from "@icetank/mcproxy";
 import { Client, PacketMeta } from "minecraft-protocol";
-import { GameState, Bot } from "mineflayer";
+import { Bot } from "mineflayer";
 import type { Entity } from "prismarine-entity";
-import { performance } from "perf_hooks";
 import type { Item as ItemType, NotchItem } from "prismarine-item";
 import merge from "ts-deepmerge";
 import { Vec3 } from "vec3";
-import { sleep } from "../../util";
 import { OmitX } from "../../types/util";
 
 
@@ -50,6 +48,7 @@ class FakeEntity {
   onGround: boolean;
   mainHand?: NotchItem;
   offHand?: NotchItem;
+  properties: any[] = [];
 
   /**
    * rounded float (yaw) to integer within mc's limits.
@@ -302,6 +301,8 @@ export class FakeBotEntity {
       }
     }
 
+    this.entityRef.properties = properties;
+
     this.writeRaw(client, "player_info", {
       action: 0,
       data: [
@@ -332,8 +333,6 @@ export class FakeBotEntity {
       ],
     });
 
-    this.updateEquipmentFor(client);
-
     this.writeRaw(client, "entity_look", {
       entityId: this.entityRef.id,
       yaw: this.entityRef.yaw,
@@ -345,6 +344,9 @@ export class FakeBotEntity {
       entityId: this.entityRef.id,
       headYaw: this.entityRef.intYaw,
     });
+
+    this.updateEquipmentFor(client);
+
   };
 
   private writeDestroyEntity(client: Client) {
@@ -535,15 +537,13 @@ export class GhostHandler {
     this.revertToBotGamemode(client);
   }
 
-  public async linkToBotPov(client: Client) {
+  public linkToBotPov(client: Client) {
     if (this.clientsInCamera[client.uuid]) {
       console.warn("Already in the camera", client.username);
       this.unregister(client);
     }
 
     this.makeSpectator(client);
-
-    // await sleep(50); // allow bot to spawn on client end.
 
     this.writeRaw(client, "camera", {
       cameraId: this.linkedFakeBot.entityRef.id,
