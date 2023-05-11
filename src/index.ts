@@ -8,11 +8,11 @@ import {
   TwoBAntiAFKPlugin,
   WebhookReporter,
   MotdReporter,
-} from "./localServer/builtinPlugins";
+} from "./localServer";
 import { ServerBuilder } from "@nxg-org/mineflayer-mitm-proxy";
 import { buildClient } from "./discord";
 import type { Options } from "./types/options";
-import { RestartPlugin, SecurityPlugin } from "./localServer/builtinPlugins/security";
+import { RestartPlugin, SecurityPlugin } from "./localServer/security";
 import { sleep } from "./util";
 
 
