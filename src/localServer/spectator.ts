@@ -4,6 +4,7 @@ import { Client } from "minecraft-protocol";
 import { sleep } from "../util/index";
 import { FakePlayer, WorldManager } from "./spectatorUtils";
 import { FakeBotEntity, GhostHandler } from "./ghostUtils/fakes";
+
 export interface SpectatorServerOpts {
   linkOnConnect: boolean;
   worldCaching: boolean;

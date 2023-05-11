@@ -40,12 +40,12 @@ export class Task<Finish = void, Cancel = void> {
     return new Task()
   }
 
-  static createDoneTask (): Task<any, any> {
+  static createDoneTask<Finish = void, Cancel = void>(): Task<Finish, Cancel> {
     return {
       done: true,
       promise: Promise.resolve(),
-      cancel: () => {},
-      finish: () => {}
+      cancel: (cancel: Cancel) => { return {} as any},
+      finish: (finish: Finish) => { return {} as any},
     }
   }
 }

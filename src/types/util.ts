@@ -188,3 +188,11 @@ type OneOf<U> = U2I<U extends U ? (x: U) => 0 : never> extends (x: infer L) => 0
 export type U2T<U, L = OneOf<U>> = [U] extends [never] ? [] : [...U2T<Exclude<U, L>>, L]
 
 export type ListType<L> = L extends Array<infer R> ? R : never
+
+export type OmitX<ToRemove extends number, Args extends any[], Remain extends any[] = []> = ToRemove extends Remain["length"]
+  ? Args
+  : Args extends []
+  ? never
+  : Args extends [first?: infer Arg, ...i: infer Rest]
+  ? OmitX<ToRemove, Rest, [...Remain, Arg]>
+  : never;

@@ -13,9 +13,10 @@ import { ServerBuilder } from "@nxg-org/mineflayer-mitm-proxy";
 import { buildClient } from "./discord";
 import type { Options } from "./types/options";
 import { RestartPlugin, SecurityPlugin } from "./localServer/security";
-import { sleep } from "./util";
+import { Task, sleep } from "./util";
 
 import detectTSNode from "detect-ts-node";
+import { once } from "events";
  
 
 if (process.version.split('v')[1].split('.')[0] != '16') {
@@ -24,6 +25,9 @@ if (process.version.split('v')[1].split('.')[0] != '16') {
   console.log('This is an issue with node-minecraft-protocol, so annoy them. Not me.')
   process.exit(1);
 }
+
+
+
 
 
 
@@ -76,7 +80,7 @@ async function setup() {
   }
 
   if (checkedConfig.discord.webhooks?.enabled) {
-    server.loadPlugin(new WebhookReporter(checkedConfig.discord.webhooks));
+    server.loadPlugin(new WebhookReporter(checkedConfig.discord.webhooks))
   }
 
   if (checkedConfig.discord.bot?.enabled) {
@@ -106,6 +110,22 @@ async function setup() {
 
     }    
   });
+
+
+
+let stopTask = Task.createDoneTask();
+process.on('SIGINT', async () =>{
+  if (server.isProxyConnected()) {
+    if (!stopTask.done) return await stopTask.promise;
+    stopTask = Task.createTask();
+    console.log("Recieved interrupt, shutting down (wait 5 seconds for termination).");
+    server.stop();
+    await sleep(5000);
+    stopTask.finish();
+  }
+  
+  process.exit(0);
+});
 
 
   await sleep(1000);

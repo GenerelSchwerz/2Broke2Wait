@@ -49,41 +49,44 @@ export const configSchema = joi.object({
         })
         .default()
         .description("Discord's configuration for an interactive bot."),
-      webhooks: joi
-        .object({
-          enabled: joi.boolean().default(false).description('Whether to use the discord webhooks or not.'),
-          queue: joi
-            .object({
-              url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
-              icon: joi.string().allow('').default('').description('Icon when sending messages.'),
-              username: joi.string().default('Queue webhook').description('Username when sending messages.'),
-              reportAt: joi
-                .number()
-                .min(0)
-                .default(9999)
-                .description('Begin sending updates from this number and under')
-            })
-            .required()
-            .description('Info for queue updates.'),
-          gameChat: joi
-            .object({
-              url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
-              icon: joi.string().allow('').default('').description('Icon when sending messages.'),
-              username: joi.string().default('Queue webhook').description('Username when sending messages.')
-            })
-            .required()
-            .description('Info for queue updates.'),
-          serverInfo: joi
-            .object({
-              url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
-              icon: joi.string().allow('').default('').description('Icon when sending messages.'),
-              username: joi.string().default('Queue webhook').description('Username when sending messages.')
-            })
-            .required()
-            .description('Info for queue updates.')
-        })
-        .default()
-        .description('Webhook URLs for logging, if wanted.')
+      // webhooks: joi
+      //   .object({
+      //     enabled: joi.boolean().default(false).description('Whether to use the discord webhooks or not.'),
+      //     queue: joi
+      //       .object({
+      //         url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
+      //         icon: joi.string().allow('').default('').description('Icon when sending messages.'),
+      //         username: joi.string().default('Queue webhook').description('Username when sending messages.'),
+      //         reportAt: joi
+      //           .number()
+      //           .min(0)
+      //           .default(9999)
+      //           .description('Begin sending updates from this number and under')
+      //       })
+      //       .required()
+      //       .description('Info for queue updates.'),
+      //       edit: joi.boolean().default(false).description('Edit the queue message to not spam.'),
+      //       cleanup: joi.boolean().default(false).description('Cleanup queue messages after server disconnects.'),
+      //     gameChat: joi
+      //       .object({
+      //         url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
+      //         icon: joi.string().allow('').default('').description('Icon when sending messages.'),
+      //         username: joi.string().default('Queue webhook').description('Username when sending messages.')
+      //       })
+      //       .required()
+      //       .description('Info for queue updates.'),
+      //     serverInfo: joi
+      //       .object({
+      //         url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
+      //         icon: joi.string().allow('').default('').description('Icon when sending messages.'),
+      //         username: joi.string().default('Queue webhook').description('Username when sending messages.'),
+      //         cleanup: joi.boolean().default(false).description('Cleanup queue messages after server disconnects.'),
+      //       })
+      //       .required()
+      //       .description('Info for queue updates.')
+      //   })
+      //   .default()
+      //   .description('Webhook URLs for logging, if wanted.')
     })
     .optional()
     .description('Configuration for a discord bot.'),

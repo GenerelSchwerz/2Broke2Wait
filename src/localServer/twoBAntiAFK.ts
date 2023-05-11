@@ -39,7 +39,7 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, {}, Tw
     return this._queue
   }
 
-  onPreStart = (conn: Conn) => {
+  onPreStart(conn: Conn) {
     this._queue = new CombinedPredictor(conn)
     this._queue.begin()
     this._queue.on('*', (...args: any[]) => {
@@ -48,12 +48,12 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, {}, Tw
     this.share('queue', this._queue)
   }
 
-  onPreStop = () => {
+  onPreStop() {
     if (this._queue != null) this._queue.end()
     this.drop('queue')
   }
 
-  onInitialBotSetup = (bot: Bot) => {
+  onInitialBotSetup(bot: Bot) {
     if (this.psOpts.antiAFK.enabled) {
       bot.loadPlugin(pathfinder)
       bot.loadPlugin(antiAFK)
@@ -125,13 +125,13 @@ export class TwoBAntiAFKPlugin extends ProxyServerPlugin<TwoBAntiAFKOpts, {}, Tw
     }
   }
 
-  onBotAutonomous = (bot: Bot) => {
+  onBotAutonomous(bot: Bot) {
     if (this._queue == null) throw Error('Somehow bot is starting without queue being initialized!')
     if (this.psOpts.antiAFK && !this._queue.inQueue) bot.antiafk.start()
     if (this.psOpts.autoEat && !this._queue.inQueue) bot.autoEat.enableAuto()
   }
 
-  onBotControlled = (bot: Bot) => {
+  onBotControlled(bot: Bot) {
     if (this.psOpts.antiAFK) bot.antiafk.forceStop()
     if (this.psOpts.autoEat) bot.autoEat.disableAuto()
   }

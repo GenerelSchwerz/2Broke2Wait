@@ -7,6 +7,7 @@ import type { Item as ItemType, NotchItem } from "prismarine-item";
 import merge from "ts-deepmerge";
 import { Vec3 } from "vec3";
 import { sleep } from "../../util";
+import { OmitX } from "../../types/util";
 
 
 const itemLoader = require("prismarine-item/index.js"); // ncc compat, get default.
@@ -121,13 +122,7 @@ const DefaultPlayerOpts: FakeBotEntityOpts = {
 };
 
 type AllowedClient = Client;
-type OmitX<ToRemove extends number, Args extends any[], Remain extends any[] = []> = ToRemove extends Remain["length"]
-  ? Args
-  : Args extends []
-  ? never
-  : Args extends [first?: infer Arg, ...i: infer Rest]
-  ? OmitX<ToRemove, Rest, [...Remain, Arg]>
-  : never;
+
 
 export class FakeBotEntity {
   public static id = 9999;

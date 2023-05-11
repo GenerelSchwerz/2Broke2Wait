@@ -2,6 +2,7 @@ import type { AllOpts, BaseWebhookOpts } from '../localServer'
 import type { BotOptions } from 'mineflayer'
 import type { ServerOptions, Client } from 'minecraft-protocol'
 import { IProxyServerOpts, LogConfig } from '@nxg-org/mineflayer-mitm-proxy'
+import { WhPluginOpts } from '../localServer/reporters'
 
 export interface DiscordBotOptions {
   enabled: boolean
@@ -9,12 +10,9 @@ export interface DiscordBotOptions {
   prefix: string
 }
 
-export interface DiscordWebhookOptions {
+export type DiscordWebhookOptions = {
   enabled: boolean
-  gameChat: GameChatSetup
-  serverInfo: BaseWebhookOpts
-  queue: QueueSetup
-}
+} & WhPluginOpts;
 
 export type QueueSetup = BaseWebhookOpts & {
   reportAt: number

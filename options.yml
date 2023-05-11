@@ -98,13 +98,19 @@ localServerConfig:
   autoEat: true
 
 
+
+
+
+
+
+
 # Discord logging settings.
 discord:
 
   # Discord bot configuration.
   bot:
     enabled: true
-    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GzP4pb.0ShyYLty5vMgN3SAV9KIJ1P7qCoDwbgm9SI6nE
+    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GJ5mgM.U-XlB9kJm5VnrX5kuPAd4JltM5aeNYKXa-KXPM
     prefix: "!"
 
 
@@ -113,23 +119,60 @@ discord:
   webhooks:
     enabled: true
 
-    gameChat:
-      url: "https://canary.discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B" # empty url = specific webhook disabled
-      #icon: ""
-      username: Game chat
-      timestamp: true
 
-    serverInfo:
-      url: "https://canary.discord.com/api/webhooks/1088895214233583616/EYCY1yYwSgplczE7Fvu09_hcF1OReVIoEYH53oOwghB_5KRqmGyan9wMGlo9PpjlcfZm"
-      # icon: ""
-      username: Server info
 
-    queue:
-      reportAt: 500
-      url: "https://canary.discord.com/api/webhooks/1088895149628719277/EWaUJwcART1Nj2n6YF2aDo2CZuKiuNx2dFi09KCVf6OItSEB4z3xvQYevCQ2wPifluNb"
-      # icon: ""
-      username: Queue
-      edit: true # edit webhook message after first sent. Defaults to false
+    eventConfig:
+      started:  
+        skipFooter: false
+        skipTitle: false
+        deleteEvents: ["stopped", "leftQueue"]
+
+      stopped:
+        skipFooter: false
+        skipTitle: false
+        deleteEvents: ["started", "enteredQueue", "queueUpdate"]
+
+
+      leftQueue:
+        skipFooter: false
+        skipTitle: false
+      
+      enteredQueue:
+        skipFooter: false
+        skipTitle: false
+
+      queueUpdate:
+        skipFooter: false
+        skipTitle: false
+        reportAt: 500
+        edit: true # edit webhook message after first sent. Defaults to false
+
+      botevent_chat:
+        skipFooter: false
+        skipTitle: false
+        timestamp: true
+
+
+
+    whConfig:
+      gameChat:
+        url: "https://canary.discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B" # empty url = specific webhook disabled
+        #icon: ""
+        username: Game chat
+        wantedEvents: ["botevent_chat"]
+
+
+      serverInfo:
+        url: "https://canary.discord.com/api/webhooks/1088895214233583616/EYCY1yYwSgplczE7Fvu09_hcF1OReVIoEYH53oOwghB_5KRqmGyan9wMGlo9PpjlcfZm"
+        # icon: ""
+        username: Server info
+        wantedEvents: ["started", "stopped"]
+
+      queue:
+        url: "https://canary.discord.com/api/webhooks/1088895149628719277/EWaUJwcART1Nj2n6YF2aDo2CZuKiuNx2dFi09KCVf6OItSEB4z3xvQYevCQ2wPifluNb"
+        # icon: ""
+        username: Queue
+        wantedEvents: ["queueUpdate", "leftQueue", "enteredQueue"]
 
 
 
