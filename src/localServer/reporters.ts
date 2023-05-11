@@ -168,6 +168,8 @@ const NiceEventNames: { [key in keyof CleanEvents]: string } = {
   restart: "Server is restarting!",
   clientChat: "Local proxy chat!",
   clientChatRaw: "Local proxy chat (raw)!",
+  linking: "Client linked to bot!", 
+  unlinking: "Client unlinked from bot!", 
   "*": "Any event...",
 } as const;
 
@@ -236,20 +238,15 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
   onLoad(server: ProxyServer) {
     super.onLoad(server);
     const whList = this.opts.webhookList;
-    for (const [key, val] of Object.entries(this.opts.eventConfig)) {
-      const k = key as keyof AllEvents;
-      const v = val || {};
-      this.eventMsgs[k] = [];
-
-      whList
-        .filter((wanted) => wanted.wantedEvents?.includes(k))
-        .map((w) => {
-          return { client: new WebhookClient({ url: w.url }), ...w };
-        })
-        .forEach((w) => {
-          updateWebhook(w);
-          this.handleEventType(k, w, v);
-        });
+    for (const wh of this.opts.webhookList) {
+      if (wh.wantedEvents == null) continue;
+      wh.wantedEvents.forEach(k=> {
+        const v = this.opts.eventConfig[k] || {};
+        this.eventMsgs[k] = [];
+        const wC = { client: new WebhookClient({ url: wh.url }), ...wh };
+        updateWebhook(wC);
+        this.handleEventType(k, wC, v);
+      })
     }
   }
 
@@ -274,10 +271,27 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
         return this.serverOn("enteredQueue", setup(this.enterQueueReporter));
       case "botevent_chat":
         return this.serverOn("botevent_chat", setup(this.botChatReporter));
+      case "linking":
+        return this.serverOn("linking", setup(this.linkReporter.bind(this, true)));
+      case "unlinking":
+        return this.serverOn("unlinking", setup(this.linkReporter.bind(this, false)));
       default:
         console.warn(`[WARN] Event "${eventName}" is currently not supported for webhooks!`)
     }
   };
+
+  async linkReporter(linking: boolean, wh: WhClient, eConf: EventOpts, eName: keyof AllEvents) {
+    const title = linking ? "linking" : "unlinking"
+    const embed = this.buildServerEmbed(title, eConf);
+    if (eConf.timestamp) {
+      if (embed.footer?.text) {
+        embed.footer.text += `\nSent: ${DateTime.local().toFormat("hh:mm a, MM/dd")}`;
+      } else {
+        embed.footer = { text: `Sent: ${DateTime.local().toFormat("hh:mm a, MM/dd")}` };
+      }
+    }
+    await this.handleMsgSend(wh, eConf, eName, { embeds: [embed] });
+  }
 
   async startReporter(wh: WhClient, eConf: EventOpts, eName: keyof AllEvents) {
     const embed = this.buildServerEmbed("started", eConf);
