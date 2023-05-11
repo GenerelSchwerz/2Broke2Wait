@@ -44,7 +44,7 @@ export const configSchema = joi.object({
       bot: joi
         .object({
           enabled: joi.boolean().default(false).description('Whether to use the discord bot or not.'),
-          botToken: tokenSchema.allow('').default('').description('The discord bot token to send updates to.'),
+          token: tokenSchema.allow('').default('').description('The discord bot token to send updates to.'),
           prefix: joi.string().default('!').description('The prefix for the discord bot (using simple commands).')
         })
         .default()

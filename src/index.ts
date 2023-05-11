@@ -40,6 +40,8 @@ try {
 const checkedConfig: Options = validateOptions(config);
 const bOpts = botOptsFromConfig(checkedConfig);
 
+
+console.log(checkedConfig, checkedConfig.discord.bot)
 async function setup() {
   const serverOptions = await serverOptsFromConfig(checkedConfig);
 

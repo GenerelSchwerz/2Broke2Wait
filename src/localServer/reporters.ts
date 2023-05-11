@@ -3,9 +3,9 @@ import { ServerClient } from "minecraft-protocol";
 import type { Bot } from "mineflayer";
 import { DateTime, Duration } from "ts-luxon";
 import { AllEvents, AllOpts, BaseWebhookOpts } from ".";
-import { DiscordWebhookOptions, GameChatSetup, Options, QueueSetup } from "../../types/options";
+import { DiscordWebhookOptions, GameChatSetup, Options, QueueSetup } from "../types/options";
 import { ProxyServer, ProxyServerPlugin } from "@nxg-org/mineflayer-mitm-proxy";
-import { CombinedPredictor } from "../predictors/combinedPredictor";
+import { CombinedPredictor } from "./predictors/combinedPredictor";
 import { TwoBAntiAFKEvents } from "./twoBAntiAFK";
 
 export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {

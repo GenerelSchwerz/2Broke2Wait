@@ -16,8 +16,8 @@ import {
 import { Conn } from '@icetank/mcproxy'
 import { Bot } from 'mineflayer'
 import { pathfinder } from 'mineflayer-pathfinder'
-import { PacketQueuePredictor, PacketQueuePredictorEvents } from '../predictors/packetQueuePredictor'
-import { CombinedPredictor } from '../predictors/combinedPredictor'
+import { PacketQueuePredictor, PacketQueuePredictorEvents } from './predictors/packetQueuePredictor'
+import { CombinedPredictor } from './predictors/combinedPredictor'
 import { IProxyServerOpts, IProxyServerEvents, ProxyServerPlugin } from '@nxg-org/mineflayer-mitm-proxy'
 
 export interface TwoBAntiAFKOpts {

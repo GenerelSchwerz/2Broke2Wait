@@ -1,11 +1,11 @@
-import type { AllOpts, BaseWebhookOpts } from '../localServer/builtinPlugins'
+import type { AllOpts, BaseWebhookOpts } from '../localServer'
 import type { BotOptions } from 'mineflayer'
 import type { ServerOptions, Client } from 'minecraft-protocol'
 import { IProxyServerOpts, LogConfig } from '@nxg-org/mineflayer-mitm-proxy'
 
 export interface DiscordBotOptions {
   enabled: boolean
-  botToken: string
+  token: string
   prefix: string
 }
 

@@ -4,7 +4,7 @@ import { IntentsBitField } from 'discord.js'
 import './commands'
 import type { Options } from '../types/options'
 import { ProxyServer } from '@nxg-org/mineflayer-mitm-proxy'
-import { AllEvents, AllOpts } from '../localServer/builtinPlugins'
+import { AllEvents, AllOpts } from '../localServer'
 
 declare module 'discordx' {
   interface Client {
@@ -13,7 +13,7 @@ declare module 'discordx' {
 }
 
 export async function buildClient (
-  { botToken, prefix }: Exclude<Options['discord']['bot'], undefined>,
+  { token, prefix }: Exclude<Options['discord']['bot'], undefined>,
   server: ProxyServer<AllOpts, AllEvents>
 ): Promise<Client> {
   const client = new Client({
@@ -38,6 +38,8 @@ export async function buildClient (
     client.executeInteraction(interaction)
   })
 
-  await client.login(botToken)
+  console.log(token, prefix)
+
+  await client.login(token)
   return client
 }

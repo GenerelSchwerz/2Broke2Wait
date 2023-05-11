@@ -26,7 +26,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: localhost
+    host: 2b2t.org
     port: 25565
     version: 1.12.2
 
@@ -83,7 +83,7 @@ localServerConfig:
         enabled: true
         distance: 16
         travelTime: 5000
-        waitTime: 0000
+        waitTime: 30000 # wait 30 seconds before turning/walking
 
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.
@@ -103,9 +103,9 @@ discord:
 
   # Discord bot configuration.
   bot:
-    enabled: false
-    # token: 
-    # prefix: 
+    enabled: true
+    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GzP4pb.0ShyYLty5vMgN3SAV9KIJ1P7qCoDwbgm9SI6nE
+    prefix: "!"
 
 
   # Discord webhook configuration.
@@ -114,19 +114,19 @@ discord:
     enabled: true
 
     gameChat:
-      url: "" # empty url = specific webhook disabled
+      url: "https://canary.discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B" # empty url = specific webhook disabled
       icon: ""
       username: Game chat
       timestamp: true
 
     serverInfo:
-      url: ""
+      url: "https://canary.discord.com/api/webhooks/1088895214233583616/EYCY1yYwSgplczE7Fvu09_hcF1OReVIoEYH53oOwghB_5KRqmGyan9wMGlo9PpjlcfZm"
       icon: ""
       username: Server info
 
     queue:
       reportAt: 500
-      url: ""
+      url: "https://canary.discord.com/api/webhooks/1088895149628719277/EWaUJwcART1Nj2n6YF2aDo2CZuKiuNx2dFi09KCVf6OItSEB4z3xvQYevCQ2wPifluNb"
       icon: ""
       username: Queue
       edit: true # edit webhook message after first sent. Defaults to false
