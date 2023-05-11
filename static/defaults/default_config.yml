@@ -1,7 +1,6 @@
-# Global setting for all debugging.
-debug: true
-
-
+# 2b2w initial settings
+debug: false
+startImmediately: true
 
 
 # Configuration for minecraft
@@ -121,31 +120,21 @@ discord:
 
     eventConfig:
       started:  
-        skipFooter: false
-        skipTitle: false
-        deleteEvents: ["stopped", "leftQueue"]
+        deleteEvents: ["stopped", "leftQueue", "enteredQueue", "queueUpdate"]
 
       stopped:
-        skipFooter: false
-        skipTitle: false
-        deleteEvents: ["started", "enteredQueue", "queueUpdate"]
+        deleteEvents: ["started", "leftQueue", "enteredQueue", "queueUpdate"]
 
       leftQueue:
-        skipFooter: false
-        skipTitle: false
       
       enteredQueue:
-        skipFooter: false
-        skipTitle: false
 
       queueUpdate:
-        skipFooter: false
-        skipTitle: false
         reportAt: 500
         edit: true # edit webhook message after first sent. Defaults to false
 
       botevent_chat:
-        skipFooter: false
+        skipFooter: true
         skipTitle: false
         timestamp: true
 

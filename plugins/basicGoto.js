@@ -1,9 +1,6 @@
 const { ProxyServerPlugin } = require("@nxg-org/mineflayer-mitm-proxy");
 const { goals, pathfinder } = require("mineflayer-pathfinder");
 
-const { SpectatorServerPlugin } = require("../lib/localServer/builtinPlugins/spectator");
-const { sleep } = require("../lib/util");
-
 /**
  * Gen here again.
  *

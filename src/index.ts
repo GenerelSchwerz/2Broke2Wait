@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import path from 'path'
+import path from "path";
 import { validateOptions } from "./util/config";
 import { botOptsFromConfig, serverOptsFromConfig } from "./util/options";
 import {
@@ -16,20 +16,17 @@ import { RestartPlugin, SecurityPlugin } from "./localServer/security";
 import { Task, sleep } from "./util";
 
 import detectTSNode from "detect-ts-node";
-import { once } from "events";
- 
 
-if (process.version.split('v')[1].split('.')[0] != '16') {
-  console.log('Your version of node is incorrect. This program only functions on Node16.')
-  console.log(`Your node version is: ${process.version}`)
-  console.log('This is an issue with node-minecraft-protocol, so annoy them. Not me.')
+
+import rl from "readline"
+
+
+if (process.version.split("v")[1].split(".")[0] != "16") {
+  console.log("Your version of node is incorrect. This program only functions on Node16.");
+  console.log(`Your node version is: ${process.version}`);
+  console.log("This is an issue with node-minecraft-protocol, so annoy them. Not me.");
   process.exit(1);
 }
-
-
-
-
-
 
 const yaml = require("js-yaml");
 
@@ -44,25 +41,28 @@ try {
   config = yaml.load(data);
 }
 
-
 const checkedConfig: Options = validateOptions(config);
 const bOpts = botOptsFromConfig(checkedConfig);
 
-
 async function setup() {
-  const serverOptions = await serverOptsFromConfig(checkedConfig);
 
+
+  // ==================
+  //   Server setup
+  // ==================
+
+  const serverOptions = await serverOptsFromConfig(checkedConfig);
 
   const server = new ServerBuilder(serverOptions, bOpts)
 
     // add plugins that provide events here!
-   
+
     .addPlugin(new SecurityPlugin())
     .addPlugin(new RestartPlugin())
     .addPlugin(new SpectatorServerPlugin())
     .addPlugin(new TwoBAntiAFKPlugin())
     .addPlugin(new MotdReporter())
-    
+
     // apply settings only after all plugins have been loaded!
     .setSettings(checkedConfig.localServerConfig)
     .setOtherSettings({
@@ -71,66 +71,124 @@ async function setup() {
     })
     .build();
 
-
   // all other plugins must be listener-only to be strongly typed.
   // This is to prevent improperly built servers.
   if (true) {
-    server.loadPlugin(new MotdReporter())
-    server.loadPlugin(new ConsoleReporter())
+    server.loadPlugin(new MotdReporter());
+    server.loadPlugin(new ConsoleReporter());
   }
 
   if (checkedConfig.discord.webhooks?.enabled) {
-    server.loadPlugin(new WebhookReporter(checkedConfig.discord.webhooks))
+    server.loadPlugin(new WebhookReporter(checkedConfig.discord.webhooks));
   }
 
   if (checkedConfig.discord.bot?.enabled) {
     buildClient(checkedConfig.discord.bot, server);
   }
 
+  // ==========================
+  //   Dynamic plugin loading
+  // ==========================
 
   // Added support for external plugins.
-  const f = path.join(__dirname, '../plugins')
-  fs.readdirSync(f).forEach(async file => {
+  const f = path.join(__dirname, "../plugins");
+  fs.readdirSync(f).forEach(async (file) => {
     const file1 = path.join(f, file);
-    const filetype = file1.split('.')[file1.split('.').length-1]
+    const filetype = file1.split(".")[file1.split(".").length - 1];
 
     switch (filetype) {
       case "js":
         const data0 = await require(file1);
-        server.loadPlugin(data0)
-        break
-      case "ts": 
-        if (!detectTSNode) throw Error(
-          'Typescript plugin loaded at runtime when running with JavaScript!\n' + 
-          'To load typescript plugins, run this program with "npm run ts-start"'
-          )
+        server.loadPlugin(data0);
+        break;
+      case "ts":
+        if (!detectTSNode)
+          throw Error(
+            "Typescript plugin loaded at runtime when running with JavaScript!\n" +
+              'To load typescript plugins, run this program with "npm run ts-start"'
+          );
         const data1 = await require(file1);
-        server.loadPlugin(data1.default)
-        break
+        server.loadPlugin(data1.default);
+        break;
+    }
+  });
 
-    }    
+
+  // ===============================
+  //   Process interrupt handling
+  // ===============================
+
+  let stopTask = Task.createDoneTask();
+  process.on("SIGINT", async () => {
+    if (server.isProxyConnected()) {
+      if (!stopTask.done) return await stopTask.promise;
+      stopTask = Task.createTask();
+      console.log("Recieved interrupt, shutting down (wait 5 seconds for termination).");
+      server.stop();
+      await sleep(5000);
+      stopTask.finish();
+    }
+
+    process.exit(0);
   });
 
 
 
-let stopTask = Task.createDoneTask();
-process.on('SIGINT', async () =>{
-  if (server.isProxyConnected()) {
-    if (!stopTask.done) return await stopTask.promise;
-    stopTask = Task.createTask();
-    console.log("Recieved interrupt, shutting down (wait 5 seconds for termination).");
-    server.stop();
-    await sleep(5000);
-    stopTask.finish();
+
+  // ===========================
+  //   Command-line Handling
+  // ===========================
+
+  const handler = rl.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+
+  handler.on("line", (line) => {
+    const [cmd, ...args] = line.trim().split(' ')
+
+    switch (cmd) {
+
+      case "help":
+        console.log("----------- Help Message ---------")
+        console.log("help: this message")
+        console.log("start: starts the server")
+        console.log("stop: stops the server")
+        console.log("clear <#>: clear terminal (of <#> lines or all)")
+        return;
+        
+      case "start":
+        console.log("Starting the server.")
+        return server.start();
+
+      case "stop":
+        console.log("Stopping the server.")
+        return server.stop();
+
+
+      case "clear":
+        const num0 = args[0] ? -Number(args[0]) : -100
+        rl.moveCursor(process.stdout,0,num0);
+        rl.clearScreenDown(process.stdout);
+        console.log("cleared screen")
+        return;
+
+      case "status": {
+        return console.log()
+      }
+
+
+    }
+  })
+
+
+
+  if (checkedConfig.startImmediately) {
+    server.start();
   }
+
   
-  process.exit(0);
-});
-
-
-  await sleep(1000);
-
-  server.start();
 
   // ==========================
   //  custom logging example!

@@ -37,7 +37,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     },
 
     c: {
-      usage: "c [msg]",
+      usage: "<string>",
       description: "Chat with other players connected to your proxy",
       callable: (client, ...args) => this.server.broadcastMessage(`[${client.username}] ${args.join(" ")}`),
     },

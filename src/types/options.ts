@@ -24,6 +24,8 @@ export type GameChatSetup = BaseWebhookOpts & {
 
 // Minecraft and discord options such as discord bot prefix and minecraft login info
 export interface Options {
+  startImmediately: boolean,
+  debug: boolean,
   discord: {
     bot?: DiscordBotOptions
     webhooks?: DiscordWebhookOptions
@@ -51,5 +53,4 @@ export interface Options {
   localServer: ServerOptions
   localServerConfig: AllOpts & IProxyServerOpts
   logger: LogConfig
-  debug: boolean
 }

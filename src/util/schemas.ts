@@ -2,24 +2,22 @@
 // Imports
 // =======
 
-import * as joi from 'joi'
+import Joi, * as joi from "joi";
 // ===========
 // Sub-Schemas
 // ===========
 
 // Schema used to validate Minecraft usernames (between 3 and 16 characters, containing only a-z, A-Z, 0-9, and _)
-const usernameSchema = joi.string().min(3).max(16).token()
+const usernameSchema = joi.string().min(3).max(16).token();
 
 // Schema used to validate packet names (lowercase, consisting only of a-z and underscores)
 const packetSchema = joi
   .string()
   .pattern(/^[a-z_]*$/)
-  .lowercase()
+  .lowercase();
 
 // Schema used to validate Discord tokens (26 char, period, 6 char, period, 38 char)
-const tokenSchema = joi
-  .string()
-  .pattern(/^[a-zA-Z0-9_].*$/)
+const tokenSchema = joi.string().pattern(/^[a-zA-Z0-9_].*$/);
 
 const proxySchema = joi.object({
   // host: joi.string().when('host', {
@@ -30,8 +28,23 @@ const proxySchema = joi.object({
   host: joi.string().description("Proxy's host"),
   port: joi.number().min(1).max(65535).description("Proxy's port"),
   username: joi.string().optional().description("Optional: Proxy's username"),
-  password: joi.string().optional().description("Optional: Proxy's password")
-})
+  password: joi.string().optional().description("Optional: Proxy's password"),
+});
+
+const WebhookSchema = joi.object({
+  url: joi.string().required().description("URL for webhook"),
+  icon: joi.string().optional().description("URL for webhook icon"),
+  username: joi.string().optional().description("Username for webhook"),
+});
+
+const EventSchema = joi.object({
+  color: Joi.number().description("color code for webhook"),
+  skipFooter: Joi.boolean().default(false).description("Skip footer for webhook"),
+  skipTitle: Joi.boolean().default(false).description("Skip title for webhook"),
+  deleteEvents: Joi.array()
+    .items(Joi.string())
+    .description("Other events to delete messages for whenever this event is fired."),
+}).allow(null);
 
 // =============
 // Config Schema
@@ -39,163 +52,138 @@ const proxySchema = joi.object({
 
 // Schema used to validate options.yml
 export const configSchema = joi.object({
+  debug: joi.boolean().default(false).description("Global server debug setting."),
+  startImmediately: joi.boolean().default(true).description("Whether or not to start server immediately."),
+  
   discord: joi
     .object({
       bot: joi
         .object({
-          enabled: joi.boolean().default(false).description('Whether to use the discord bot or not.'),
-          token: tokenSchema.allow('').default('').description('The discord bot token to send updates to.'),
-          prefix: joi.string().default('!').description('The prefix for the discord bot (using simple commands).')
+          enabled: joi.boolean().default(false).description("Whether to use the discord bot or not."),
+          token: tokenSchema.allow("").default("").description("The discord bot token to send updates to."),
+          prefix: joi.string().default("!").description("The prefix for the discord bot (using simple commands)."),
         })
         .default()
         .description("Discord's configuration for an interactive bot."),
-      // webhooks: joi
-      //   .object({
-      //     enabled: joi.boolean().default(false).description('Whether to use the discord webhooks or not.'),
-      //     queue: joi
-      //       .object({
-      //         url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
-      //         icon: joi.string().allow('').default('').description('Icon when sending messages.'),
-      //         username: joi.string().default('Queue webhook').description('Username when sending messages.'),
-      //         reportAt: joi
-      //           .number()
-      //           .min(0)
-      //           .default(9999)
-      //           .description('Begin sending updates from this number and under')
-      //       })
-      //       .required()
-      //       .description('Info for queue updates.'),
-      //       edit: joi.boolean().default(false).description('Edit the queue message to not spam.'),
-      //       cleanup: joi.boolean().default(false).description('Cleanup queue messages after server disconnects.'),
-      //     gameChat: joi
-      //       .object({
-      //         url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
-      //         icon: joi.string().allow('').default('').description('Icon when sending messages.'),
-      //         username: joi.string().default('Queue webhook').description('Username when sending messages.')
-      //       })
-      //       .required()
-      //       .description('Info for queue updates.'),
-      //     serverInfo: joi
-      //       .object({
-      //         url: joi.string().allow('').default('').description('Webhook URL for queue updates.'),
-      //         icon: joi.string().allow('').default('').description('Icon when sending messages.'),
-      //         username: joi.string().default('Queue webhook').description('Username when sending messages.'),
-      //         cleanup: joi.boolean().default(false).description('Cleanup queue messages after server disconnects.'),
-      //       })
-      //       .required()
-      //       .description('Info for queue updates.')
-      //   })
-      //   .default()
-      //   .description('Webhook URLs for logging, if wanted.')
+      webhooks: joi
+        .object({
+          enabled: joi.boolean().default(false).description("Whether to use the discord webhooks or not."),
+          eventConfig: joi.object().pattern(
+            Joi.string(),
+            EventSchema,
+        ).description("Event listings"),
+          webhookList: joi.array().items(WebhookSchema).description("A list of webhooks to use"),
+        })
+        .description("Webhook URLs for logging, if wanted."),
     })
     .optional()
-    .description('Configuration for a discord bot.'),
+    .description("Configuration for a discord bot."),
   minecraft: joi
     .object({
       account: joi
         .object({
           username: usernameSchema
-            .default('default-username')
-            .description('The in-game playername of the account (only significant in offline mode).'),
+            .default("default-username")
+            .description("The in-game playername of the account (only significant in offline mode)."),
           email: joi
             .string()
             .email()
-            .allow('')
-            .default('')
-            .description('The email of the account. Leave empty for offline accounts.'),
+            .allow("")
+            .default("")
+            .description("The email of the account. Leave empty for offline accounts."),
           password: joi
             .string()
-            .empty('')
-            .default('')
+            .empty("")
+            .default("")
             .description(
-              'The password of the account (only required for Mojang accounts, leave it empty for Microsoft accounts. Microsoft accounts will just get instructions in the console to put a token into [microsoft.com/link](https://microsoft.com/link)'
+              "The password of the account (only required for Mojang accounts, leave it empty for Microsoft accounts. Microsoft accounts will just get instructions in the console to put a token into [microsoft.com/link](https://microsoft.com/link)"
             ), // to-do: add a mojang password regex
           auth: joi
             .string()
-            .valid('microsoft', 'mojang', 'offline')
-            .default('microsoft')
+            .valid("microsoft", "mojang", "offline")
+            .default("microsoft")
             .description("Authentication type (options: 'microsoft', 'mojang', 'offline')"),
-          fakeHost: joi.string().optional().description('Advanced: fake the host of the client to bypass TCPShield.')
+          fakeHost: joi.string().optional().description("Advanced: fake the host of the client to bypass TCPShield."),
         })
         .default()
-        .description('Minecraft account details. Any mineflayer options can be used here.'),
+        .description("Minecraft account details. Any mineflayer options can be used here."),
       proxy: joi
         .object({
           proxy: joi
             .object({
-              enabled: joi.boolean().default(true).required().description('Whether or not to use the specified proxy.'),
+              enabled: joi.boolean().default(true).required().description("Whether or not to use the specified proxy."),
               protocol: joi
                 .string()
-                .valid('socks5h', 'socks5', 'socks4', 'http', 'https')
+                .valid("socks5h", "socks5", "socks4", "http", "https")
                 .required()
-                .description('The type of proxy to use.'),
-              info: proxySchema
+                .description("The type of proxy to use."),
+              info: proxySchema,
             })
             .optional()
-            .description('Advanced: Connect the remote bot via a proxy.')
+            .description("Advanced: Connect the remote bot via a proxy."),
         })
-        .description('Advanced: options for proxies'),
+        .description("Advanced: options for proxies"),
       remoteServer: joi
         .object({
-          host: joi.string().default('2b2t.org').description('Address of the server to connect the bot to'),
-          port: joi.number().port().default(25565).description('Port of the server to connect to'),
+          host: joi.string().default("2b2t.org").description("Address of the server to connect the bot to"),
+          port: joi.number().port().default(25565).description("Port of the server to connect to"),
           version: joi
             .string()
             .regex(/1\.([1-9](\.|[0-9]\.)|0\.)[0-9]{1,2}$/)
-            .default('1.12.2')
-            .description('Version of Minecraft the server is on ')
+            .default("1.12.2")
+            .description("Version of Minecraft the server is on "),
         })
         .default()
-        .description('Settings for how the proxy connects to the server')
+        .description("Settings for how the proxy connects to the server"),
     })
     .default()
-    .description('All minecraft related settings.'),
+    .description("All minecraft related settings."),
 
   localServer: joi
     .object({
       host: joi
         .string()
         .hostname()
-        .default('connect.2b2t.org')
-        .description('Address of the server for proxy users to connect to'),
-      port: joi.number().port().default(25565).description('Port on the machine to connect to the proxy'),
+        .default("connect.2b2t.org")
+        .description("Address of the server for proxy users to connect to"),
+      port: joi.number().port().default(25565).description("Port on the machine to connect to the proxy"),
       version: joi
         .string()
         .regex(/1\.([1-9](\.|[0-9]\.)|0\.)[0-9]{1,2}$/)
-        .default('1.12.2')
-        .description('Version of Minecraft the server is on '),
-      'online-mode': joi
+        .default("1.12.2")
+        .description("Version of Minecraft the server is on "),
+      "online-mode": joi
         .boolean()
         .default(true)
-        .description('Whether to enable online-mode on the proxy. This probably should never be touched'),
-      maxPlayers: joi.number().min(1).default(1).description('Maximum allowed players to connect to the local server.')
+        .description("Whether to enable online-mode on the proxy. This probably should never be touched"),
+      maxPlayers: joi.number().min(1).default(1).description("Maximum allowed players to connect to the local server."),
     })
     .default()
-    .description('Settings for how you connect to the proxy'),
+    .description("Settings for how you connect to the proxy"),
 
   localServerConfig: joi
     .object({
       restartOnDisconnect: joi
         .boolean()
         .default(true)
-        .description('Whether or not the bot should reconnect when disconnected.'),
+        .description("Whether or not the bot should reconnect when disconnected."),
       disconectAllOnEnd: joi
         .boolean()
         .default(true)
-        .description('Whether to kick connected clients when the remote bot disconnects'),
+        .description("Whether to kick connected clients when the remote bot disconnects"),
       antiAFK: joi
         .object({
           /* todo lmao */
         })
-        .description('AntiAFK options.'),
-      autoEat: joi.boolean().default(true).description('Whether or not the bot should eat automatically.'),
+        .description("AntiAFK options."),
+      autoEat: joi.boolean().default(true).description("Whether or not the bot should eat automatically."),
       whitelist: joi
         .array()
         .items(usernameSchema)
         .allow(null)
         .optional()
-        .description('Playernames of accounts that are allowed to connect to the proxy')
+        .description("Playernames of accounts that are allowed to connect to the proxy"),
     })
     .default()
-    .description('Custom server options not normally found on minecraft-protocol')
-})
+    .description("Custom server options not normally found on minecraft-protocol"),
+});

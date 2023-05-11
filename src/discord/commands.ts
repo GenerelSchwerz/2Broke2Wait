@@ -1,4 +1,4 @@
-import { CommandInteraction, OAuth2Scopes, ApplicationCommandOptionType } from 'discord.js'
+import { CommandInteraction, OAuth2Scopes, ApplicationCommandOptionType, Interaction } from 'discord.js'
 import { Client, Discord, Slash, SlashGroup, SlashOption } from 'discordx'
 import { DateTime, Duration } from 'ts-luxon'
 

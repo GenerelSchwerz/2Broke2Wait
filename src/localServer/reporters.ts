@@ -9,6 +9,11 @@ import { CombinedPredictor } from "./predictors/combinedPredictor";
 import { TwoBAntiAFKEvents } from "./twoBAntiAFK";
 import { OmitX } from "../types/util";
 
+
+function getRemoteServerName<This extends {server: ProxyServer}>(cls: This): string {
+  return cls.server.bOpts.host + (cls.server.bOpts.port !== 25565 ? ":" + cls.server.bOpts.port : "");
+}
+
 export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
   constructor(public debug = false) {
     super();
@@ -21,9 +26,7 @@ export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
     this.serverOn("queueUpdate", this.onQueueUpdate);
   }
 
-  private getRemoteServerName(): string {
-    return this.server.bOpts.host + (this.server.bOpts.port !== 25565 ? ":" + this.server.bOpts.port : "");
-  }
+  private getRemoteServerName = getRemoteServerName;
 
   onPostStart = () => {
     console.log("Server started!");
@@ -77,7 +80,7 @@ export class ConsoleReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
     }
 
     console.log("Queue update!");
-    console.log(`\t${this.getRemoteServerName()} | Pos: ${newPos} | ${etaStr}`);
+    console.log(`\t${getRemoteServerName(this)} | Pos: ${newPos} | ${etaStr}`);
   };
 }
 
@@ -96,15 +99,15 @@ export class MotdReporter extends ProxyServerPlugin<MotdOpts, TwoBAntiAFKEvents,
   }
 
   onPostStart = () => {
-    this.setServerMotd(`Joining ${this.getRemoteServerName()}`);
+    this.setServerMotd(`Joining ${getRemoteServerName(this)}`);
   };
 
   disconnectServerMotd = (type: string, info: string | Error) => {
-    this.setServerMotd(`Disconnected from ${this.getRemoteServerName()}!\n[${type}]: ${String(info).substring(0, 48)}`);
+    this.setServerMotd(`Disconnected from ${getRemoteServerName(this)}!\n[${type}]: ${String(info).substring(0, 48)}`);
   };
 
   queueEnterMotd = () => {
-    this.setServerMotd(`Entered queue on ${this.getRemoteServerName()}`);
+    this.setServerMotd(`Entered queue on ${getRemoteServerName(this)}`);
   };
 
   queueUpdateMotd = (oldPos: number, newPos: number, eta: number, givenEta?: number) => {
@@ -119,20 +122,17 @@ export class MotdReporter extends ProxyServerPlugin<MotdOpts, TwoBAntiAFKEvents,
       etaStr += ` | Given ETA: ${Duration.fromMillis(givenEta * 1000 - Date.now()).toFormat("d'd', h'hr', m'min'")}`;
     }
 
-    this.setServerMotd(`${this.getRemoteServerName()} | Pos: ${newPos}\n${etaStr}`);
+    this.setServerMotd(`${getRemoteServerName(this)} | Pos: ${newPos}\n${etaStr}`);
   };
 
   inGameServerMotd = () => {
-    this.setServerMotd(`Playing on ${this.getRemoteServerName()}!`);
+    this.setServerMotd(`Playing on ${getRemoteServerName(this)}!`);
   };
 
   botUpdatesMotd = (bot: Bot) => {
     this.setServerMotd(`Health: ${bot.health.toFixed(2)}, Hunger: ${bot.food.toFixed(2)}`);
   };
 
-  getRemoteServerName(): string {
-    return this.server.bOpts.host + (this.server.bOpts.port !== 25565 ? ":" + this.server.bOpts.port : "");
-  }
 
   setServerMotd(message: string) {
     if (this.psOpts.motdPrefix) {
@@ -192,6 +192,7 @@ type EventOpts = {
   deleteEvents?: (keyof AllEvents)[];
   skipFooter?: boolean;
   skipTitle?: boolean;
+  color?: number,
   [k: string]: any;
 } & (
   | { edit?: false }
@@ -216,14 +217,13 @@ type WhWrap = WhSetup & WhOpts;
 
 type WhClient = { client: WebhookClient } & WhWrap;
 
-type WhTypes = "queue" | "serverInfo" | "gameChat";
 
 type RelaxedRecord<K extends string | number | symbol, T> = { [P in K]?: T };
 type EventConfig = RelaxedRecord<keyof AllEvents, EventOpts>;
 
 export type WhPluginOpts = {
   eventConfig: EventConfig;
-  webhooks: WhWrap[];
+  webhookList: WhWrap[];
 };
 
 export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
@@ -235,9 +235,10 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
 
   onLoad(server: ProxyServer) {
     super.onLoad(server);
-    const whList = this.opts.webhooks;
+    const whList = this.opts.webhookList;
     for (const [key, val] of Object.entries(this.opts.eventConfig)) {
       const k = key as keyof AllEvents;
+      const v = val || {};
       this.eventMsgs[k] = [];
 
       whList
@@ -247,7 +248,7 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
         })
         .forEach((w) => {
           updateWebhook(w);
-          this.handleEventType(k, w, val);
+          this.handleEventType(k, w, v);
         });
     }
   }
@@ -280,7 +281,9 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
 
   async startReporter(wh: WhClient, eConf: EventOpts, eName: keyof AllEvents) {
     const embed = this.buildServerEmbed("started", eConf);
-    embed.description = `Started at: ${DateTime.local().toFormat("hh:mm a, MM/dd")}\n`;
+    embed.description = 
+      `Started at: ${DateTime.local().toFormat("hh:mm a, MM/dd")}\n` 
+      + `Connecting to: ${getRemoteServerName(this)}`;
     await this.handleMsgSend(wh, eConf, eName, { embeds: [embed] });
   }
 
@@ -401,6 +404,7 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
 
     const embed: APIEmbed = {
       title: config.skipTitle ? undefined : wantedEvent,
+      color: config.color
     };
 
     if (config.skipFooter) return embed;
@@ -418,6 +422,8 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
     wantedEvent = (NiceEventNames as any)[wantedEvent] ?? wantedEvent;
     const embed: APIEmbed = {
       title: config.skipTitle ? undefined : wantedEvent,
+      color: config.color,
+
     };
 
     const queue = this.getShared<CombinedPredictor>("queue");
@@ -448,251 +454,3 @@ export class WebhookReporter extends ProxyServerPlugin<{}, AllEvents> {
     return embed;
   }
 }
-
-// export class OldWebhookReporter extends ProxyServerPlugin<{}, TwoBAntiAFKEvents> {
-//   public queueInfo?: WebhookWrapper & QueueSetup;
-//   public serverInfo?: WebhookWrapper;
-//   public gameChat?: WebhookWrapper & GameChatSetup;
-
-//   private serverStopDels: [WebhookWrapper, string][] = [];
-//   private serverStartDels: [WebhookWrapper, string][] = [];
-
-//   constructor(webhookUrls: DiscordWebhookOptions) {
-//     super();
-
-//     if (webhookUrls.queue.url) {
-//       this.queueInfo = {
-//         client: new WebhookClient({ url: webhookUrls.queue.url }),
-//         config: { skipFooter: true },
-//         ...webhookUrls.queue,
-//       };
-//       updateWebhook(this.queueInfo);
-//     }
-
-//     if (webhookUrls.serverInfo.url) {
-//       this.serverInfo = {
-//         client: new WebhookClient({ url: webhookUrls.serverInfo.url }),
-//         config: { skipFooter: true },
-//         ...webhookUrls.serverInfo,
-//       };
-//       updateWebhook(this.serverInfo);
-//     }
-
-//     if (webhookUrls.gameChat.url) {
-//       this.gameChat = {
-//         client: new WebhookClient({ url: webhookUrls.gameChat.url }),
-//         config: { skipTitle: true, skipFooter: true },
-//         ...webhookUrls.gameChat,
-//       };
-
-//       updateWebhook(this.gameChat);
-//     }
-//   }
-
-//   public onLoad(server: ProxyServer): void {
-//     super.onLoad(server);
-//     this.serverOn("queueUpdate", this.onQueueUpdate);
-//     this.serverOn("enteredQueue", this.onEnteredQueue);
-//     this.serverOn("leftQueue", this.onLeftQueue);
-//     this.serverOn("botevent_chat", this.onBotChat);
-//     this.serverOn("started", this.startCleanup);
-//     this.serverOn("stopped", this.stopCleanup);
-//   }
-
-//   private readonly startCleanup = async () => {
-//     for (const [sender, msgId] of this.serverStartDels) {
-//       if (sender.edit) if (sender.firstMessageId === msgId) delete sender.firstMessageId;
-//       await sender.client.deleteMessage(msgId);
-//     }
-//     this.serverStartDels = [];
-//   };
-
-//   private readonly stopCleanup = async () => {
-//     for (const [sender, msgId] of this.serverStopDels) {
-//       if (sender.edit) if (sender.firstMessageId === msgId) delete sender.firstMessageId;
-//       await sender.client.deleteMessage(msgId);
-//     }
-//     this.serverStopDels = [];
-//   };
-
-//   // 1am edit, im too lazy to add typings.
-//   private readonly sendOrEdit = async (wrap: WebhookWrapper, message: any, additionalConfig?: AdditionaWhConfig) => {
-//     let ret;
-//     if (wrap.edit) {
-//       if (wrap.firstMessageId == null) {
-//         ret = await wrap.client.send(message);
-//         wrap.firstMessageId = ret.id;
-//         if (additionalConfig?.deleteOnServerStop) this.serverStopDels.push([wrap, ret.id]);
-//         else if (additionalConfig?.deleteOnServerStart) this.serverStartDels.push([wrap, ret.id]);
-//       } else {
-//         ret = await wrap.client.editMessage(wrap.firstMessageId, message);
-//       }
-//     } else {
-//       ret = await wrap.client.send(message);
-//       if (additionalConfig?.deleteOnServerStop) this.serverStopDels.push([wrap, ret.id]);
-//       else if (additionalConfig?.deleteOnServerStart) this.serverStartDels.push([wrap, ret.id]);
-//     }
-//     return ret;
-//   };
-
-//   /**
-//    * @override
-//    * @returns
-//    */
-//   async onPostStart() {
-//     if (this.serverInfo == null) return;
-//     const embed = this.buildServerEmbed("started", this.serverInfo.config);
-//     embed.description = `Started at: ${DateTime.local().toFormat("hh:mm a, MM/dd")}\n`;
-//     await this.sendOrEdit(
-//       this.serverInfo,
-//       {
-//         embeds: [embed],
-//       },
-//       { deleteOnServerStop: true }
-//     );
-//   }
-
-//   async onPostStop() {
-//     if (this.serverInfo == null) return;
-//     const embed = this.buildServerEmbed("stopped", this.serverInfo.config);
-//     embed.description = `Closed at: ${DateTime.local().toFormat("hh:mm a, MM/dd")}\n`;
-//     await this.sendOrEdit(
-//       this.serverInfo,
-//       {
-//         embeds: [embed],
-//       },
-//       { deleteOnServerStart: true }
-//     );
-//   }
-
-//   async onRemoteDisconnect(type: string, info: string | Error) {
-//     if (this.serverInfo == null) return;
-//     const embed = this.buildServerEmbed("Bot disconnected!", this.serverInfo.config);
-
-//     embed.description =
-//       `Time: ${DateTime.local().toFormat("hh:mm a, MM/dd")}\n` + `Reason: ${String(info).substring(0, 1000)}`;
-
-//     await this.serverInfo.client.send({
-//       embeds: [embed],
-//     });
-//   }
-
-//   async onBotChat(_bot: Bot, username: string, message: string) {
-//     if (this.gameChat == null) return;
-//     const embed = this.buildClientEmbed("chat", this.gameChat.config);
-//     embed.author = {
-//       name: username,
-//       icon_url: `https://minotar.net/helm/${username}/69.png`,
-//     };
-
-//     embed.description = escapeMarkdown(message)[0];
-
-//     if (this.gameChat.timestamp) {
-//       if (embed.footer?.text) {
-//         embed.footer.text += `\nSent: ${DateTime.local().toFormat("hh:mm a, MM/dd")}`;
-//       } else {
-//         embed.footer = { text: `Sent: ${DateTime.local().toFormat("hh:mm a, MM/dd")}` };
-//       }
-//     }
-
-//     await this.gameChat.client.send({
-//       embeds: [embed],
-//     });
-//   }
-
-//   async onLeftQueue() {
-//     if (this.queueInfo == null) return;
-//     const embed = this.buildServerEmbed("leftQueue", this.queueInfo.config);
-//     embed.description = `Left queue at ${DateTime.local().toFormat("hh:mm a, MM/dd")}`;
-//     await this.queueInfo.client.send({
-//       embeds: [embed],
-//     });
-//   }
-
-//   async onEnteredQueue() {
-//     if (this.queueInfo == null) return;
-//     const embed = this.buildServerEmbed("enteredQueue", this.queueInfo.config);
-//     embed.description = `Entered queue at ${DateTime.local().toFormat("hh:mm a, MM/dd")}`;
-//     await this.queueInfo.client.send({
-//       embeds: [embed],
-//     });
-//   }
-
-//   async onQueueUpdate(oldPos: number, newPos: number, eta: number, givenEta?: number) {
-//     if (this.queueInfo == null) return;
-//     const embed = this.buildServerEmbed("queueUpdate", this.queueInfo.config);
-
-//     const strETA = !Number.isNaN(eta)
-//       ? Duration.fromMillis(eta * 1000 - Date.now()).toFormat("h 'hours and ' m 'minutes'")
-//       : "Unknown (NaN)";
-
-//     const twoBETA =
-//       !givenEta || Number.isNaN(givenEta)
-//         ? "Unknown (NaN)"
-//         : Duration.fromMillis(givenEta * 1000 - Date.now()).toFormat("h 'hours and ' m 'minutes'");
-
-//     embed.description =
-//       `Current time: ${DateTime.local().toFormat("hh:mm a, MM/dd")}\n` +
-//       `Old position: ${oldPos}\n` +
-//       `New position: ${newPos}\n` +
-//       `Estimated ETA: ${strETA}\n` +
-//       `2b2t's ETA: ${twoBETA}`;
-
-//     await this.sendOrEdit(this.queueInfo, {
-//       embeds: [embed],
-//     });
-//   }
-
-//   private buildClientEmbed(wantedEvent: string, config?: WebhookEmbedConfig): APIEmbed;
-//   private buildClientEmbed(wantedEvent: keyof CleanEvents | string, config: WebhookEmbedConfig = {}): APIEmbed {
-//     wantedEvent = (NiceEventNames as any)[wantedEvent] ?? wantedEvent;
-
-//     const embed: APIEmbed = {
-//       title: config.skipTitle ? undefined : wantedEvent,
-//     };
-
-//     if (config.skipFooter) return embed;
-
-//     if (this.server.controllingPlayer != null) {
-//       embed.footer = {
-//         text: `Connected player: ${this.server.controllingPlayer.username}`,
-//       };
-//     }
-//     return embed;
-//   }
-
-//   private buildServerEmbed(wantedEvent: string, config?: WebhookEmbedConfig): APIEmbed;
-//   private buildServerEmbed(wantedEvent: keyof AllEvents | string, config: WebhookEmbedConfig = {}) {
-//     wantedEvent = (NiceEventNames as any)[wantedEvent] ?? wantedEvent;
-//     const embed: APIEmbed = {
-//       title: config.skipTitle ? undefined : wantedEvent,
-//     };
-
-//     const queue = this.getShared<CombinedPredictor>("queue");
-
-//     let eta = null;
-//     if (queue != null) {
-//       eta = Number.isNaN(queue.eta) ? null : Duration.fromMillis(queue.eta * 1000 - Date.now());
-//     }
-
-//     if (config.skipFooter) return embed;
-
-//     let text;
-//     if (this.server.isProxyConnected()) {
-//       text = `Connected to: ${this.server.bOpts.host}`;
-//       if (this.server.bOpts.port !== 25565) text += `:${this.server.bOpts.port}`;
-//       text += "\n";
-//     } else {
-//       text = "Not connected.\n";
-//     }
-
-//     if (this.server.controllingPlayer != null) text += `Connected player: ${this.server.controllingPlayer.username}\n`;
-//     if (queue?.inQueue && eta != null) {
-//       text += `Join time: ${DateTime.local().plus(eta).toFormat("hh:mm a, MM/dd")}\n`;
-//     }
-
-//     embed.footer = { text };
-
-//     return embed;
-//   }
-// }

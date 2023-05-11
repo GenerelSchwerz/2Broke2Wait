@@ -1,6 +1,7 @@
-# Global setting for all debugging.
-debug: true
+# Global settings
+debug: false
 
+startImmediately: true
 
 
 
@@ -102,8 +103,6 @@ localServerConfig:
 
 
 
-
-
 # Discord logging settings.
 discord:
 
@@ -116,43 +115,39 @@ discord:
 
   # Discord webhook configuration.
   # Usage: https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
+  # color picker lol :https://www.google.com/search?q=hex+color&sourceid=chrome&ie=UTF-8#cobssid=s
+  # replace color's "#" with "0x"
   webhooks:
     enabled: true
 
     eventConfig:
       started:  
-        skipFooter: false
-        skipTitle: false
-        deleteEvents: ["stopped", "leftQueue"]
+        deleteEvents: ["stopped", "leftQueue", "enteredQueue", "queueUpdate"]
+        color: 0x458cf7
 
       stopped:
-        skipFooter: false
-        skipTitle: false
-        deleteEvents: ["started", "enteredQueue", "queueUpdate"]
+        deleteEvents: ["started", "leftQueue", "enteredQueue", "queueUpdate"]
+        color: 0xde1f22
 
       leftQueue:
-        skipFooter: false
-        skipTitle: false
+        deleteEvents: ["enteredQueue", "queueUpdate"]
       
       enteredQueue:
-        skipFooter: false
-        skipTitle: false
+        deleteEvents: ["leftQueue"]
 
       queueUpdate:
-        skipFooter: false
-        skipTitle: false
         reportAt: 500
         edit: true # edit webhook message after first sent. Defaults to false
 
       botevent_chat:
-        skipFooter: false
-        skipTitle: false
+        skipFooter: true # these can be put on any webhook
+        skipTitle: true 
         timestamp: true
 
 
     # Webhooks have been overhauled.
     # List as many webhooks as you'd like and list the events that go to that webhook below.
-    webhooks: [
+    webhookList: [
       {
         url: "https://canary.discord.com/api/webhooks/1088894870569103493/xX5auwxqly71oSbwnHc2FXYU91y8-Hhnqf8o6teLIPbdj4NK5NIA1EVBO50jMTYz992B",
         #icon: ""
@@ -172,7 +167,6 @@ discord:
         wantedEvents: ["queueUpdate", "leftQueue", "enteredQueue"]
 
       }
-
     ]
  
        

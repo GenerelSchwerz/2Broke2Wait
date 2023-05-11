@@ -25,7 +25,7 @@ class SwordPVPPlugin extends ProxyServerPlugin {
 
     swordpvp: {
       attack: {
-        usage: "<entity username/name>",
+        usage: "<name>",
         description: "Attack entity with identifier",
         callable: this.attack.bind(this),
       },
