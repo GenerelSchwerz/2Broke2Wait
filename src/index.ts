@@ -92,7 +92,7 @@ async function setup() {
 
   // Added support for external plugins.
   const f = path.join(__dirname, "../plugins");
-  fs.readdirSync(f).forEach(async (file) => {
+  await Promise.all(fs.readdirSync(f).map(async (file) => {
     const file1 = path.join(f, file);
     const filetype = file1.split(".")[file1.split(".").length - 1];
 
@@ -111,7 +111,7 @@ async function setup() {
         server.loadPlugin(data1.default);
         break;
     }
-  });
+  }));
 
 
   // ===============================
@@ -157,7 +157,7 @@ async function setup() {
         console.log("stop: stops the server")
         console.log("clear <#>: clear terminal (of <#> lines or all)")
         return;
-        
+
       case "start":
         console.log("Starting the server.")
         return server.start();

@@ -48,7 +48,7 @@ class GotoPlacePlugin extends ProxyServerPlugin {
     
   };
 
-  onInitialBotSetup = (bot) => {
+  onInitialBotSetup(bot) {
     bot.loadPlugin(pathfinder);
   };
 

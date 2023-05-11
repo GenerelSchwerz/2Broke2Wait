@@ -45,7 +45,7 @@ class SwordPVPPlugin extends ProxyServerPlugin {
 
   wantedTarget = null;
 
-  onInitialBotSetup = (bot) => {
+  onInitialBotSetup(bot) {
     bot.loadPlugin(pathfinder);
     bot.loadPlugin(customPVP);
   };
