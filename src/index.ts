@@ -39,6 +39,7 @@ try {
   const data = fs.readFileSync("./static/defaults/default_config.yml", "utf-8");
   fs.writeFileSync("./options.yml", data);
   config = yaml.load(data);
+  console.warn("No config detected, so loading default one. This will crash, so fill it out.")
 }
 
 const checkedConfig: Options = validateOptions(config);

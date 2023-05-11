@@ -126,7 +126,7 @@ discord:
         color: 0x458cf7
 
       stopped:
-        deleteEvents: ["started", "leftQueue", "enteredQueue", "queueUpdate"]
+        deleteEvents: ["started", "leftQueue", "enteredQueue", "queueUpdate", "linking", "unlinking"]
         color: 0xde1f22
 
       leftQueue:
