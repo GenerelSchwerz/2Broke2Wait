@@ -57,7 +57,7 @@ localServerConfig:
   disableCommands: false
 
   # Experimental, but does work. (Some commands break)
-  disconnectAllOnEnd: true
+  disconnectAllOnEnd: false
   restartOnDisconnect: true
   linkOnConnect: true
 
@@ -109,7 +109,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    token: 
+    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GbA484.CYu4LNlgihKW5d9blWCrOuj-vr8UD9a_EYyYPc
     prefix: "!"
 
 

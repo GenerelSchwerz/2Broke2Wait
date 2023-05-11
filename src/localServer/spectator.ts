@@ -159,7 +159,7 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     if (!connect) {
       this.fakeSpectator!.makeSpectator(client);
       this.fakeSpectator!.register(client);
-      if (this.server.conn?.pclient == null) {
+      if (this.server.controllingPlayer == null) {
         this.server.beginBotLogic();
       }
     } else {
