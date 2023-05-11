@@ -368,11 +368,13 @@ export class FakeBotEntity {
   }
 
   public subscribe(client: AllowedClient) {
+    if (this.linkedClients.get(client.uuid) != null) return;
     this.linkedClients.set(client.uuid, client);
     this.spawn(client);
   }
 
   public unsubscribe(client: AllowedClient) {
+    if (this.linkedClients.get(client.uuid) == null) return;
     this.despawn(client);
     this.linkedClients.delete(client.uuid);
   }
@@ -541,17 +543,19 @@ export class GhostHandler {
 
     this.makeSpectator(client);
 
-    await sleep(50); // allow bot to spawn on client end.
+    // await sleep(50); // allow bot to spawn on client end.
 
     this.writeRaw(client, "camera", {
       cameraId: this.linkedFakeBot.entityRef.id,
     });
-    const updatePos = () =>
+    const updatePos = () => {
+      console.log("called", this.linkedFakeBot.entityRef.knownPosition)
       this.writeRaw(client, "position", {
         ...this.linkedFakeBot.entityRef.knownPosition,
         yaw: 180 - (this.linkedFakeBot.entityRef.yaw * 180) / Math.PI,
         pitch: -(this.linkedFakeBot.entityRef.pitch * 180) / Math.PI,
       });
+    }
 
     updatePos();
     const onMove = () => updatePos();

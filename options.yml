@@ -27,7 +27,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: 2b2t.org
+    host: localhost
     port: 25565
     version: 1.12.2
 
@@ -84,7 +84,7 @@ localServerConfig:
         enabled: true
         distance: 16
         travelTime: 5000
-        waitTime: 30000 # wait 30 seconds before turning/walking
+        waitTime: 0000 # wait 30 seconds before turning/walking
 
     # AntiAFK passive settings. Leave this be for now.
     # I will include documentation at a later date.
@@ -109,7 +109,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    token: 
+    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GhA-zD.xrwX-R94yOW-jKIe7prDiO99KmFtEHri0l8O6Q
     prefix: "!"
 
 
