@@ -1,7 +1,7 @@
 # Global settings
 debug: false
-
 startImmediately: true
+pluginFolder: './plugins'
 
 
 
@@ -109,7 +109,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GOVgoa.DUR6dNC-DMCLIxsU3Guwc4XIZno2f7cMbqYGM4
+    token: 
     prefix: "!"
 
 

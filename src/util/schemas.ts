@@ -54,7 +54,7 @@ const EventSchema = joi.object({
 export const configSchema = joi.object({
   debug: joi.boolean().default(false).description("Global server debug setting."),
   startImmediately: joi.boolean().default(true).description("Whether or not to start server immediately."),
-  
+  pluginFolder: joi.string().optional().description('Folder for extra plugins'),
   discord: joi
     .object({
       bot: joi

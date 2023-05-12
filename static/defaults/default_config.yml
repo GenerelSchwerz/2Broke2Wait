@@ -1,7 +1,7 @@
 # 2b2w initial settings
 debug: false
 startImmediately: true
-
+pluginFolder: './plugins'
 
 # Configuration for minecraft
 minecraft:
@@ -125,10 +125,6 @@ discord:
       stopped:
         deleteEvents: ["started", "leftQueue", "enteredQueue", "queueUpdate"]
 
-      leftQueue:
-      
-      enteredQueue:
-
       queueUpdate:
         reportAt: 500
         edit: true # edit webhook message after first sent. Defaults to false
@@ -137,6 +133,14 @@ discord:
         skipFooter: true
         skipTitle: false
         timestamp: true
+
+      leftQueue:
+      
+      enteredQueue:
+
+      linking:
+
+      unlinking:
 
 
     # Webhooks have been overhauled.

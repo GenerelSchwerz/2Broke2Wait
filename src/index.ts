@@ -92,29 +92,37 @@ async function setup() {
   // ==========================
 
   // Added support for external plugins.
-  const f = path.join(process.cwd(), "./plugins");
 
-  if (!fs.existsSync(f)) fs.mkdirSync(f);
-  else await Promise.all(fs.readdirSync(f).map(async (file) => {
-    const file1 = path.join(f, file);
-    const filetype = file1.split(".")[file1.split(".").length - 1];
 
-    switch (filetype) {
-      case "js":
-        const data0 = await require(file1);
-        server.loadPlugin(data0);
-        break;
-      case "ts":
-        if (!detectTSNode)
-          throw Error(
-            "Typescript plugin loaded at runtime when running with JavaScript!\n" +
-              'To load typescript plugins, run this program with "npm run ts-start"'
-          );
-        const data1 = await require(file1);
-        server.loadPlugin(data1.default);
-        break;
+  if (checkedConfig.pluginFolder) {
+    const f = path.join(checkedConfig.pluginFolder);
+
+    if (!fs.existsSync(f)) {
+      fs.mkdirSync(f);
+      console.warn("Plugin folder was not present. Made a new folder instead.")
     }
-  }));
+    else await Promise.all(fs.readdirSync(f).map(async (file) => {
+      const file1 = path.join(f, file);
+      const filetype = file1.split(".")[file1.split(".").length - 1];
+  
+      switch (filetype) {
+        case "js":
+          const data0 = await require(file1);
+          server.loadPlugin(data0);
+          break;
+        case "ts":
+          if (!detectTSNode)
+            throw Error(
+              "Typescript plugin loaded at runtime when running with JavaScript!\n" +
+                'To load typescript plugins, run this program with "npm run ts-start"'
+            );
+          const data1 = await require(file1);
+          server.loadPlugin(data1.default);
+          break;
+      }
+    }));
+  }
+  
 
 
   // ===============================

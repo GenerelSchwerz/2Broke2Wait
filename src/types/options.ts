@@ -25,6 +25,7 @@ export type GameChatSetup = BaseWebhookOpts & {
 // Minecraft and discord options such as discord bot prefix and minecraft login info
 export interface Options {
   startImmediately: boolean,
+  pluginFolder?: string,
   debug: boolean,
   discord: {
     bot?: DiscordBotOptions
