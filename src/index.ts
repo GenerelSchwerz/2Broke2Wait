@@ -95,7 +95,7 @@ async function setup() {
 
 
   if (checkedConfig.pluginFolder) {
-    const f = path.join(checkedConfig.pluginFolder);
+    const f = path.join(process.cwd(), checkedConfig.pluginFolder);
 
     if (!fs.existsSync(f)) {
       fs.mkdirSync(f);
