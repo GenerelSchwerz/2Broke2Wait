@@ -95,8 +95,9 @@ async function setup() {
 
 
   if (checkedConfig.pluginFolder) {
-    const f = path.join(process.cwd(), checkedConfig.pluginFolder);
-
+    if (checkedConfig.pluginFolder.startsWith('.')) checkedConfig.pluginFolder = path.join(process.cwd(), checkedConfig.pluginFolder);
+    const f = checkedConfig.pluginFolder;
+    
     if (!fs.existsSync(f)) {
       fs.mkdirSync(f);
       console.warn("Plugin folder was not present. Made a new folder instead.")
