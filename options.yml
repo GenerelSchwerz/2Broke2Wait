@@ -109,7 +109,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GYgfMC.Q_b9BjjtS4f5J5lamZx-kKMUsn_3Z0E__Jow0k
+    token:
     prefix: "!"
 
 
