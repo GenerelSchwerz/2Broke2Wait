@@ -93,7 +93,9 @@ async function setup() {
 
   // Added support for external plugins.
   const f = path.join(__dirname, "../plugins");
-  await Promise.all(fs.readdirSync(f).map(async (file) => {
+
+  if (!fs.existsSync(f)) fs.mkdirSync(f);
+  else await Promise.all(fs.readdirSync(f).map(async (file) => {
     const file1 = path.join(f, file);
     const filetype = file1.split(".")[file1.split(".").length - 1];
 
