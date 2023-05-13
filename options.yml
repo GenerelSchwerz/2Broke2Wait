@@ -37,7 +37,7 @@ minecraft:
 # All options from there are valid.
 localServer:
   host: 0.0.0.0
-  port: 25566
+  port: 25567
   version: 1.12.2
   online-mode: false
   maxPlayers: 1
@@ -109,7 +109,7 @@ discord:
   # Discord bot configuration.
   bot:
     enabled: true
-    token:
+    token: 
     prefix: "!"
 
 

@@ -179,6 +179,15 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     return true;
   };
 
+
+  link(client: Client) {
+    if (this.server.controllingPlayer == null) {
+      this.server.message(client, "Linking");
+      super.link(client);
+    }
+    else this.server.message(client, `Cannot link. User §3${this.server.controllingPlayer.username}:§r is linked.`);
+  }
+
   async onLinking(client: Client) {
     if (client === this.server.controllingPlayer) {
       this.server.message(client, "Already in control, cannot link!");
@@ -186,22 +195,23 @@ export class SpectatorServerPlugin extends ProxyServerPlugin<SpectatorServerOpts
     }
 
     if (this.server.controllingPlayer == null) {
-      this.server.message(client, "Linking");
       this.fakeSpectator?.revertToBotStatus(client);
-    } else {
-      const mes = `Cannot link. User §3${this.server.controllingPlayer.username}:§r is linked.`;
-      this.server.message(client, mes);
     }
   }
 
-  onUnlinking(client: Client): void {
-    if (client == null) return;
+  unlink(client: Client) {
     if (client !== this.server.controllingPlayer) {
       this.server.message(client, "Cannot unlink as not in control!");
       return;
     }
-    this.fakeSpectator?.makeSpectator(client);
+
     this.server.message(client, "Unlinking");
+    super.unlink(client);
+  }
+
+  onUnlinking(client: Client): void {
+    if (client == null) return;
+    this.fakeSpectator?.makeSpectator(client);
   }
 
   makeViewFakePlayer(client: Client) {

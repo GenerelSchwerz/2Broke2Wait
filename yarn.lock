@@ -313,10 +313,10 @@
     "@nxg-org/mineflayer-trajectories" "^1.0.15"
     "@nxg-org/mineflayer-util-plugin" "^1.5.2"
 
-"@nxg-org/mineflayer-mitm-proxy@^0.4.4":
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-mitm-proxy/-/mineflayer-mitm-proxy-0.4.4.tgz#8f2b3d9e476450b0786dd0ec00c9a294b79e16d8"
-  integrity sha512-0wxGyvEpLM9o/0QsU08DfClf4uAsGDxegku6f6oLNdfvWAKCioE3R5DpCr+zVpwI/5mopqNcWOs9tnEwMBiOPg==
+"@nxg-org/mineflayer-mitm-proxy@^0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-mitm-proxy/-/mineflayer-mitm-proxy-0.5.3.tgz#53e5b8f170d62d184fa62c46a143ca6f899afb56"
+  integrity sha512-7xs19H+2rGOwzSJPcqpwVcLKvbPp9VOIvRcmESet4N0dtuu9XOj7IWd+2S7vuGeLbXZ6nqpCRvpaQXinoFY8VA==
   dependencies:
     "@icetank/mcproxy" "^1.0.2"
     eventemitter2 "^6.4.9"

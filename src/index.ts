@@ -19,6 +19,7 @@ import detectTSNode from "detect-ts-node";
 
 
 import rl from "readline"
+import { once } from "events";
 
 
 if (process.version.split("v")[1].split(".")[0] != "16") {
@@ -136,8 +137,8 @@ async function setup() {
       if (!stopTask.done) return await stopTask.promise;
       stopTask = Task.createTask();
       console.log("Recieved interrupt, shutting down (wait 5 seconds for termination).");
-      server.stop();
-      await sleep(5000);
+      server.close();
+      await once(server, "closed");
       stopTask.finish();
     }
 
