@@ -13,7 +13,7 @@ minecraft:
   # All options from that are valid.
   account:
     username: Generel_Schwerz
-    auth: microsoft
+    auth: offline
 
   # Custom implementation of a SOCKS4/5 proxy.
   proxy:
@@ -27,7 +27,7 @@ minecraft:
   # The server we wish to connect to.
   # This will override options in "account".
   remoteServer:
-    host: localhost
+    host: 127.0.0.1
     port: 25565
     version: 1.12.2
 
@@ -108,7 +108,7 @@ discord:
 
   # Discord bot configuration.
   bot:
-    enabled: true
+    enabled: false
     token: MTA1Nzc4NjAxOTc5OTM4MDA1OQ.GjVN3l.P1EeF-ZqDgVWW91TMDygBFvOKOBPuNSZ6F7NGY
     prefix: "!"
 
@@ -118,7 +118,7 @@ discord:
   # color picker lol :https://www.google.com/search?q=hex+color&sourceid=chrome&ie=UTF-8#cobssid=s
   # replace color's "#" with "0x"
   webhooks:
-    enabled: true
+    enabled: false
 
     eventConfig:
       started:  

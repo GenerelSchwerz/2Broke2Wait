@@ -7,7 +7,6 @@ import merge from "ts-deepmerge";
 import { Vec3 } from "vec3";
 import { OmitX } from "../../types/util";
 
-
 const itemLoader = require("prismarine-item/index.js"); // ncc compat, get default.
 const fetch = require("node-fetch");
 
@@ -121,7 +120,6 @@ const DefaultPlayerOpts: FakeBotEntityOpts = {
 };
 
 type AllowedClient = Client;
-
 
 export class FakeBotEntity {
   public static id = 9999;
@@ -259,12 +257,9 @@ export class FakeBotEntity {
   listenerWorldJoin = () => this.doForAllClients(this.writePlayerEntity);
 
   async getPlayerUuid(): Promise<string | null> {
-    
     let resp;
     try {
-      resp = await fetch(
-        `https://api.minecraftservices.com/minecraft/profile/lookup/name/${this.linkedBot.username}`
-      );
+      resp = await fetch(`https://api.minecraftservices.com/minecraft/profile/lookup/name/${this.linkedBot.username}`);
       if (resp.status !== 200) {
         console.warn(`Request for ${this.linkedBot.username} failed!`);
         return null;
@@ -277,7 +272,7 @@ export class FakeBotEntity {
       }
       return data.id;
     } catch (e) {
-      console.error("UUID lookup failed", e, resp);
+      console.error("UUID lookup failed:", e, resp);
       return null;
     }
   }
@@ -286,18 +281,19 @@ export class FakeBotEntity {
     let properties = [];
     if (this.opts.skinLookup) {
       const uuid = await this.getPlayerUuid();
-      if (uuid == null) return;
-      let response;
-      try {
-        response = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}?unsigned=false`);
-        if (response.status === 204) console.warn("Offline mode, no skin for", uuid);
-        else {
-          const p = await response.json();
-          properties = p?.properties ?? [];
-          if (properties?.length !== 1) console.warn("Skin lookup failed for", uuid);
+      if (uuid != null) {
+        let response;
+        try {
+          response = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}?unsigned=false`);
+          if (response.status === 204) console.warn("Offline mode, no skin for", uuid);
+          else {
+            const p = await response.json();
+            properties = p?.properties ?? [];
+            if (properties?.length !== 1) console.warn("Skin lookup failed for", uuid);
+          }
+        } catch (err) {
+          console.error("Skin lookup failed", err, response);
         }
-      } catch (err) {
-        console.error("Skin lookup failed", err, response);
       }
     }
 
@@ -346,7 +342,6 @@ export class FakeBotEntity {
     });
 
     this.updateEquipmentFor(client);
-
   };
 
   private writeDestroyEntity(client: Client) {
@@ -554,7 +549,7 @@ export class GhostHandler {
         yaw: 180 - (this.linkedFakeBot.entityRef.yaw * 180) / Math.PI,
         pitch: -(this.linkedFakeBot.entityRef.pitch * 180) / Math.PI,
       });
-    }
+    };
 
     updatePos();
     const onMove = () => updatePos();
