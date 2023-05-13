@@ -208,10 +208,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@icetank/mcproxy@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@icetank/mcproxy/-/mcproxy-1.0.2.tgz#aa6013381edcefd818c72853abe7e3918e69a32e"
-  integrity sha512-0kLL2Z9yRBsy2j1ucKIZG5fPyhuYnb9VmTneXHRuRl7plOA+Iywt9Msal3haOLlOukk90LsNPmAr37L4NAldCQ==
+"@icetank/mcproxy@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@icetank/mcproxy/-/mcproxy-1.0.3.tgz#e99353308618e2182121e1a25ce9f48549a9ae17"
+  integrity sha512-Ca4LlWQ/FBAU44n4N7U1LyVzD4PvaMVWNaKHSUxlE+TqY7B0bIK7SN1jQVuNxCzm3GKkY6B8tx32nS3kJW73BA==
   dependencies:
     minecraft-data "^3.0.0"
     minecraft-protocol "^1.32.0"
@@ -313,12 +313,12 @@
     "@nxg-org/mineflayer-trajectories" "^1.0.15"
     "@nxg-org/mineflayer-util-plugin" "^1.5.2"
 
-"@nxg-org/mineflayer-mitm-proxy@^0.5.6":
-  version "0.5.6"
-  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-mitm-proxy/-/mineflayer-mitm-proxy-0.5.6.tgz#c1f9615a23aa630e30a75b5d604d8eda25d76b90"
-  integrity sha512-lnxSCEA5Ys9lnyiX72dUrgF2FOwcyR/1EjRFU3XSESMZPXCfCqljj4OaHqr31S9+TobwVDZxeyQ041BUUbRONQ==
+"@nxg-org/mineflayer-mitm-proxy@^0.5.7":
+  version "0.5.7"
+  resolved "https://registry.yarnpkg.com/@nxg-org/mineflayer-mitm-proxy/-/mineflayer-mitm-proxy-0.5.7.tgz#ac044bad9ae44297757db519a16cf6bf90687d6d"
+  integrity sha512-tmz43LZf2SEk/5QLb8EwWBVGb91xKskw6fiFxoTSPivuthZS9EADuL4/b1Ypy+MFw5+fLWQwd4r3VVYH72zmQA==
   dependencies:
-    "@icetank/mcproxy" "^1.0.2"
+    "@icetank/mcproxy" "^1.0.3"
     eventemitter2 "^6.4.9"
     minecraft-protocol "^1.41.2"
     strict-event-emitter-types "^2.0.0"
