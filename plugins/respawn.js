@@ -21,16 +21,19 @@ class RespawnPlugin extends ProxyServerPlugin {
   };
 
   universalCmds = {
-    respawnTime: {
-      usage: "[number in ms]",
-      description: "set respawn timer (when player is linked)",
-      callable: this.setRespawnTime.bind(this),
-    },
+    respawner: {
+      respawnTime: {
+        usage: "[number in ms]",
+        description: "set respawn timer (when player is linked)",
+        callable: this.setRespawnTime.bind(this),
+      },
+    }
+    
   };
 
   setRespawnTime(client, num) {
     const n = Number(num);
-    if (Number.isNaN(n)) return this.server.message(client, `Number "${num} is not a number!`);
+    if (Number.isNaN(n)) return this.server.message(client, `"${num} is not a number!`);
 
     this.opts.respawnTime = num;
     this.server.message(client, `Set respawn timer to "${num} ms!`);
