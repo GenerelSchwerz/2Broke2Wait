@@ -1,4 +1,4 @@
-# 2Broke2Wait
+# 2Broke2Wait 1.19
 
 This project is made to skip the queue of 2b2t.
 
